@@ -33,6 +33,7 @@ from schemas import (
     CashFlowStatement,
     Company,
     ExtractionFlag,
+    ExtractionSource,
     FilingType,
     FinancialPeriod,
     IncomeStatement,
@@ -146,6 +147,58 @@ def _missing_fields(items: dict[str, Optional[LineItem]]) -> list[str]:
     return [f for f in _ALL_FIELDS if items.get(f) is None]
 
 
+def _derive_missing_required(
+    items: dict[str, Optional[LineItem]],
+) -> dict[str, Optional[LineItem]]:
+    """Last-ditch derivations for required fields neither Track A nor B filled.
+
+    Some filers (JNJ, NKE) don't tag operating income at all and Claude is
+    non-deterministic about whether to use a proxy. Some (NKE, KO) don't tag
+    total liabilities. Both can be derived from other extracted fields with
+    high enough confidence to keep the pipeline from failing — and the
+    DERIVED source is preserved so the HITL surface can flag them for
+    review.
+    """
+    items = dict(items)
+
+    # operating_income ≈ income_before_tax + interest_expense
+    # (op income = pre-tax earnings + financing costs, ignoring small
+    #  non-operating income/expense items — close enough for a first-pass
+    #  DCF; user can override).
+    if items.get("operating_income") is None:
+        ibt = items.get("income_before_tax")
+        ie = items.get("interest_expense")
+        if ibt is not None and ie is not None:
+            items["operating_income"] = LineItem(
+                value=ibt.value + ie.value,
+                source=ExtractionSource.DERIVED,
+                confidence=0.65,
+                source_quote=(
+                    f"Derived: income_before_tax + interest_expense "
+                    f"({ibt.value} + {ie.value})"
+                ),
+                xbrl_tag=None,
+            )
+
+    # total_liabilities = total_assets - shareholders_equity (accounting identity)
+    if items.get("total_liabilities") is None:
+        ta = items.get("total_assets")
+        eq = items.get("shareholders_equity")
+        if ta is not None and eq is not None:
+            items["total_liabilities"] = LineItem(
+                value=ta.value - eq.value,
+                source=ExtractionSource.DERIVED,
+                confidence=0.99,  # accounting identity, near-certain
+                source_quote=(
+                    f"Derived: total_assets - shareholders_equity "
+                    f"({ta.value} - {eq.value})"
+                ),
+                xbrl_tag=None,
+            )
+
+    return items
+
+
 def _compose_company(
     ticker: str,
     cik: str,
@@ -222,6 +275,11 @@ def _make_track_b(
                 # Best-effort: log and let _compose_company decide if the
                 # remaining gaps are tolerable (i.e. all-optional).
                 print(f"Track B failed for {state['ticker']}: {e}", file=sys.stderr)
+
+        # Final pass: derive what we still can from accounting identities
+        # before composition. Handles filers that don't tag op income or
+        # total liabilities at all (JNJ, NKE, KO).
+        items = _derive_missing_required(items)
 
         company = _compose_company(
             ticker=state["ticker"],
