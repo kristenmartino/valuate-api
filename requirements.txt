@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.27
+pydantic>=2.5
+langgraph>=0.2,<1.0
+anthropic>=0.50
+beautifulsoup4>=4.12
+lxml>=5.0
