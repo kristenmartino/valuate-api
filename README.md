@@ -25,16 +25,23 @@ A single FastAPI app serving a LangGraph state machine that extracts financial l
 
 The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END`:
 
-1. **Ingest** — `EdgarClient` fetches the latest 10-K's metadata, the XBRL company-facts JSON, and the filing's primary HTML URL. Rate-limited to SEC's 10 req/s limit.
-2. **Track A — XBRL** (`extract_track_a.py`). Walks `CANONICAL_CONCEPTS` against the company-facts JSON. Returns a flat dict of LineItems for the **3 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
+1. **Ingest** — `EdgarClient` fetches the latest 10-K's metadata, the XBRL company-facts JSON, and the filing's primary HTML URL. The SIC code from the SEC submissions response routes the rest of the pipeline through the right industry path (`industry.py` → `Industry.STANDARD` for industrials/tech, `Industry.BANK` for depositories, with insurer/REIT/energy stubs ready to be wired up). Rate-limited to SEC's 10 req/s limit.
+2. **Track A — XBRL** (`extract_track_a.py`). Walks the industry-specific concept map (`STANDARD_CANONICAL_CONCEPTS` for industrials, `BANK_CANONICAL_CONCEPTS` for banks — banks tag net interest income, loans, deposits, etc. that don't exist in the standard schema). Returns a flat dict of LineItems for the **3 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
 3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. Every value carries a verbatim source quote and a confidence score.
 4. **Derivation backstop** (in `graph.py`). For fields neither track filled, applies accounting-identity fallbacks:
    - `operating_income ≈ income_before_tax + interest_expense` (handles JNJ, NKE)
    - `total_liabilities = total_assets − shareholders_equity` (handles NKE, KO)
 
    Both write `source=DERIVED` with a synthetic source quote.
-5. **Composition** — builds a `Company` with up to 3 `FinancialPeriod`s. The latest period must be complete or `CompositionError` raises (HTTP 422). Older periods with thin coverage are silently dropped from the response.
+5. **Composition** — builds a `Company` with up to 3 `FinancialPeriod`s, dispatching to the right schema variants per the industry: `IncomeStatement` / `BalanceSheet` / `CashFlowStatement` for standard filers, `BankIncomeStatement` / `BankBalanceSheet` / `BankCashFlowStatement` for banks. Pydantic discriminated unions on each statement (`kind` literal) keep the JSON shape unambiguous on the wire. The latest period must be complete or `CompositionError` raises (HTTP 422); older periods with thin coverage are silently dropped.
 6. **Validate** — flags low-confidence items (<0.80) and balance-sheet identity violations (>50bps tolerance) as `ExtractionFlag`s on the response.
+
+## Valuation flavors
+
+`compute_projection` in `dcf.py` dispatches by industry:
+
+- **Standard** (industrials / tech): 5-year FCFF DCF with Gordon-growth terminal, plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid over (revenue growth × operating margin).
+- **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` is observed dividend CAGR capped 200bps under default `r` so the Gordon constraint holds out of the box. Monte Carlo still runs (effectively perturbing only g and r since revenue/margin axes don't enter DDM); sensitivity is hidden client-side because the grid axes don't apply.
 
 ## HITL overrides
 
@@ -102,15 +109,23 @@ Required env vars (set in the Railway project UI):
 
 ## Universe
 
-10 hand-picked S&P 500 tickers: AAPL, MSFT, GOOGL, NVDA, COST, HD, NKE, JNJ, KO, CAT.
+11 hand-picked S&P 500 tickers — 10 industrial / tech filers (AAPL, MSFT, GOOGL, NVDA, COST, HD, NKE, JNJ, KO, CAT) plus one bank (JPM) demonstrating the industry-aware extraction path.
 
-Three of those needed Track B or DERIVED fallback to compose successfully — XBRL tagging consistency is worse than the universe size suggests. The two-track-plus-derivation architecture earns its keep on this universe.
+Three of the standard tickers needed Track B or DERIVED fallback to compose successfully — XBRL tagging consistency is worse than the universe size suggests. JPM extracted cleanly through Track A alone (post-CECL bank tags are well-standardized across the major US banks), so the bank pipeline doubles as evidence the architecture isn't bound to one industry's accounting model.
 
-## Scope ceiling
+## Industry coverage
 
-The universe is intentional. Banks, insurers, REITs, and energy E&P companies report on fundamentally different financial-statement structures, and pretending one extraction logic works for all of them is the standard demo's failure mode. Expansion to those filers is tracked as [issue #4](https://github.com/kristenmartino/valuate-api/issues/4).
+| Industry | Status | Valuation method | Sample ticker |
+|---|---|---|---|
+| Industrial / tech | shipped | 5-year FCFF DCF + Monte Carlo + sensitivity | AAPL, MSFT, ... |
+| Banks | shipped | Gordon DDM | JPM |
+| Insurers | not yet | embedded value (planned) | — |
+| REITs | not yet | FFO-based DCF (planned) | — |
+| Energy E&P | not yet | reserve-based valuation (planned) | — |
 
-Other items deliberately parked in the [`later` label](https://github.com/kristenmartino/valuate-api/issues?q=label%3Alater): segment-aware DCF (currently consolidated only), comparable-company DCF cross-check, multi-period filing-accession attribution, saved scenarios.
+Insurer / REIT / energy E&P stubs are wired into `industry.py`'s SIC classifier but have no schema variants or DCF math yet. They're tracked as Phase 2-4 of [issue #4](https://github.com/kristenmartino/valuate-api/issues/4). Anything outside these classifications falls back to `Industry.STANDARD` and runs the FCFF path — which produces nonsense for filers it shouldn't apply to. The frontend's universe gate (the home page) keeps users on supported tickers.
+
+Other items deliberately parked in the [`later` label](https://github.com/kristenmartino/valuate-api/issues?q=label%3Alater): segment-aware DCF (currently consolidated only), multi-period filing-accession attribution, saved scenarios.
 
 ## License
 
