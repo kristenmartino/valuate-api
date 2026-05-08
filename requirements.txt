@@ -10,6 +10,10 @@ lxml>=5.0
 # cross-check. Unofficial Yahoo Finance scraping; acceptable for the
 # 10-ticker demo universe. Falls back gracefully when the source 503s.
 yfinance>=0.2.40
+# Postgres-backed persistence for the Company cache + HITL overrides.
+# Auto-enabled when DATABASE_URL is set (Railway's Postgres plugin); falls
+# back to in-memory storage in local dev when the env var is absent.
+asyncpg>=0.29
 
 # Test-only; kept here so a fresh clone gets to a runnable `pytest tests/` in
 # one step. Tiny footprint, fine to include in production install.

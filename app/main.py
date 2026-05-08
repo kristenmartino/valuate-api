@@ -1,11 +1,9 @@
 """Valuate API — FastAPI service for the DCF extraction agent.
 
-Phase 4: adds HITL review endpoints. The /extract result is cached in an
-in-process dict keyed by ticker; subsequent calls to GET /company/{ticker}
-or PUT /company/{ticker}/override read and mutate that cached state.
-
-Note: in-memory storage means state is lost on restart. The README's V1
-explicitly excludes save/share, so this is fine for the MVP.
+Storage: persistence is repository-backed. PostgresRepo turns on whenever
+DATABASE_URL is in the environment (Railway's Postgres plugin sets this
+automatically); otherwise InMemoryRepo runs and the behavior matches the
+prior in-memory dict for local dev.
 
 Run locally:
     SEC_USER_AGENT="Your Name you@example.com" \
@@ -31,6 +29,7 @@ from dcf import (
 from edgar import EdgarClient
 from graph import CompositionError, build_graph, validate_company
 from overrides import apply_override
+from repository import CompanyRepo, make_repo
 from schemas import (
     Assumptions,
     Company,
@@ -82,16 +81,19 @@ class ValuationResponse(BaseModel):
 
 
 _graph: Any = None
-_companies: dict[str, Company] = {}
+_repo: Optional[CompanyRepo] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _graph
+    global _graph, _repo
     _graph = build_graph(EdgarClient(), AsyncAnthropic())
+    _repo = await make_repo()
     yield
     _graph = None
-    _companies.clear()
+    if _repo is not None:
+        await _repo.close()
+        _repo = None
 
 
 app = FastAPI(title="Valuate API", lifespan=lifespan)
@@ -100,6 +102,21 @@ app = FastAPI(title="Valuate API", lifespan=lifespan)
 @app.get("/healthz")
 async def healthz() -> dict[str, bool]:
     return {"ok": True}
+
+
+def _require_repo() -> CompanyRepo:
+    if _repo is None:
+        raise HTTPException(503, "Service not ready")
+    return _repo
+
+
+async def _require_company(ticker: str) -> Company:
+    company = await _require_repo().get(ticker)
+    if company is None:
+        raise HTTPException(
+            404, f"No extraction found for {ticker}. POST /extract first."
+        )
+    return company
 
 
 @app.post("/extract", response_model=Company)
@@ -115,28 +132,18 @@ async def extract(req: ExtractRequest) -> Company:
         # Required fields still missing after both Track A and Track B.
         raise HTTPException(422, str(e))
     company = result["company"]
-    _companies[req.ticker.upper()] = company
+    await _require_repo().set(req.ticker, company)
     return company
 
 
 @app.get("/company/{ticker}", response_model=Company)
 async def get_company(ticker: str) -> Company:
-    company = _companies.get(ticker.upper())
-    if company is None:
-        raise HTTPException(
-            404, f"No extraction found for {ticker}. POST /extract first."
-        )
-    return company
+    return await _require_company(ticker)
 
 
 @app.put("/company/{ticker}/override", response_model=Company)
 async def override(ticker: str, req: OverrideRequest) -> Company:
-    ticker_upper = ticker.upper()
-    company = _companies.get(ticker_upper)
-    if company is None:
-        raise HTTPException(
-            404, f"No extraction found for {ticker}. POST /extract first."
-        )
+    company = await _require_company(ticker)
     try:
         updated = apply_override(
             company,
@@ -148,27 +155,19 @@ async def override(ticker: str, req: OverrideRequest) -> Company:
         raise HTTPException(400, str(e))
     # Re-run validation so flags reflect the post-override state.
     updated = validate_company(updated)
-    _companies[ticker_upper] = updated
+    await _require_repo().set(ticker, updated)
     return updated
 
 
 @app.get("/value/{ticker}/defaults", response_model=Assumptions)
 async def value_defaults(ticker: str) -> Assumptions:
-    company = _companies.get(ticker.upper())
-    if company is None:
-        raise HTTPException(
-            404, f"No extraction found for {ticker}. POST /extract first."
-        )
+    company = await _require_company(ticker)
     return default_assumptions(company)
 
 
 @app.post("/value/{ticker}", response_model=ValuationResponse)
 async def value(ticker: str, req: ValuationRequest) -> ValuationResponse:
-    company = _companies.get(ticker.upper())
-    if company is None:
-        raise HTTPException(
-            404, f"No extraction found for {ticker}. POST /extract first."
-        )
+    company = await _require_company(ticker)
     try:
         projection = compute_projection(company, req.assumptions)
     except ValueError as e:
