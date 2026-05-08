@@ -25,11 +25,15 @@ from typing import Any, Awaitable, Callable, Optional, TypedDict
 from anthropic import AsyncAnthropic
 from langgraph.graph import END, StateGraph
 
-from edgar import EdgarClient, latest_value_per_period
+from edgar import EdgarClient, concepts_for, latest_value_per_period
 from extract_track_a import extract_track_a
 from extract_track_b import extract_revenue_segments, extract_track_b
+from industry import Industry, classify_sic
 from schemas import (
     BalanceSheet,
+    BankBalanceSheet,
+    BankCashFlowStatement,
+    BankIncomeStatement,
     CashFlowStatement,
     Company,
     ExtractionFlag,
@@ -53,8 +57,12 @@ BALANCE_SHEET_TOLERANCE = Decimal("0.005")  # 50bps of total assets
 N_HISTORICAL_PERIODS = 3
 
 
-# Schema field names per statement. Used both to know what to ask Track B
-# for and to map the merged dict back into Pydantic models when composing.
+# Schema field names per statement, grouped by industry. Each tuple is the
+# (income_fields, balance_fields, cashflow_fields, required_income,
+# required_balance, required_cashflow) for that industry. Composition uses
+# this dispatch table to know which fields to pull out of the items dict
+# and which are required to instantiate the variant.
+
 INCOME_STATEMENT_FIELDS = [
     "revenue",
     "cost_of_revenue",
@@ -90,18 +98,98 @@ CASH_FLOW_FIELDS = [
     "capital_expenditures",
     "cash_from_investing",
     "cash_from_financing",
+    "dividends_paid",
 ]
 
-# Required schema fields per statement (must be present to compose Company).
 REQUIRED_INCOME = {"revenue", "operating_income", "net_income", "diluted_shares_outstanding"}
 REQUIRED_BALANCE = {"cash_and_equivalents", "total_assets", "total_liabilities", "shareholders_equity"}
 REQUIRED_CASH_FLOW = {"depreciation_amortization", "cash_from_operations", "capital_expenditures"}
 
-# Union of all distinct field names across the three statements (D&A is on
-# both IS and CF; we store one entry and reuse it).
-_ALL_FIELDS = sorted(
-    set(INCOME_STATEMENT_FIELDS) | set(BALANCE_SHEET_FIELDS) | set(CASH_FLOW_FIELDS)
-)
+# --- Bank fields ------------------------------------------------------------
+
+BANK_INCOME_FIELDS = [
+    "interest_income",
+    "interest_expense",
+    "net_interest_income",
+    "provision_for_credit_losses",
+    "non_interest_income",
+    "non_interest_expense",
+    "income_before_tax",
+    "income_tax_expense",
+    "net_income",
+    "diluted_shares_outstanding",
+]
+BANK_BALANCE_FIELDS = [
+    "cash_and_equivalents",
+    "securities",
+    "total_loans",
+    "allowance_for_loan_losses",
+    "total_deposits",
+    "long_term_debt",
+    "total_assets",
+    "total_liabilities",
+    "shareholders_equity",
+]
+BANK_CASH_FLOW_FIELDS = [
+    "cash_from_operations",
+    "cash_from_investing",
+    "cash_from_financing",
+    "dividends_paid",
+    "depreciation_amortization",
+    "capital_expenditures",
+]
+
+BANK_REQUIRED_INCOME = {
+    "net_interest_income",
+    "income_before_tax",
+    "income_tax_expense",
+    "net_income",
+    "diluted_shares_outstanding",
+}
+BANK_REQUIRED_BALANCE = {
+    "cash_and_equivalents",
+    "total_loans",
+    "total_deposits",
+    "total_assets",
+    "total_liabilities",
+    "shareholders_equity",
+}
+BANK_REQUIRED_CASH_FLOW = {"cash_from_operations"}
+
+
+def _industry_fields(industry: Industry) -> tuple[
+    list[str], list[str], list[str], set[str], set[str], set[str]
+]:
+    """Return (income, balance, cashflow, req_income, req_balance, req_cashflow)
+    field lists for the given industry."""
+    if industry == Industry.BANK:
+        return (
+            BANK_INCOME_FIELDS,
+            BANK_BALANCE_FIELDS,
+            BANK_CASH_FLOW_FIELDS,
+            BANK_REQUIRED_INCOME,
+            BANK_REQUIRED_BALANCE,
+            BANK_REQUIRED_CASH_FLOW,
+        )
+    return (
+        INCOME_STATEMENT_FIELDS,
+        BALANCE_SHEET_FIELDS,
+        CASH_FLOW_FIELDS,
+        REQUIRED_INCOME,
+        REQUIRED_BALANCE,
+        REQUIRED_CASH_FLOW,
+    )
+
+
+def _all_fields_for(industry: Industry) -> list[str]:
+    income, balance, cashflow, *_ = _industry_fields(industry)
+    return sorted(set(income) | set(balance) | set(cashflow))
+
+
+# Backward-compat: standard-industry union of all fields. The graph helpers
+# below use _all_fields_for(industry) instead, but the module-level constant
+# is referenced in some places that haven't been updated.
+_ALL_FIELDS = _all_fields_for(Industry.STANDARD)
 
 
 class CompositionError(Exception):
@@ -116,6 +204,7 @@ class GraphState(TypedDict, total=False):
     filing_accession: str
     filing_url: str
     facts: dict[str, Any]
+    industry: Industry  # classified at ingest from SEC SIC code
     period_ends: list[date]  # most recent first; populated by track_a
     periods_items: dict[date, dict[str, Optional[LineItem]]]  # by track_a/b
     company: Company
@@ -127,6 +216,10 @@ def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphS
         cik = await client.get_cik_from_ticker(ticker)
         submissions = await client.get_submissions(cik)
         name = submissions.get("name", ticker)
+        # Classify industry from the SIC code on submissions. Routes the
+        # whole rest of the graph (Track A concept map, required fields,
+        # composition variant). Defaults to STANDARD on unknown SIC.
+        industry = classify_sic(submissions.get("sic"))
         filing_meta = await client.get_latest_10k(cik)
         period_end = date.fromisoformat(filing_meta["period_of_report"])
         facts = await client.get_company_facts(cik)
@@ -137,6 +230,7 @@ def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphS
             "filing_accession": filing_meta["accession_number"],
             "filing_url": filing_meta["primary_doc_url"],
             "facts": facts,
+            "industry": industry,
         }
 
     return ingest
@@ -175,51 +269,62 @@ def _recent_period_ends(
 async def track_a(state: GraphState) -> GraphState:
     """Extract the N most-recent fiscal years from XBRL into a per-period dict.
 
-    Older periods often have less coverage than the latest (a filer may not
-    have tagged some concepts in earlier years). Composition tolerates this
-    by skipping older periods that miss required fields, while raising on
-    the latest period.
+    Uses the industry-specific concept map (banks have different XBRL tags
+    than industrials). Older periods often have thinner coverage than the
+    latest; composition tolerates this by silently dropping older periods
+    that miss required fields, while still raising on the latest.
     """
     facts = state["facts"]
     latest = state["period_end"]
+    industry = state.get("industry", Industry.STANDARD)
+    concepts = concepts_for(industry)
+
     period_ends = _recent_period_ends(facts, latest)
     if not period_ends:
         period_ends = [latest]
 
+    expected_fields = _all_fields_for(industry)
     periods_items: dict[date, dict[str, Optional[LineItem]]] = {}
     for pe in period_ends:
-        items = extract_track_a(pe, facts)
-        for field in _ALL_FIELDS:
+        items = extract_track_a(pe, facts, concepts=concepts)
+        for field in expected_fields:
             items.setdefault(field, None)
         periods_items[pe] = items
 
     return {"period_ends": period_ends, "periods_items": periods_items}
 
 
-def _missing_fields(items: dict[str, Optional[LineItem]]) -> list[str]:
-    """Return all fields in _ALL_FIELDS that are None in items."""
-    return [f for f in _ALL_FIELDS if items.get(f) is None]
+def _missing_fields(
+    items: dict[str, Optional[LineItem]],
+    industry: Industry = Industry.STANDARD,
+) -> list[str]:
+    """Return all industry-relevant fields that are None in items."""
+    return [f for f in _all_fields_for(industry) if items.get(f) is None]
 
 
 def _derive_missing_required(
     items: dict[str, Optional[LineItem]],
+    industry: Industry = Industry.STANDARD,
 ) -> dict[str, Optional[LineItem]]:
     """Last-ditch derivations for required fields neither Track A nor B filled.
 
-    Some filers (JNJ, NKE) don't tag operating income at all and Claude is
-    non-deterministic about whether to use a proxy. Some (NKE, KO) don't tag
-    total liabilities. Both can be derived from other extracted fields with
-    high enough confidence to keep the pipeline from failing — and the
-    DERIVED source is preserved so the HITL surface can flag them for
-    review.
+    Standard industry:
+    - operating_income ≈ income_before_tax + interest_expense (JNJ, NKE)
+
+    Bank industry:
+    - net_interest_income ≈ interest_income − interest_expense (filers that
+      tag the components but not the net)
+
+    Universal:
+    - total_liabilities = total_assets − shareholders_equity (NKE, KO and
+      banks that don't tag Liabilities directly)
+
+    Each DERIVED entry preserves provenance with a synthetic source quote
+    describing the formula, so the HITL surface can still flag it for review.
     """
     items = dict(items)
 
-    # operating_income ≈ income_before_tax + interest_expense
-    # (op income = pre-tax earnings + financing costs, ignoring small
-    #  non-operating income/expense items — close enough for a first-pass
-    #  DCF; user can override).
-    if items.get("operating_income") is None:
+    if industry == Industry.STANDARD and items.get("operating_income") is None:
         ibt = items.get("income_before_tax")
         ie = items.get("interest_expense")
         if ibt is not None and ie is not None:
@@ -234,7 +339,21 @@ def _derive_missing_required(
                 xbrl_tag=None,
             )
 
-    # total_liabilities = total_assets - shareholders_equity (accounting identity)
+    if industry == Industry.BANK and items.get("net_interest_income") is None:
+        ii = items.get("interest_income")
+        ie = items.get("interest_expense")
+        if ii is not None and ie is not None:
+            items["net_interest_income"] = LineItem(
+                value=ii.value - ie.value,
+                source=ExtractionSource.DERIVED,
+                confidence=0.85,
+                source_quote=(
+                    f"Derived: interest_income − interest_expense "
+                    f"({ii.value} − {ie.value})"
+                ),
+                xbrl_tag=None,
+            )
+
     if items.get("total_liabilities") is None:
         ta = items.get("total_assets")
         eq = items.get("shareholders_equity")
@@ -242,10 +361,10 @@ def _derive_missing_required(
             items["total_liabilities"] = LineItem(
                 value=ta.value - eq.value,
                 source=ExtractionSource.DERIVED,
-                confidence=0.99,  # accounting identity, near-certain
+                confidence=0.99,
                 source_quote=(
-                    f"Derived: total_assets - shareholders_equity "
-                    f"({ta.value} - {eq.value})"
+                    f"Derived: total_assets − shareholders_equity "
+                    f"({ta.value} − {eq.value})"
                 ),
                 xbrl_tag=None,
             )
@@ -255,16 +374,18 @@ def _derive_missing_required(
 
 def _missing_required_for_period(
     items: dict[str, Optional[LineItem]],
+    industry: Industry = Industry.STANDARD,
 ) -> list[str]:
-    """Field paths that are still None in `items` and required by the schema."""
+    """Field paths still None in `items` and required by the industry's schema."""
+    _, _, _, req_income, req_balance, req_cashflow = _industry_fields(industry)
     missing: list[str] = []
-    for f in REQUIRED_INCOME:
+    for f in req_income:
         if items.get(f) is None:
             missing.append(f"income_statement.{f}")
-    for f in REQUIRED_BALANCE:
+    for f in req_balance:
         if items.get(f) is None:
             missing.append(f"balance_sheet.{f}")
-    for f in REQUIRED_CASH_FLOW:
+    for f in req_cashflow:
         if items.get(f) is None:
             missing.append(f"cash_flow_statement.{f}")
     return missing
@@ -274,21 +395,34 @@ def _build_financial_period(
     period_end: date,
     filing_accession: str,
     items: dict[str, Optional[LineItem]],
+    industry: Industry = Industry.STANDARD,
     revenue_segments: Optional[list[RevenueSegment]] = None,
 ) -> FinancialPeriod:
-    income_kwargs: dict[str, Any] = {f: items.get(f) for f in INCOME_STATEMENT_FIELDS}
-    if revenue_segments is not None:
-        income_kwargs["revenue_segments"] = revenue_segments
-    balance_kwargs = {f: items.get(f) for f in BALANCE_SHEET_FIELDS}
-    cash_flow_kwargs = {f: items.get(f) for f in CASH_FLOW_FIELDS}
+    income_fields, balance_fields, cashflow_fields, *_ = _industry_fields(industry)
+    income_kwargs: dict[str, Any] = {f: items.get(f) for f in income_fields}
+    balance_kwargs: dict[str, Any] = {f: items.get(f) for f in balance_fields}
+    cash_flow_kwargs: dict[str, Any] = {f: items.get(f) for f in cashflow_fields}
+
+    if industry == Industry.BANK:
+        income_stmt = BankIncomeStatement(**income_kwargs)
+        balance_stmt = BankBalanceSheet(**balance_kwargs)
+        cash_flow_stmt = BankCashFlowStatement(**cash_flow_kwargs)
+    else:
+        if revenue_segments is not None:
+            income_kwargs["revenue_segments"] = revenue_segments
+        income_stmt = IncomeStatement(**income_kwargs)
+        balance_stmt = BalanceSheet(**balance_kwargs)
+        cash_flow_stmt = CashFlowStatement(**cash_flow_kwargs)
+
     return FinancialPeriod(
         fiscal_year=period_end.year,
         fiscal_period_end=period_end,
         filing_accession=filing_accession,
         filing_type=FilingType.FORM_10K,
-        income_statement=IncomeStatement(**income_kwargs),
-        balance_sheet=BalanceSheet(**balance_kwargs),
-        cash_flow_statement=CashFlowStatement(**cash_flow_kwargs),
+        industry=industry,
+        income_statement=income_stmt,
+        balance_sheet=balance_stmt,
+        cash_flow_statement=cash_flow_stmt,
     )
 
 
@@ -299,26 +433,27 @@ def _compose_company(
     period_ends: list[date],  # newest-first
     filing_accession: str,
     periods_items: dict[date, dict[str, Optional[LineItem]]],
+    industry: Industry = Industry.STANDARD,
     revenue_segments: Optional[list[RevenueSegment]] = None,
 ) -> Company:
-    """Build a Company from per-period field dicts.
+    """Build a Company from per-period field dicts, dispatching by industry.
 
     The latest period (period_ends[0]) is required: if any of its required
     fields are still None after Track A + Track B + derivation, raise
-    CompositionError. Older periods often have thinner XBRL coverage; if
-    any of their required fields are missing they're silently dropped from
-    `Company.periods`. The latest period is the demo's anchor; older
-    periods are nice-to-have historical context.
+    CompositionError. Older periods with thinner coverage are silently
+    dropped from `Company.periods` rather than failing the whole request.
 
-    `revenue_segments` is attached to the latest period's IncomeStatement
-    only — the segment-reporting note in Item 8 is for the most recent
-    fiscal year and we don't fetch prior 10-Ks to backfill segment history.
+    `revenue_segments` only applies to standard-industry filers (banks
+    don't report segment revenue in the same way) and is attached to the
+    latest period's IncomeStatement only.
     """
     if not period_ends:
         raise CompositionError(f"No fiscal periods to compose for {ticker}")
 
     latest = period_ends[0]
-    latest_missing = _missing_required_for_period(periods_items.get(latest, {}))
+    latest_missing = _missing_required_for_period(
+        periods_items.get(latest, {}), industry
+    )
     if latest_missing:
         raise CompositionError(
             f"Required fields still missing after Track A + Track B for {ticker}: {latest_missing}"
@@ -327,12 +462,22 @@ def _compose_company(
     fp_list: list[FinancialPeriod] = []
     for pe in period_ends:
         items = periods_items.get(pe, {})
-        if pe != latest and _missing_required_for_period(items):
+        if pe != latest and _missing_required_for_period(items, industry):
             # Older period with thin coverage — drop rather than fail.
             continue
-        segments_for_period = revenue_segments if pe == latest else None
+        segments_for_period = (
+            revenue_segments
+            if pe == latest and industry == Industry.STANDARD
+            else None
+        )
         fp_list.append(
-            _build_financial_period(pe, filing_accession, items, segments_for_period)
+            _build_financial_period(
+                pe,
+                filing_accession,
+                items,
+                industry=industry,
+                revenue_segments=segments_for_period,
+            )
         )
 
     return Company(
@@ -351,18 +496,17 @@ def _make_track_b(
     async def track_b(state: GraphState) -> GraphState:
         period_ends = state["period_ends"]
         periods_items = {pe: dict(items) for pe, items in state["periods_items"].items()}
+        industry = state.get("industry", Industry.STANDARD)
         latest = period_ends[0]
         latest_items = periods_items[latest]
 
         # Two distinct things we want from the latest 10-K's text section:
         #  (a) backfill any required/optional line items XBRL didn't tag
-        #  (b) extract revenue-by-segment from the segment reporting note
+        #  (b) extract revenue-by-segment (standard industry only — banks
+        #      don't report revenue segments in a comparable way)
         # Both share the same HTML fetch + section slice, and the same cached
-        # system prompt on the Anthropic side. We always run (b) — segment
-        # reporting tells us *something* even when (a) is a no-op (a single
-        # `segments: []` answer is itself meaningful: confirms the filer is
-        # single-segment).
-        missing = _missing_fields(latest_items)
+        # system prompt on the Anthropic side.
+        missing = _missing_fields(latest_items, industry)
         revenue_segments: list[RevenueSegment] = []
 
         try:
@@ -383,23 +527,25 @@ def _make_track_b(
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
 
-            revenue_segments = await extract_revenue_segments(
-                client=anthropic_client,
-                ticker=state["ticker"],
-                company_name=state["company_name"],
-                period_end=latest,
-                accession_number=state["filing_accession"],
-                filing_section_text=section_text,
-            )
+            if industry == Industry.STANDARD:
+                revenue_segments = await extract_revenue_segments(
+                    client=anthropic_client,
+                    ticker=state["ticker"],
+                    company_name=state["company_name"],
+                    period_end=latest,
+                    accession_number=state["filing_accession"],
+                    filing_section_text=section_text,
+                )
         except Exception as e:
             # Best-effort: log and let _compose_company decide if the
             # remaining gaps are tolerable (i.e. all-optional).
             print(f"Track B failed for {state['ticker']}: {e}", file=sys.stderr)
 
         # Derivation runs for every period — older years can also be missing
-        # operating_income or total_liabilities depending on the filer.
+        # operating_income / net_interest_income / total_liabilities depending
+        # on the filer.
         for pe in period_ends:
-            periods_items[pe] = _derive_missing_required(periods_items[pe])
+            periods_items[pe] = _derive_missing_required(periods_items[pe], industry)
 
         company = _compose_company(
             ticker=state["ticker"],
@@ -408,6 +554,7 @@ def _make_track_b(
             period_ends=period_ends,
             filing_accession=state["filing_accession"],
             periods_items=periods_items,
+            industry=industry,
             revenue_segments=revenue_segments,
         )
         return {"company": company}

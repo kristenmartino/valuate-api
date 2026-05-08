@@ -346,6 +346,126 @@ def test_compose_company_skips_older_periods_with_missing_required():
     assert company.periods[0].fiscal_year == 2025
 
 
+# --- industry classification + bank DDM --------------------------------------
+
+
+def test_classify_sic_routes_known_codes():
+    """SIC ranges from industry.py map to the right Industry enum."""
+    from industry import Industry, classify_sic
+
+    assert classify_sic("6021") == Industry.BANK  # National Commercial Banks
+    assert classify_sic(6099) == Industry.BANK  # Bank holding companies
+    assert classify_sic("6311") == Industry.INSURER  # Life Insurance
+    assert classify_sic("6798") == Industry.REIT
+    assert classify_sic("1311") == Industry.ENERGY
+    assert classify_sic("2911") == Industry.ENERGY  # Petroleum Refining
+    assert classify_sic("3674") == Industry.STANDARD  # Semiconductors
+    assert classify_sic(None) == Industry.STANDARD
+    assert classify_sic("not-a-code") == Industry.STANDARD
+
+
+def test_bank_ddm_fair_value_matches_gordon_formula():
+    """compute_bank_projection should match D₀(1+g)/(r−g) by hand-computation."""
+    from datetime import date as date_
+
+    from dcf import compute_bank_projection
+    from schemas import (
+        Assumptions,
+        BankBalanceSheet,
+        BankCashFlowStatement,
+        BankIncomeStatement,
+        Company,
+        FilingType,
+        FinancialPeriod,
+    )
+    from industry import Industry
+
+    # Build a synthetic bank period: 2.5B diluted shares, $15B annual dividends
+    # → $6.00 D0. With g=4% and r=10%, fair value = 6 * 1.04 / 0.06 = $104.00.
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date_(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.BANK,
+        income_statement=BankIncomeStatement(
+            net_interest_income=_line(95_000_000_000),
+            income_before_tax=_line(70_000_000_000),
+            income_tax_expense=_line(15_000_000_000),
+            net_income=_line(55_000_000_000),
+            diluted_shares_outstanding=_line(2_500_000_000),
+        ),
+        balance_sheet=BankBalanceSheet(
+            cash_and_equivalents=_line(400_000_000_000),
+            total_loans=_line(1_400_000_000_000),
+            total_deposits=_line(2_400_000_000_000),
+            total_assets=_line(4_200_000_000_000),
+            total_liabilities=_line(3_900_000_000_000),
+            shareholders_equity=_line(300_000_000_000),
+        ),
+        cash_flow_statement=BankCashFlowStatement(
+            cash_from_operations=_line(80_000_000_000),
+            dividends_paid=_line(15_000_000_000),
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test Bank",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+    assumptions = Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.18,  # ROE
+        terminal_growth=0.04,  # dividend growth
+        wacc=0.10,  # cost of equity
+        tax_rate=0.21,
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+    proj = compute_bank_projection(company, assumptions)
+    # 6.00 * 1.04 / 0.06 = 104.0
+    assert abs(proj.fair_value_per_share - 104.0) < 1e-6
+    # equity_value = 104.0 * 2.5B = $260B
+    assert abs(proj.equity_value - 260_000_000_000) < 1
+    assert proj.years == []  # DDM has no FCFF projection
+
+
+def test_bank_ddm_rejects_growth_above_required_return():
+    """Gordon constraint: r > g, else fair value is undefined.
+
+    The check fires before we even need a populated Company — it's a pure
+    invariant on the Assumptions object — so the assertion lives at the
+    front of compute_bank_projection.
+    """
+    import pytest as pt
+
+    from dcf import compute_bank_projection
+    from schemas import Assumptions, Company
+
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test",
+        fiscal_year_end_month=12,
+        periods=[],
+    )
+    bad = Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.0,
+        terminal_growth=0.10,  # g > r, violates Gordon
+        wacc=0.05,
+        tax_rate=0.21,
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+    with pt.raises(ValueError, match="Cost of equity"):
+        compute_bank_projection(company, bad)
+
+
 def test_default_assumptions_averages_across_periods():
     """Ratios should average over every available period; CAGR drives the
     initial revenue_growth slider when ≥2 periods exist."""

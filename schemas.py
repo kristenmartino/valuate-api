@@ -12,9 +12,11 @@ Design notes:
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from industry import Industry
 
 
 class FilingType(str, Enum):
@@ -62,8 +64,14 @@ class RevenueSegment(BaseModel):
 
 
 class IncomeStatement(BaseModel):
-    """Income statement line items needed for DCF modeling."""
+    """Industrial / tech income statement — the default shape.
 
+    `kind` is the discriminator that lets the response carry one of several
+    industry-specific income statement variants (banks have a totally
+    different shape — see BankIncomeStatement). Frontend dispatches on this.
+    """
+
+    kind: Literal["standard"] = "standard"
     revenue: LineItem
     cost_of_revenue: Optional[LineItem] = None
     gross_profit: Optional[LineItem] = None
@@ -83,9 +91,44 @@ class IncomeStatement(BaseModel):
     )
 
 
-class BalanceSheet(BaseModel):
-    """Balance sheet line items needed for DCF + equity bridge."""
+class BankIncomeStatement(BaseModel):
+    """Bank income statement.
 
+    Banks don't have COGS or operating margin in the traditional sense. The
+    primary economic story is interest spread (interest income − interest
+    expense, net of credit losses) plus fee-and-trading income. Operating
+    expense is "non-interest expense" — branch ops, comp, tech, regulatory.
+
+    Required fields here track what's needed for a bank DCF flavor (DDM
+    or residual income): pre-tax income, tax expense, net income, diluted
+    shares. Net interest income is the load-bearing top-line metric.
+    """
+
+    kind: Literal["bank"] = "bank"
+    interest_income: Optional[LineItem] = None
+    interest_expense: Optional[LineItem] = None
+    net_interest_income: LineItem
+    provision_for_credit_losses: Optional[LineItem] = None
+    non_interest_income: Optional[LineItem] = None
+    non_interest_expense: Optional[LineItem] = None
+    income_before_tax: LineItem
+    income_tax_expense: LineItem
+    net_income: LineItem
+    diluted_shares_outstanding: LineItem
+
+
+# Discriminated union: Pydantic v2 uses the `kind` field to decide which
+# variant to validate against. Frontend TS gets the same narrowing semantics.
+AnyIncomeStatement = Annotated[
+    Union[IncomeStatement, BankIncomeStatement],
+    Field(discriminator="kind"),
+]
+
+
+class BalanceSheet(BaseModel):
+    """Industrial / tech balance sheet — current/non-current breakdown."""
+
+    kind: Literal["standard"] = "standard"
     cash_and_equivalents: LineItem
     short_term_investments: Optional[LineItem] = None
     accounts_receivable: Optional[LineItem] = None
@@ -101,18 +144,77 @@ class BalanceSheet(BaseModel):
     shareholders_equity: LineItem
 
 
-class CashFlowStatement(BaseModel):
-    """Cash flow line items needed for DCF (FCF and capex)."""
+class BankBalanceSheet(BaseModel):
+    """Bank balance sheet — loans + deposits dominate, current/non-current split is meaningless.
 
+    Banks don't classify their balance sheet into current vs non-current the
+    way an industrial does. The economically interesting items are the loan
+    book (and its allowance) and the deposit base. Capital ratios — driven
+    by `shareholders_equity / total_assets` — drive regulatory headroom.
+    """
+
+    kind: Literal["bank"] = "bank"
+    cash_and_equivalents: LineItem
+    securities: Optional[LineItem] = None  # AFS + HTM securities portfolio
+    total_loans: LineItem  # net of allowance, typically
+    allowance_for_loan_losses: Optional[LineItem] = None
+    total_deposits: LineItem
+    long_term_debt: Optional[LineItem] = None
+    total_assets: LineItem
+    total_liabilities: LineItem
+    shareholders_equity: LineItem
+
+
+AnyBalanceSheet = Annotated[
+    Union[BalanceSheet, BankBalanceSheet],
+    Field(discriminator="kind"),
+]
+
+
+class CashFlowStatement(BaseModel):
+    """Industrial / tech cash flow — DCF needs D&A, CFO, capex."""
+
+    kind: Literal["standard"] = "standard"
     depreciation_amortization: LineItem  # add-back from CFO; canonical D&A figure
     cash_from_operations: LineItem
     capital_expenditures: LineItem  # positive number; sign handled downstream
     cash_from_investing: Optional[LineItem] = None
     cash_from_financing: Optional[LineItem] = None
+    dividends_paid: Optional[LineItem] = None  # positive; needed for DDM
+
+
+class BankCashFlowStatement(BaseModel):
+    """Bank cash flow — DCF doesn't apply, DDM does.
+
+    Banks don't have meaningful "free cash flow" the way industrials do —
+    capex is rounding error compared to loan-book changes, and the cash
+    flow statement is dominated by deposit/loan flows. What we actually
+    need for a bank DDM is `dividends_paid` — the rest of the cash flow
+    is informational only.
+    """
+
+    kind: Literal["bank"] = "bank"
+    cash_from_operations: LineItem
+    cash_from_investing: Optional[LineItem] = None
+    cash_from_financing: Optional[LineItem] = None
+    dividends_paid: Optional[LineItem] = None  # required for DDM in practice
+    depreciation_amortization: Optional[LineItem] = None
+    capital_expenditures: Optional[LineItem] = None
+
+
+AnyCashFlowStatement = Annotated[
+    Union[CashFlowStatement, BankCashFlowStatement],
+    Field(discriminator="kind"),
+]
 
 
 class FinancialPeriod(BaseModel):
-    """Bundled financial statements for one fiscal period."""
+    """Bundled financial statements for one fiscal period.
+
+    `industry` mirrors the `kind` discriminator on each statement and is
+    redundant with them — but it's much more convenient for the frontend
+    (one check at the period level) than four parallel checks per render.
+    """
 
     fiscal_year: int
     fiscal_period_end: date
@@ -120,9 +222,10 @@ class FinancialPeriod(BaseModel):
         ..., description="SEC accession number, e.g. '0000320193-24-000123'"
     )
     filing_type: FilingType
-    income_statement: IncomeStatement
-    balance_sheet: BalanceSheet
-    cash_flow_statement: CashFlowStatement
+    industry: Industry = Industry.STANDARD
+    income_statement: AnyIncomeStatement
+    balance_sheet: AnyBalanceSheet
+    cash_flow_statement: AnyCashFlowStatement
 
 
 class ExtractionFlag(BaseModel):

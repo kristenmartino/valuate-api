@@ -202,7 +202,13 @@ def latest_value_per_period(
 
 # Common us-gaap concept names you'll want for Track A extraction.
 # Companies are inconsistent — many fall back to one of the alternates.
-CANONICAL_CONCEPTS = {
+#
+# Per-industry concept maps live below. Use `concepts_for(industry)` to pick
+# the right one at extraction time. The keys in each map MUST match the
+# corresponding industry's schema field names exactly — graph.py uses them
+# verbatim when composing the FinancialPeriod.
+
+STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "revenue": ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"],
     "cost_of_revenue": ["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold"],
     "operating_income": ["OperatingIncomeLoss"],
@@ -221,6 +227,9 @@ CANONICAL_CONCEPTS = {
         "PaymentsToAcquireProductiveAssets",  # NVDA, HD
     ],
     "cash_from_operations": ["NetCashProvidedByUsedInOperatingActivities"],
+    "cash_from_investing": ["NetCashProvidedByUsedInInvestingActivities"],
+    "cash_from_financing": ["NetCashProvidedByUsedInFinancingActivities"],
+    "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
     "cash_and_equivalents": ["CashAndCashEquivalentsAtCarryingValue"],
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
     "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
@@ -231,3 +240,104 @@ CANONICAL_CONCEPTS = {
         "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
     ],
 }
+
+
+# Banks tag their P&L on a different conceptual axis: interest spread vs.
+# fee income, with provision-for-credit-losses replacing COGS. Balance sheet
+# is loans + deposits dominated. The fields here mirror BankIncomeStatement
+# / BankBalanceSheet / BankCashFlowStatement in schemas.py.
+BANK_CANONICAL_CONCEPTS: dict[str, list[str]] = {
+    # Income statement
+    "interest_income": [
+        "InterestAndDividendIncomeOperating",
+        "InterestIncomeOperating",
+    ],
+    "interest_expense": ["InterestExpense"],
+    "net_interest_income": [
+        "InterestIncomeExpenseNet",
+        "InterestIncomeExpenseAfterProvisionForLoanLoss",
+    ],
+    "provision_for_credit_losses": [
+        "ProvisionForLoanLeaseAndOtherLosses",
+        "ProvisionForLoanAndLeaseLosses",
+        "FinancingReceivableCreditLossExpenseReversal",  # CECL era
+    ],
+    "non_interest_income": [
+        "NoninterestIncome",
+        "RevenuesNetOfInterestExpense",
+    ],
+    "non_interest_expense": ["NoninterestExpense"],
+    "income_before_tax": [
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+    ],
+    "income_tax_expense": ["IncomeTaxExpenseBenefit"],
+    "net_income": ["NetIncomeLoss", "ProfitLoss"],
+    "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+    # Balance sheet
+    "cash_and_equivalents": [
+        "CashAndCashEquivalentsAtCarryingValue",
+        "Cash",
+        "CashAndDueFromBanks",
+    ],
+    "securities": [
+        "DebtSecuritiesAvailableForSaleExcludingAccruedInterest",
+        "AvailableForSaleSecuritiesDebtSecurities",
+        "AvailableForSaleSecurities",
+    ],
+    "total_loans": [
+        # Post-CECL (2020+) tag — used by JPM, BAC. After-allowance net loans.
+        "FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss",
+        # Pre-CECL legacy tags
+        "LoansAndLeasesReceivableNetReportedAmount",
+        "LoansAndLeasesReceivableNetOfDeferredIncome",
+    ],
+    "allowance_for_loan_losses": [
+        # Post-CECL primary tag
+        "FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest",
+        "FinancingReceivableAllowanceForCreditLossesExcludingAccruedInterest",
+        # Pre-CECL legacy tags
+        "AllowanceForLoanAndLeaseLosses",
+        "LoansAndLeasesReceivableAllowance",
+    ],
+    "total_deposits": ["Deposits"],
+    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "total_assets": ["Assets"],
+    "total_liabilities": ["Liabilities"],
+    "shareholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
+    # Cash flow
+    "cash_from_operations": ["NetCashProvidedByUsedInOperatingActivities"],
+    "cash_from_investing": ["NetCashProvidedByUsedInInvestingActivities"],
+    "cash_from_financing": ["NetCashProvidedByUsedInFinancingActivities"],
+    "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
+    "depreciation_amortization": [
+        "DepreciationDepletionAndAmortization",
+        "DepreciationAndAmortization",
+    ],
+    "capital_expenditures": ["PaymentsToAcquirePropertyPlantAndEquipment"],
+}
+
+
+# Backward-compat alias used by extract_track_a's older signature; new code
+# should reach for STANDARD_CANONICAL_CONCEPTS or call concepts_for(industry).
+CANONICAL_CONCEPTS = STANDARD_CANONICAL_CONCEPTS
+
+
+def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[name-defined]
+    """Return the right XBRL concept map for the given industry.
+
+    Defaults to the standard map for industries we don't yet have a variant
+    for (insurer, REIT, energy E&P → Phase 2-4); Track A will still find
+    common fields like net_income / total_assets, just won't find the
+    industry-specific ones until those phases land.
+    """
+    # Late import to avoid a circular dep (industry → schemas → edgar would
+    # be a cycle; industry is small enough to import here on demand).
+    from industry import Industry
+
+    if industry == Industry.BANK:
+        return BANK_CANONICAL_CONCEPTS
+    return STANDARD_CANONICAL_CONCEPTS

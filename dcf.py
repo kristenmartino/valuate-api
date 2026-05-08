@@ -17,6 +17,7 @@ import math
 import random
 from typing import Optional
 
+from industry import Industry
 from schemas import (
     Assumptions,
     Company,
@@ -31,12 +32,85 @@ PROJECTION_YEARS = 5
 DEFAULT_TAX_RATE = 0.21  # US federal corporate rate
 DEFAULT_WORKING_CAPITAL_RATIO = 0.05
 
+# Bank DDM defaults — used when historicals are too thin to derive.
+DEFAULT_BANK_COST_OF_EQUITY = 0.10
+DEFAULT_BANK_DIVIDEND_GROWTH = 0.04
+
 
 def _line_value(line) -> Optional[float]:
     """Pull a float from a LineItem, or None if absent."""
     if line is None:
         return None
     return float(line.value)
+
+
+def _industry(company: Company) -> Industry:
+    if not company.periods:
+        return Industry.STANDARD
+    return company.periods[0].industry
+
+
+def _default_bank_assumptions(periods: list) -> Assumptions:
+    """Bank DDM-flavored defaults.
+
+    For banks the existing Assumptions fields are repurposed:
+    - operating_margin → return on equity (ROE)
+    - terminal_growth → long-term dividend growth (g)
+    - wacc → cost of equity / required return (r)
+    The other ratios (capex, D&A, working capital) aren't used by DDM and
+    stay at zero. Tax rate is preserved for informational consistency.
+
+    The frontend dispatches on `period.industry` to relabel the sliders
+    accordingly (so users see "Cost of equity" instead of "WACC" etc.).
+    """
+    roes: list[float] = []
+    tax_rates: list[float] = []
+    div_per_share: list[float] = []  # newest-first
+
+    for p in periods:
+        is_, bs, cf = p.income_statement, p.balance_sheet, p.cash_flow_statement
+        ni = _line_value(is_.net_income)
+        eq = _line_value(bs.shareholders_equity)
+        if ni is not None and eq and eq > 0:
+            roes.append(ni / eq)
+
+        ibt = _line_value(is_.income_before_tax)
+        tax = _line_value(is_.income_tax_expense)
+        if ibt is not None and ibt > 0 and tax is not None:
+            tax_rates.append(max(0.0, min(0.5, tax / ibt)))
+
+        div_item = getattr(cf, "dividends_paid", None)
+        shares = _line_value(is_.diluted_shares_outstanding)
+        if div_item is not None and shares and shares > 0:
+            div_value = _line_value(div_item)
+            if div_value is not None:
+                div_per_share.append(div_value / shares)
+
+    # Dividend CAGR derived from history, but capped well below the default
+    # cost of equity so the Gordon constraint (r > g) holds out of the box.
+    # Recent post-COVID dividend hikes at major banks hit double digits — not
+    # sustainable as terminal growth.
+    div_growth = DEFAULT_BANK_DIVIDEND_GROWTH
+    if len(div_per_share) >= 2 and div_per_share[-1] > 0:
+        cagr = (
+            div_per_share[0] / div_per_share[-1]
+        ) ** (1 / (len(div_per_share) - 1)) - 1
+        max_g = DEFAULT_BANK_COST_OF_EQUITY - 0.02  # leave 200bps headroom
+        div_growth = max(-0.02, min(max_g, cagr))
+
+    def _avg(xs: list[float], fallback: float) -> float:
+        return sum(xs) / len(xs) if xs else fallback
+
+    return Assumptions(
+        revenue_growth=0.0,
+        operating_margin=_avg(roes, 0.12),
+        terminal_growth=div_growth,
+        wacc=DEFAULT_BANK_COST_OF_EQUITY,
+        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
 
 
 def default_assumptions(company: Company) -> Assumptions:
@@ -58,6 +132,9 @@ def default_assumptions(company: Company) -> Assumptions:
     periods = company.periods
     if not periods:
         raise ValueError("Company has no FinancialPeriod entries")
+
+    if _industry(company) == Industry.BANK:
+        return _default_bank_assumptions(periods)
 
     margins: list[float] = []
     capex_ratios: list[float] = []
@@ -124,12 +201,64 @@ def _diluted_shares(company: Company) -> float:
     return _line_value(company.periods[0].income_statement.diluted_shares_outstanding) or 0.0
 
 
-def compute_projection(company: Company, a: Assumptions) -> Projection:
-    """Build a 5-year FCFF projection and discount to a per-share fair value.
+def compute_bank_projection(company: Company, a: Assumptions) -> Projection:
+    """Gordon dividend-discount model for banks.
 
-    Raises ValueError if WACC <= terminal_growth (Gordon growth requires
-    WACC strictly greater than g for a finite, non-negative terminal value).
+    Uses the same Assumptions schema, with two fields repurposed:
+    - `wacc` is interpreted as the cost of equity / required return (r)
+    - `terminal_growth` is the long-term dividend growth rate (g)
+
+    Formula: P = D0 × (1 + g) / (r − g), where D0 is current dividends per
+    share. Equity value = fair_value_per_share × diluted_shares.
+
+    No 5-year FCFF projection makes sense here, so `years` is empty and the
+    response packs the DDM equity value into both `equity_value` and
+    `terminal_value`. Frontend detects industry=bank to render appropriately.
     """
+    if a.wacc <= a.terminal_growth:
+        raise ValueError(
+            f"Cost of equity ({a.wacc}) must exceed dividend growth ({a.terminal_growth})"
+        )
+
+    period = company.periods[0]
+    is_ = period.income_statement  # BankIncomeStatement
+    cf = period.cash_flow_statement  # BankCashFlowStatement
+
+    shares = _line_value(is_.diluted_shares_outstanding) or 0.0
+    if shares <= 0:
+        raise ValueError("Diluted shares must be positive")
+
+    div_paid = _line_value(getattr(cf, "dividends_paid", None)) or 0.0
+    div_per_share_now = div_paid / shares
+
+    next_year_div = div_per_share_now * (1 + a.terminal_growth)
+    fair_value_per_share = next_year_div / (a.wacc - a.terminal_growth)
+    equity_value = fair_value_per_share * shares
+
+    return Projection(
+        assumptions=a,
+        base_year=period.fiscal_year,
+        base_revenue=0.0,  # not applicable for banks
+        years=[],  # DDM doesn't project FCFF year by year
+        terminal_value=equity_value,
+        enterprise_value=equity_value,  # for banks, EV ≈ equity
+        net_debt=0.0,
+        equity_value=equity_value,
+        diluted_shares=shares,
+        fair_value_per_share=fair_value_per_share,
+    )
+
+
+def compute_projection(company: Company, a: Assumptions) -> Projection:
+    """Dispatch to industry-appropriate valuation.
+
+    Standard (industrial / tech): 5-year FCFF DCF (Gordon-growth terminal).
+    Bank: Dividend Discount Model.
+    Other industries fall through to the standard path for now (Phase 2-4).
+    """
+    if _industry(company) == Industry.BANK:
+        return compute_bank_projection(company, a)
+
     if a.wacc <= a.terminal_growth:
         raise ValueError(
             f"WACC ({a.wacc}) must exceed terminal_growth ({a.terminal_growth})"
