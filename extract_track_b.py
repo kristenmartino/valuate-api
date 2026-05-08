@@ -20,7 +20,7 @@ from typing import Any
 from anthropic import AsyncAnthropic
 
 from extraction_prompt import EXTRACTION_SYSTEM_PROMPT, build_extraction_messages
-from schemas import ExtractionSource, LineItem
+from schemas import ExtractionSource, LineItem, RevenueSegment
 
 
 MODEL = "claude-sonnet-4-6"
@@ -143,3 +143,98 @@ async def extract_track_b(
             continue
         result[field_name] = line_item
     return result
+
+
+async def extract_revenue_segments(
+    client: AsyncAnthropic,
+    ticker: str,
+    company_name: str,
+    period_end: date,
+    accession_number: str,
+    filing_section_text: str,
+) -> list[RevenueSegment]:
+    """Ask Claude for the most-recent FY revenue breakdown by segment.
+
+    Returns an empty list if the filer is single-segment / doesn't break out
+    revenue, or if extraction fails for any reason. The list contains
+    RevenueSegment objects whose `revenue` LineItem carries the same
+    provenance fields (source quote, confidence) as consolidated line items.
+
+    Reuses the cached EXTRACTION_SYSTEM_PROMPT for cost amortization across
+    the segment call and the main field-fill call on the same filing.
+    """
+    user_prompt = (
+        f"Company: {company_name} ({ticker})\n"
+        f"Filing: 10-K for fiscal year ended {period_end.isoformat()}\n"
+        f"Accession: {accession_number}\n\n"
+        "Locate the segment reporting note in the filing excerpt below "
+        '(typically titled "Segment Information", "Operating Segments", '
+        '"Disaggregation of Revenue", "Net Sales by Reportable Segment", '
+        "or similar). Return revenue broken out by segment for the most "
+        "recent fiscal year only.\n\n"
+        "Schema:\n"
+        "{\n"
+        '  "segments": [\n'
+        '    {"name": "<exact label as reported>", '
+        '"value": <number in actual USD>, '
+        '"source_quote": "<5-30 word verbatim quote>", '
+        '"confidence": <float 0-1>},\n'
+        "    ...\n"
+        "  ]\n"
+        "}\n\n"
+        'If the company does not report revenue by segment, return {"segments": []}.\n'
+        "Use the filer's segment names verbatim — do not regroup, rename, or "
+        "paraphrase. Return value in actual USD (multiply through if the "
+        "filing reports in millions or thousands).\n\n"
+        "FILING EXCERPT (financial statements section):\n"
+        "---\n"
+        f"{filing_section_text}\n"
+        "---\n\n"
+        "Return only the JSON object. No prose, no markdown."
+    )
+
+    response = await client.messages.create(
+        model=MODEL,
+        max_tokens=4096,
+        thinking={"type": "disabled"},
+        output_config={"effort": "low"},
+        system=[
+            {
+                "type": "text",
+                "text": EXTRACTION_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_prompt}],
+    )
+
+    text = next((b.text for b in response.content if b.type == "text"), "")
+    data = _parse_response_text(text)
+    raw = data.get("segments", [])
+    if not isinstance(raw, list):
+        return []
+
+    segments: list[RevenueSegment] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        value = entry.get("value")
+        if not isinstance(name, str) or not name.strip() or value is None:
+            continue
+        try:
+            confidence = float(entry.get("confidence", 0.8))
+        except (TypeError, ValueError):
+            confidence = 0.8
+        confidence = max(0.0, min(1.0, confidence))
+        try:
+            line = LineItem(
+                value=Decimal(str(value)),
+                source=ExtractionSource.LLM_HTML,
+                confidence=confidence,
+                source_quote=entry.get("source_quote"),
+            )
+        except (ValueError, TypeError):
+            continue
+        segments.append(RevenueSegment(name=name.strip(), revenue=line))
+    return segments

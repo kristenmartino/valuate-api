@@ -27,7 +27,7 @@ from langgraph.graph import END, StateGraph
 
 from edgar import EdgarClient, latest_value_per_period
 from extract_track_a import extract_track_a
-from extract_track_b import extract_track_b
+from extract_track_b import extract_revenue_segments, extract_track_b
 from schemas import (
     BalanceSheet,
     CashFlowStatement,
@@ -38,6 +38,7 @@ from schemas import (
     FinancialPeriod,
     IncomeStatement,
     LineItem,
+    RevenueSegment,
 )
 from section_extractor import extract_financial_statements_section
 
@@ -273,8 +274,11 @@ def _build_financial_period(
     period_end: date,
     filing_accession: str,
     items: dict[str, Optional[LineItem]],
+    revenue_segments: Optional[list[RevenueSegment]] = None,
 ) -> FinancialPeriod:
-    income_kwargs = {f: items.get(f) for f in INCOME_STATEMENT_FIELDS}
+    income_kwargs: dict[str, Any] = {f: items.get(f) for f in INCOME_STATEMENT_FIELDS}
+    if revenue_segments is not None:
+        income_kwargs["revenue_segments"] = revenue_segments
     balance_kwargs = {f: items.get(f) for f in BALANCE_SHEET_FIELDS}
     cash_flow_kwargs = {f: items.get(f) for f in CASH_FLOW_FIELDS}
     return FinancialPeriod(
@@ -295,6 +299,7 @@ def _compose_company(
     period_ends: list[date],  # newest-first
     filing_accession: str,
     periods_items: dict[date, dict[str, Optional[LineItem]]],
+    revenue_segments: Optional[list[RevenueSegment]] = None,
 ) -> Company:
     """Build a Company from per-period field dicts.
 
@@ -304,6 +309,10 @@ def _compose_company(
     any of their required fields are missing they're silently dropped from
     `Company.periods`. The latest period is the demo's anchor; older
     periods are nice-to-have historical context.
+
+    `revenue_segments` is attached to the latest period's IncomeStatement
+    only — the segment-reporting note in Item 8 is for the most recent
+    fiscal year and we don't fetch prior 10-Ks to backfill segment history.
     """
     if not period_ends:
         raise CompositionError(f"No fiscal periods to compose for {ticker}")
@@ -321,7 +330,10 @@ def _compose_company(
         if pe != latest and _missing_required_for_period(items):
             # Older period with thin coverage — drop rather than fail.
             continue
-        fp_list.append(_build_financial_period(pe, filing_accession, items))
+        segments_for_period = revenue_segments if pe == latest else None
+        fp_list.append(
+            _build_financial_period(pe, filing_accession, items, segments_for_period)
+        )
 
     return Company(
         ticker=ticker.upper(),
@@ -340,16 +352,24 @@ def _make_track_b(
         period_ends = state["period_ends"]
         periods_items = {pe: dict(items) for pe, items in state["periods_items"].items()}
         latest = period_ends[0]
-
-        # Track B (Claude) runs only for the latest period — it's the demo
-        # anchor and the most expensive call. Older periods stand on
-        # whatever Track A + derivation produced.
         latest_items = periods_items[latest]
+
+        # Two distinct things we want from the latest 10-K's text section:
+        #  (a) backfill any required/optional line items XBRL didn't tag
+        #  (b) extract revenue-by-segment from the segment reporting note
+        # Both share the same HTML fetch + section slice, and the same cached
+        # system prompt on the Anthropic side. We always run (b) — segment
+        # reporting tells us *something* even when (a) is a no-op (a single
+        # `segments: []` answer is itself meaningful: confirms the filer is
+        # single-segment).
         missing = _missing_fields(latest_items)
-        if missing:
-            try:
-                html = await edgar_client.get_filing_html(state["filing_url"])
-                section_text = extract_financial_statements_section(html)
+        revenue_segments: list[RevenueSegment] = []
+
+        try:
+            html = await edgar_client.get_filing_html(state["filing_url"])
+            section_text = extract_financial_statements_section(html)
+
+            if missing:
                 claude_items = await extract_track_b(
                     client=anthropic_client,
                     ticker=state["ticker"],
@@ -362,10 +382,19 @@ def _make_track_b(
                 for field, line_item in claude_items.items():
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
-            except Exception as e:
-                # Best-effort: log and let _compose_company decide if the
-                # remaining gaps are tolerable (i.e. all-optional).
-                print(f"Track B failed for {state['ticker']}: {e}", file=sys.stderr)
+
+            revenue_segments = await extract_revenue_segments(
+                client=anthropic_client,
+                ticker=state["ticker"],
+                company_name=state["company_name"],
+                period_end=latest,
+                accession_number=state["filing_accession"],
+                filing_section_text=section_text,
+            )
+        except Exception as e:
+            # Best-effort: log and let _compose_company decide if the
+            # remaining gaps are tolerable (i.e. all-optional).
+            print(f"Track B failed for {state['ticker']}: {e}", file=sys.stderr)
 
         # Derivation runs for every period — older years can also be missing
         # operating_income or total_liabilities depending on the filer.
@@ -379,6 +408,7 @@ def _make_track_b(
             period_ends=period_ends,
             filing_accession=state["filing_accession"],
             periods_items=periods_items,
+            revenue_segments=revenue_segments,
         )
         return {"company": company}
 

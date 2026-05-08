@@ -49,6 +49,18 @@ class LineItem(BaseModel):
     )
 
 
+class RevenueSegment(BaseModel):
+    """One row of a filer's segment-revenue breakdown.
+
+    `name` mirrors the filer's exact label ("iPhone", "Services", "Data
+    Center", etc.); `revenue` is a full LineItem so segment values carry
+    the same provenance machinery as consolidated line items.
+    """
+
+    name: str = Field(..., description="Segment / product / geography name as reported")
+    revenue: LineItem
+
+
 class IncomeStatement(BaseModel):
     """Income statement line items needed for DCF modeling."""
 
@@ -64,6 +76,11 @@ class IncomeStatement(BaseModel):
     income_tax_expense: Optional[LineItem] = None
     net_income: LineItem
     diluted_shares_outstanding: LineItem
+    revenue_segments: Optional[list[RevenueSegment]] = Field(
+        default=None,
+        description="Revenue broken out by segment if the filer reports it. "
+        "None means we didn't extract; [] means we asked and the filer is single-segment.",
+    )
 
 
 class BalanceSheet(BaseModel):
