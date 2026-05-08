@@ -246,3 +246,161 @@ def test_derive_doesnt_overwrite_existing_values():
     result = _derive_missing_required(items)
     assert result["operating_income"] is existing
     assert result["operating_income"].value == Decimal("50000000000")
+
+
+# --- multi-year extraction ---------------------------------------------------
+
+
+def test_recent_period_ends_returns_latest_n_descending():
+    """_recent_period_ends finds the N newest FY ends across high-coverage tags."""
+    from graph import _recent_period_ends
+
+    # Mix concepts so the helper has to union; oldest entry should drop at n=3.
+    facts = {
+        "facts": {
+            "us-gaap": {
+                "NetIncomeLoss": {
+                    "units": {
+                        "USD": [
+                            _entry("2022-12-31", 100),
+                            _entry("2023-12-31", 110),
+                            _entry("2024-12-31", 120),
+                            _entry("2025-12-31", 130),
+                        ]
+                    }
+                },
+                "Assets": {
+                    "units": {
+                        "USD": [
+                            _entry("2024-12-31", 1000),
+                            _entry("2025-12-31", 1100),
+                        ]
+                    }
+                },
+            }
+        }
+    }
+    out = _recent_period_ends(facts, latest_end=date(2025, 12, 31), n=3)
+    assert out == [date(2025, 12, 31), date(2024, 12, 31), date(2023, 12, 31)]
+
+
+def test_recent_period_ends_clips_to_latest_anchor():
+    """Future-dated entries (rare but possible from forward-looking forecasts
+    occasionally tagged) shouldn't show up — anchor is the 10-K's reported end."""
+    from graph import _recent_period_ends
+
+    facts = {
+        "facts": {
+            "us-gaap": {
+                "NetIncomeLoss": {
+                    "units": {
+                        "USD": [
+                            _entry("2024-12-31", 100),
+                            _entry("2025-12-31", 110),
+                            _entry("2026-12-31", 120),  # ahead of the anchor
+                        ]
+                    }
+                }
+            }
+        }
+    }
+    out = _recent_period_ends(facts, latest_end=date(2025, 12, 31), n=3)
+    assert date(2026, 12, 31) not in out
+    assert out[0] == date(2025, 12, 31)
+
+
+def test_compose_company_skips_older_periods_with_missing_required():
+    """Older periods that don't have all required fields are dropped; the
+    latest period must be complete or composition raises."""
+    from graph import _compose_company
+
+    full_items = {
+        "revenue": _line(100_000_000_000),
+        "operating_income": _line(20_000_000_000),
+        "net_income": _line(15_000_000_000),
+        "diluted_shares_outstanding": _line(1_000_000_000),
+        "cash_and_equivalents": _line(10_000_000_000),
+        "total_assets": _line(200_000_000_000),
+        "total_liabilities": _line(80_000_000_000),
+        "shareholders_equity": _line(120_000_000_000),
+        "depreciation_amortization": _line(3_000_000_000),
+        "cash_from_operations": _line(25_000_000_000),
+        "capital_expenditures": _line(4_000_000_000),
+    }
+    sparse = dict(full_items)
+    sparse["operating_income"] = None  # older period missing one required field
+
+    company = _compose_company(
+        ticker="TEST",
+        cik="0000000001",
+        company_name="Test Co",
+        period_ends=[date(2025, 12, 31), date(2024, 12, 31)],
+        filing_accession="0000000-25-000001",
+        periods_items={
+            date(2025, 12, 31): full_items,
+            date(2024, 12, 31): sparse,
+        },
+    )
+    # Latest is complete; older is dropped silently.
+    assert len(company.periods) == 1
+    assert company.periods[0].fiscal_year == 2025
+
+
+def test_default_assumptions_averages_across_periods():
+    """Ratios should average over every available period; CAGR drives the
+    initial revenue_growth slider when ≥2 periods exist."""
+    from datetime import date as date_
+
+    from dcf import default_assumptions
+    from schemas import (
+        BalanceSheet,
+        CashFlowStatement,
+        Company,
+        FilingType,
+        FinancialPeriod,
+        IncomeStatement,
+    )
+
+    def _fp(year: int, revenue: int, op: int) -> FinancialPeriod:
+        return FinancialPeriod(
+            fiscal_year=year,
+            fiscal_period_end=date_(year, 12, 31),
+            filing_accession="0000000-25-000001",
+            filing_type=FilingType.FORM_10K,
+            income_statement=IncomeStatement(
+                revenue=_line(revenue),
+                operating_income=_line(op),
+                net_income=_line(op // 2),
+                diluted_shares_outstanding=_line(1_000_000_000),
+            ),
+            balance_sheet=BalanceSheet(
+                cash_and_equivalents=_line(10_000_000_000),
+                total_assets=_line(revenue * 2),
+                total_liabilities=_line(revenue),
+                shareholders_equity=_line(revenue),
+            ),
+            cash_flow_statement=CashFlowStatement(
+                depreciation_amortization=_line(revenue // 30),
+                cash_from_operations=_line(op),
+                capital_expenditures=_line(revenue // 25),
+            ),
+        )
+
+    # 3-year history: revenue 100 → 110 → 121 (10% YoY); op_income 20/22/24.2
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test Co",
+        fiscal_year_end_month=12,
+        periods=[
+            _fp(2025, 121_000_000_000, 24_200_000_000),
+            _fp(2024, 110_000_000_000, 22_000_000_000),
+            _fp(2023, 100_000_000_000, 20_000_000_000),
+        ],
+    )
+
+    a = default_assumptions(company)
+    # Op margins all 20%; average is 20%.
+    assert abs(a.operating_margin - 0.20) < 1e-9
+    # CAGR from 100 → 121 over 2 steps = 10%.
+    assert abs(a.revenue_growth - 0.10) < 1e-9

@@ -25,7 +25,7 @@ from typing import Any, Awaitable, Callable, Optional, TypedDict
 from anthropic import AsyncAnthropic
 from langgraph.graph import END, StateGraph
 
-from edgar import EdgarClient
+from edgar import EdgarClient, latest_value_per_period
 from extract_track_a import extract_track_a
 from extract_track_b import extract_track_b
 from schemas import (
@@ -44,6 +44,12 @@ from section_extractor import extract_financial_statements_section
 
 CONFIDENCE_FLAG_THRESHOLD = 0.80
 BALANCE_SHEET_TOLERANCE = Decimal("0.005")  # 50bps of total assets
+
+# How many fiscal years of history to extract per Company. The latest year is
+# always included; we fill backwards from there. XBRL company-facts already
+# carries every year the filer has tagged, so the only cost of N>1 is more
+# in-process LineItem objects — no extra HTTP fetches.
+N_HISTORICAL_PERIODS = 3
 
 
 # Schema field names per statement. Used both to know what to ask Track B
@@ -105,11 +111,12 @@ class GraphState(TypedDict, total=False):
     ticker: str
     cik: str
     company_name: str
-    period_end: date
+    period_end: date  # latest filing's period_of_report; alias for period_ends[0]
     filing_accession: str
     filing_url: str
     facts: dict[str, Any]
-    items: dict[str, Optional[LineItem]]
+    period_ends: list[date]  # most recent first; populated by track_a
+    periods_items: dict[date, dict[str, Optional[LineItem]]]  # by track_a/b
     company: Company
 
 
@@ -134,12 +141,58 @@ def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphS
     return ingest
 
 
+def _recent_period_ends(
+    facts: dict[str, Any],
+    latest_end: date,
+    n: int = N_HISTORICAL_PERIODS,
+) -> list[date]:
+    """Find up to N most-recent FY period-end dates present in XBRL.
+
+    Walks a small set of high-coverage concepts (net income, total assets,
+    revenue under both common tags) and unions their period-ends. The latest
+    10-K's period_of_report is always considered — even if XBRL hasn't picked
+    up that exact end yet, the caller should still include it as the anchor.
+    Returns dates sorted newest-first, capped at `n`.
+    """
+    candidate_concepts = (
+        "NetIncomeLoss",
+        "Assets",
+        "Revenues",
+        "RevenueFromContractWithCustomerExcludingAssessedTax",
+    )
+    ends_iso: set[str] = set()
+    for concept in candidate_concepts:
+        ends_iso.update(latest_value_per_period(facts, concept).keys())
+    ends_iso.add(latest_end.isoformat())
+    parsed = sorted(
+        (date.fromisoformat(e) for e in ends_iso if e <= latest_end.isoformat()),
+        reverse=True,
+    )
+    return parsed[:n]
+
+
 async def track_a(state: GraphState) -> GraphState:
-    items = extract_track_a(state["period_end"], state["facts"])
-    # Pad with the schema-only fields Track A doesn't even attempt.
-    for field in _ALL_FIELDS:
-        items.setdefault(field, None)
-    return {"items": items}
+    """Extract the N most-recent fiscal years from XBRL into a per-period dict.
+
+    Older periods often have less coverage than the latest (a filer may not
+    have tagged some concepts in earlier years). Composition tolerates this
+    by skipping older periods that miss required fields, while raising on
+    the latest period.
+    """
+    facts = state["facts"]
+    latest = state["period_end"]
+    period_ends = _recent_period_ends(facts, latest)
+    if not period_ends:
+        period_ends = [latest]
+
+    periods_items: dict[date, dict[str, Optional[LineItem]]] = {}
+    for pe in period_ends:
+        items = extract_track_a(pe, facts)
+        for field in _ALL_FIELDS:
+            items.setdefault(field, None)
+        periods_items[pe] = items
+
+    return {"period_ends": period_ends, "periods_items": periods_items}
 
 
 def _missing_fields(items: dict[str, Optional[LineItem]]) -> list[str]:
@@ -199,38 +252,32 @@ def _derive_missing_required(
     return items
 
 
-def _compose_company(
-    ticker: str,
-    cik: str,
-    company_name: str,
+def _missing_required_for_period(
+    items: dict[str, Optional[LineItem]],
+) -> list[str]:
+    """Field paths that are still None in `items` and required by the schema."""
+    missing: list[str] = []
+    for f in REQUIRED_INCOME:
+        if items.get(f) is None:
+            missing.append(f"income_statement.{f}")
+    for f in REQUIRED_BALANCE:
+        if items.get(f) is None:
+            missing.append(f"balance_sheet.{f}")
+    for f in REQUIRED_CASH_FLOW:
+        if items.get(f) is None:
+            missing.append(f"cash_flow_statement.{f}")
+    return missing
+
+
+def _build_financial_period(
     period_end: date,
     filing_accession: str,
     items: dict[str, Optional[LineItem]],
-) -> Company:
-    """Build a Company from the merged items dict.
-
-    Raises CompositionError listing every required field that is still None.
-    """
+) -> FinancialPeriod:
     income_kwargs = {f: items.get(f) for f in INCOME_STATEMENT_FIELDS}
     balance_kwargs = {f: items.get(f) for f in BALANCE_SHEET_FIELDS}
     cash_flow_kwargs = {f: items.get(f) for f in CASH_FLOW_FIELDS}
-
-    missing: list[str] = []
-    for f in REQUIRED_INCOME:
-        if income_kwargs.get(f) is None:
-            missing.append(f"income_statement.{f}")
-    for f in REQUIRED_BALANCE:
-        if balance_kwargs.get(f) is None:
-            missing.append(f"balance_sheet.{f}")
-    for f in REQUIRED_CASH_FLOW:
-        if cash_flow_kwargs.get(f) is None:
-            missing.append(f"cash_flow_statement.{f}")
-    if missing:
-        raise CompositionError(
-            f"Required fields still missing after Track A + Track B for {ticker}: {missing}"
-        )
-
-    period = FinancialPeriod(
+    return FinancialPeriod(
         fiscal_year=period_end.year,
         fiscal_period_end=period_end,
         filing_accession=filing_accession,
@@ -239,12 +286,49 @@ def _compose_company(
         balance_sheet=BalanceSheet(**balance_kwargs),
         cash_flow_statement=CashFlowStatement(**cash_flow_kwargs),
     )
+
+
+def _compose_company(
+    ticker: str,
+    cik: str,
+    company_name: str,
+    period_ends: list[date],  # newest-first
+    filing_accession: str,
+    periods_items: dict[date, dict[str, Optional[LineItem]]],
+) -> Company:
+    """Build a Company from per-period field dicts.
+
+    The latest period (period_ends[0]) is required: if any of its required
+    fields are still None after Track A + Track B + derivation, raise
+    CompositionError. Older periods often have thinner XBRL coverage; if
+    any of their required fields are missing they're silently dropped from
+    `Company.periods`. The latest period is the demo's anchor; older
+    periods are nice-to-have historical context.
+    """
+    if not period_ends:
+        raise CompositionError(f"No fiscal periods to compose for {ticker}")
+
+    latest = period_ends[0]
+    latest_missing = _missing_required_for_period(periods_items.get(latest, {}))
+    if latest_missing:
+        raise CompositionError(
+            f"Required fields still missing after Track A + Track B for {ticker}: {latest_missing}"
+        )
+
+    fp_list: list[FinancialPeriod] = []
+    for pe in period_ends:
+        items = periods_items.get(pe, {})
+        if pe != latest and _missing_required_for_period(items):
+            # Older period with thin coverage — drop rather than fail.
+            continue
+        fp_list.append(_build_financial_period(pe, filing_accession, items))
+
     return Company(
         ticker=ticker.upper(),
         cik=cik,
         name=company_name,
-        fiscal_year_end_month=period_end.month,
-        periods=[period],
+        fiscal_year_end_month=latest.month,
+        periods=fp_list,
     )
 
 
@@ -253,8 +337,15 @@ def _make_track_b(
     anthropic_client: AsyncAnthropic,
 ) -> Callable[[GraphState], Awaitable[GraphState]]:
     async def track_b(state: GraphState) -> GraphState:
-        items = dict(state["items"])  # shallow copy; we'll mutate locally
-        missing = _missing_fields(items)
+        period_ends = state["period_ends"]
+        periods_items = {pe: dict(items) for pe, items in state["periods_items"].items()}
+        latest = period_ends[0]
+
+        # Track B (Claude) runs only for the latest period — it's the demo
+        # anchor and the most expensive call. Older periods stand on
+        # whatever Track A + derivation produced.
+        latest_items = periods_items[latest]
+        missing = _missing_fields(latest_items)
         if missing:
             try:
                 html = await edgar_client.get_filing_html(state["filing_url"])
@@ -263,31 +354,31 @@ def _make_track_b(
                     client=anthropic_client,
                     ticker=state["ticker"],
                     company_name=state["company_name"],
-                    period_end=state["period_end"],
+                    period_end=latest,
                     accession_number=state["filing_accession"],
                     filing_section_text=section_text,
                     fields_to_extract=missing,
                 )
                 for field, line_item in claude_items.items():
-                    if items.get(field) is None and line_item is not None:
-                        items[field] = line_item
+                    if latest_items.get(field) is None and line_item is not None:
+                        latest_items[field] = line_item
             except Exception as e:
                 # Best-effort: log and let _compose_company decide if the
                 # remaining gaps are tolerable (i.e. all-optional).
                 print(f"Track B failed for {state['ticker']}: {e}", file=sys.stderr)
 
-        # Final pass: derive what we still can from accounting identities
-        # before composition. Handles filers that don't tag op income or
-        # total liabilities at all (JNJ, NKE, KO).
-        items = _derive_missing_required(items)
+        # Derivation runs for every period — older years can also be missing
+        # operating_income or total_liabilities depending on the filer.
+        for pe in period_ends:
+            periods_items[pe] = _derive_missing_required(periods_items[pe])
 
         company = _compose_company(
             ticker=state["ticker"],
             cik=state["cik"],
             company_name=state["company_name"],
-            period_end=state["period_end"],
+            period_ends=period_ends,
             filing_accession=state["filing_accession"],
-            items=items,
+            periods_items=periods_items,
         )
         return {"company": company}
 

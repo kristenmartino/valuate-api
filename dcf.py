@@ -40,33 +40,74 @@ def _line_value(line) -> Optional[float]:
 
 
 def default_assumptions(company: Company) -> Assumptions:
-    """Derive a starting-point Assumptions object from the latest filing.
+    """Derive a starting-point Assumptions object from historical actuals.
 
-    Historical ratios (operating_margin, capex/D&A ratios, tax rate) come
-    from the actuals. Forward-looking inputs (revenue_growth, terminal
-    growth, WACC) get neutral defaults that the user is expected to tune.
+    Ratios (operating_margin, capex/D&A ratios, tax rate) average over every
+    available historical FinancialPeriod with equal weights. Multi-year averages
+    are more stable than a single-year snapshot — Apple's FY2025 op margin was
+    ~32% but FY2023's was ~30%; a 3-year average is closer to the right point
+    for a forward projection. Falls back gracefully when only one period exists.
+
+    Also estimates a starting `revenue_growth` from observed year-over-year
+    growth (geometric mean / CAGR) when at least two periods are available, so
+    the user opens the workspace with a slider position derived from history
+    rather than a hardcoded 5%.
+
+    Forward-looking-only inputs (terminal_growth, WACC) keep neutral defaults.
     """
-    period = company.periods[0]
-    revenue = _line_value(period.income_statement.revenue) or 1.0
-    op_income = _line_value(period.income_statement.operating_income) or 0.0
-    da = _line_value(period.cash_flow_statement.depreciation_amortization) or 0.0
-    capex = _line_value(period.cash_flow_statement.capital_expenditures) or 0.0
-    ibt = _line_value(period.income_statement.income_before_tax)
-    tax = _line_value(period.income_statement.income_tax_expense)
+    periods = company.periods
+    if not periods:
+        raise ValueError("Company has no FinancialPeriod entries")
 
-    if ibt and ibt > 0 and tax is not None:
-        tax_rate = max(0.0, min(0.5, tax / ibt))
-    else:
-        tax_rate = DEFAULT_TAX_RATE
+    margins: list[float] = []
+    capex_ratios: list[float] = []
+    da_ratios: list[float] = []
+    tax_rates: list[float] = []
+    revenues: list[float] = []  # newest-first, for the CAGR estimate
+
+    for period in periods:
+        rev = _line_value(period.income_statement.revenue) or 0.0
+        if rev <= 0:
+            continue
+        revenues.append(rev)
+
+        op = _line_value(period.income_statement.operating_income)
+        if op is not None:
+            margins.append(op / rev)
+
+        da = _line_value(period.cash_flow_statement.depreciation_amortization)
+        if da is not None:
+            da_ratios.append(da / rev)
+
+        capex = _line_value(period.cash_flow_statement.capital_expenditures)
+        if capex is not None:
+            capex_ratios.append(capex / rev)
+
+        ibt = _line_value(period.income_statement.income_before_tax)
+        tax = _line_value(period.income_statement.income_tax_expense)
+        if ibt and ibt > 0 and tax is not None:
+            tax_rates.append(max(0.0, min(0.5, tax / ibt)))
+
+    def _avg(xs: list[float], fallback: float) -> float:
+        return sum(xs) / len(xs) if xs else fallback
+
+    # Geometric mean (CAGR) of YoY growth across the window. revenues is
+    # newest-first, so revenues[0] is the latest year and revenues[-1] is the
+    # oldest. Cap the result so a one-off 50% spike doesn't lock the
+    # projection into runaway growth on first render.
+    revenue_growth = 0.05
+    if len(revenues) >= 2 and revenues[-1] > 0:
+        cagr = (revenues[0] / revenues[-1]) ** (1 / (len(revenues) - 1)) - 1
+        revenue_growth = max(-0.10, min(0.25, cagr))
 
     return Assumptions(
-        revenue_growth=0.05,
-        operating_margin=op_income / revenue if revenue > 0 else 0.20,
+        revenue_growth=revenue_growth,
+        operating_margin=_avg(margins, 0.20),
         terminal_growth=0.025,
         wacc=0.08,
-        tax_rate=tax_rate,
-        capex_ratio=capex / revenue if revenue > 0 else 0.04,
-        da_ratio=da / revenue if revenue > 0 else 0.04,
+        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        capex_ratio=_avg(capex_ratios, 0.04),
+        da_ratio=_avg(da_ratios, 0.04),
         working_capital_ratio=DEFAULT_WORKING_CAPITAL_RATIO,
     )
 
