@@ -220,3 +220,42 @@ class SensitivityGrid(BaseModel):
     values: list[list[Optional[float]]] = Field(
         ..., description="values[i][j] = fair value at (rev_growth[i], op_margin[j])"
     )
+
+
+# --- Trading-comps cross-check ----------------------------------------------
+
+
+class PeerMultiples(BaseModel):
+    """One row in a trading-comps table — a peer's current market multiples."""
+
+    ticker: str
+    name: str
+    market_cap: Optional[float] = None
+    enterprise_value: Optional[float] = None
+    revenue: Optional[float] = None  # LTM
+    ebitda: Optional[float] = None  # LTM
+    pe_ratio: Optional[float] = None  # trailing P/E
+    ev_revenue: Optional[float] = None
+    ev_ebitda: Optional[float] = None
+
+
+class CompsResponse(BaseModel):
+    """Output of the /comps/{ticker} endpoint.
+
+    `target_market` is the target ticker's own current market multiples (so
+    the user can see the spread vs DCF fair value). `peers` are the
+    hand-picked comparables. Median multiples are computed across `peers`,
+    excluding nulls and non-positive denominators.
+
+    `dcf_implied_ev_revenue` and `dcf_implied_ev_ebitda` aren't computed
+    here — the frontend has the latest DCF result already and computes
+    them client-side from `valuation.projection.enterprise_value` /
+    company.periods[0].income_statement.revenue.
+    """
+
+    target_ticker: str
+    target_market: Optional[PeerMultiples] = None
+    peers: list[PeerMultiples] = Field(default_factory=list)
+    median_pe: Optional[float] = None
+    median_ev_revenue: Optional[float] = None
+    median_ev_ebitda: Optional[float] = None

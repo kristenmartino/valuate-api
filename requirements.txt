@@ -6,6 +6,10 @@ langgraph>=0.2,<1.0
 anthropic>=0.50
 beautifulsoup4>=4.12
 lxml>=5.0
+# Peer market data (market cap, EV, EBITDA, P/E) for the trading-comps
+# cross-check. Unofficial Yahoo Finance scraping; acceptable for the
+# 10-ticker demo universe. Falls back gracefully when the source 503s.
+yfinance>=0.2.40
 
 # Test-only; kept here so a fresh clone gets to a runnable `pytest tests/` in
 # one step. Tiny footprint, fine to include in production install.

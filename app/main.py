@@ -21,6 +21,7 @@ from anthropic import AsyncAnthropic
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from comps import get_peer_comps
 from dcf import (
     compute_projection,
     default_assumptions,
@@ -33,6 +34,7 @@ from overrides import apply_override
 from schemas import (
     Assumptions,
     Company,
+    CompsResponse,
     MonteCarloResult,
     Projection,
     SensitivityGrid,
@@ -205,3 +207,15 @@ async def value(ticker: str, req: ValuationRequest) -> ValuationResponse:
         monte_carlo=mc_result,
         sensitivity=sens_result,
     )
+
+
+@app.get("/comps/{ticker}", response_model=CompsResponse)
+async def comps(ticker: str) -> CompsResponse:
+    """Return peer trading multiples for the workspace's cross-check panel.
+
+    Independent of the /extract cache — peer market data lives outside our
+    extraction pipeline and can be fetched any time. Falls back gracefully
+    to an empty peers list if Yahoo Finance is unreachable rather than
+    failing the request.
+    """
+    return await get_peer_comps(ticker.upper())
