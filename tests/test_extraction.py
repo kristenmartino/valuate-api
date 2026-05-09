@@ -662,6 +662,90 @@ def test_reit_ffo_multiple_matches_formula():
     assert proj.years == []  # no FCFF projection in the FFO model
 
 
+def test_energy_projection_has_zero_terminal_value():
+    """compute_energy_projection: 10-year FCFF horizon with NO terminal value
+    (reserves deplete; Gordon-growth-to-infinity is conceptually wrong for E&P).
+
+    With flat assumptions and a unit-test FCFF that's identical each year, the
+    enterprise value should equal the discounted sum of the 10 FCFFs and the
+    terminal_value field should be exactly zero — not just small.
+    """
+    from datetime import date as date_
+
+    from dcf import ENERGY_PROJECTION_YEARS, compute_energy_projection
+    from schemas import (
+        Assumptions,
+        BalanceSheet,
+        CashFlowStatement,
+        Company,
+        FilingType,
+        FinancialPeriod,
+        IncomeStatement,
+    )
+    from industry import Industry
+
+    # Flat 10B revenue, 30% op margin, 20% capex, 20% D&A, 0% tax, 0% WC,
+    # zero growth → FCFF each year = 30%×10 − 20%×10 + 20%×10 = 30%×10 = $3B/y.
+    # Wait: NOPAT = 0.30 × 10 × (1−0) = $3B; D&A = $2B; capex = $2B; ΔWC = 0.
+    # FCFF = 3 + 2 − 2 − 0 = $3B/y. PV at 10% over 10y ≈ $18.43B.
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date_(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.ENERGY,
+        income_statement=IncomeStatement(
+            revenue=_line(10_000_000_000),
+            operating_income=_line(3_000_000_000),
+            net_income=_line(2_000_000_000),
+            diluted_shares_outstanding=_line(500_000_000),
+        ),
+        balance_sheet=BalanceSheet(
+            cash_and_equivalents=_line(2_000_000_000),
+            total_assets=_line(40_000_000_000),
+            total_liabilities=_line(15_000_000_000),
+            shareholders_equity=_line(25_000_000_000),
+            long_term_debt=_line(5_000_000_000),
+        ),
+        cash_flow_statement=CashFlowStatement(
+            depreciation_amortization=_line(2_000_000_000),
+            cash_from_operations=_line(3_000_000_000),
+            capital_expenditures=_line(2_000_000_000),
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test E&P",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+    assumptions = Assumptions(
+        revenue_growth=0.0,  # flat production
+        operating_margin=0.30,
+        terminal_growth=0.05,  # set non-zero — confirms it's IGNORED
+        wacc=0.10,
+        tax_rate=0.0,
+        capex_ratio=0.20,
+        da_ratio=0.20,
+        working_capital_ratio=0.0,
+    )
+    proj = compute_energy_projection(company, assumptions)
+    assert len(proj.years) == ENERGY_PROJECTION_YEARS == 10
+    # Terminal value MUST be zero — reserves deplete.
+    assert proj.terminal_value == 0.0
+    # FCFF each year should be $3B (NOPAT + D&A − capex − ΔWC = 3 + 2 − 2 − 0).
+    for y in proj.years:
+        assert abs(y.free_cash_flow - 3_000_000_000) < 1
+    # Sum of $3B/y discounted at 10% over 10 years.
+    expected_ev = sum(3_000_000_000 / (1.10 ** t) for t in range(1, 11))
+    assert abs(proj.enterprise_value - expected_ev) < 1
+    # Net debt = 5B - 2B = $3B. Equity = EV − $3B. Per share = / 500M.
+    expected_equity = expected_ev - 3_000_000_000
+    assert abs(proj.equity_value - expected_equity) < 10
+    assert abs(proj.fair_value_per_share - expected_equity / 500_000_000) < 1e-3
+
+
 def test_reit_real_estate_net_derived_from_components():
     """When XBRL tags real_estate_at_cost + accumulated_depreciation but not
     real_estate_net, the derivation backstop fills it in (REITs that report

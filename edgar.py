@@ -458,6 +458,35 @@ REIT_CANONICAL_CONCEPTS: dict[str, list[str]] = {
 }
 
 
+# E&P companies report on the standard income statement / balance sheet /
+# cash flow taxonomy (revenue, op income, capex are all us-gaap concepts), so
+# there's no separate Energy* schema variant — the conceptual difference is
+# in the *valuation* (no terminal Gordon-growth, since reserves deplete) not
+# in the data shape. What's worth carrying here is a couple of E&P-specific
+# tag alternates: OilAndGasRevenue (used by integrated majors like XOM/CVX
+# alongside or instead of Revenues), and PaymentsToAcquireOilAndGasPropertyAndEquipment
+# (the E&P-specific capex tag many filers use instead of the generic PP&E one).
+ENERGY_CANONICAL_CONCEPTS: dict[str, list[str]] = {
+    **STANDARD_CANONICAL_CONCEPTS,
+    "revenue": [
+        "Revenues",
+        "OilAndGasRevenue",  # XOM, CVX use this
+        "RevenueFromContractWithCustomerExcludingAssessedTax",
+        "SalesRevenueNet",
+    ],
+    "capital_expenditures": [
+        "PaymentsToAcquirePropertyPlantAndEquipment",
+        "PaymentsToAcquireOilAndGasPropertyAndEquipment",  # CVX, OXY use this
+        "PaymentsToAcquireProductiveAssets",
+    ],
+    "depreciation_amortization": [
+        "DepreciationDepletionAndAmortization",  # E&P companies use this — depletion is the load-bearing term
+        "DepreciationAndAmortization",
+        "Depreciation",
+    ],
+}
+
+
 # Backward-compat alias used by extract_track_a's older signature; new code
 # should reach for STANDARD_CANONICAL_CONCEPTS or call concepts_for(industry).
 CANONICAL_CONCEPTS = STANDARD_CANONICAL_CONCEPTS
@@ -466,10 +495,11 @@ CANONICAL_CONCEPTS = STANDARD_CANONICAL_CONCEPTS
 def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[name-defined]
     """Return the right XBRL concept map for the given industry.
 
-    Defaults to the standard map for industries we don't yet have a variant
-    for (energy E&P → Phase 4); Track A will still find common fields like
-    net_income / total_assets, just won't find the industry-specific ones
-    until those phases land.
+    All five industries (standard, bank, insurer, REIT, energy) now have an
+    explicit map. Anything classified outside these falls back to the
+    standard map and runs the FCFF path — which produces nonsense for
+    filers it shouldn't apply to (the frontend's universe gate keeps users
+    on supported tickers).
     """
     # Late import to avoid a circular dep (industry → schemas → edgar would
     # be a cycle; industry is small enough to import here on demand).
@@ -481,4 +511,6 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
         return INSURANCE_CANONICAL_CONCEPTS
     if industry == Industry.REIT:
         return REIT_CANONICAL_CONCEPTS
+    if industry == Industry.ENERGY:
+        return ENERGY_CANONICAL_CONCEPTS
     return STANDARD_CANONICAL_CONCEPTS

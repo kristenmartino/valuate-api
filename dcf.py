@@ -48,6 +48,15 @@ DEFAULT_INSURER_ROE = 0.10
 DEFAULT_REIT_COST_OF_EQUITY = 0.08
 DEFAULT_REIT_FFO_GROWTH = 0.03
 
+# Energy E&P — 10-year reserve-life-capped FCFF, no terminal value.
+# Most pure-play US E&P companies have a proved-reserve life of 8-15 years
+# at current production rates; 10 years is a defensible round number for
+# the demo and matches what most sell-side NAV models use as the projection
+# horizon. The horizon could be a slider, but the simpler the better for a
+# demo — and the choice is documented in the help text on the frontend.
+ENERGY_PROJECTION_YEARS = 10
+DEFAULT_ENERGY_PRODUCTION_GROWTH = -0.02  # mild annual decline (production curve)
+
 
 def _line_value(line) -> Optional[float]:
     """Pull a float from a LineItem, or None if absent."""
@@ -165,6 +174,73 @@ def _default_insurer_assumptions(periods: list) -> Assumptions:
     )
 
 
+def _default_energy_assumptions(periods: list) -> Assumptions:
+    """Energy E&P NAV-DCF defaults.
+
+    The Assumptions schema is reused as-is; the conceptual differences from
+    standard FCFF are:
+    - `revenue_growth` is interpreted as production growth/decline (E&P
+      companies' "revenue growth" is dominated by volume × commodity-price
+      moves, both of which decline as wells deplete absent reinvestment).
+      Defaulted to a small negative number if no historical CAGR is
+      available — mild decline is the realistic base case for E&P assets
+      held without aggressive drilling reinvestment.
+    - `terminal_growth` is unused (compute_energy_projection ignores it
+      and sets terminal_value = 0; reserves deplete, so Gordon-growth-to-
+      infinity produces nonsense for E&P).
+    Other ratios behave like the standard path.
+    """
+    revenues: list[float] = []
+    margins: list[float] = []
+    capex_ratios: list[float] = []
+    da_ratios: list[float] = []
+    tax_rates: list[float] = []
+
+    for period in periods:
+        rev = _line_value(period.income_statement.revenue) or 0.0
+        if rev <= 0:
+            continue
+        revenues.append(rev)
+
+        op = _line_value(period.income_statement.operating_income)
+        if op is not None:
+            margins.append(op / rev)
+
+        da = _line_value(period.cash_flow_statement.depreciation_amortization)
+        if da is not None:
+            da_ratios.append(da / rev)
+
+        capex = _line_value(period.cash_flow_statement.capital_expenditures)
+        if capex is not None:
+            capex_ratios.append(capex / rev)
+
+        ibt = _line_value(period.income_statement.income_before_tax)
+        tax = _line_value(period.income_statement.income_tax_expense)
+        if ibt and ibt > 0 and tax is not None:
+            tax_rates.append(max(0.0, min(0.5, tax / ibt)))
+
+    production_growth = DEFAULT_ENERGY_PRODUCTION_GROWTH
+    if len(revenues) >= 2 and revenues[-1] > 0:
+        cagr = (revenues[0] / revenues[-1]) ** (1 / (len(revenues) - 1)) - 1
+        # Cap symmetrically — both runaway growth and unrealistic crashes
+        # should land somewhere defensible for a slider starting position.
+        production_growth = max(-0.15, min(0.15, cagr))
+
+    def _avg(xs: list[float], fallback: float) -> float:
+        return sum(xs) / len(xs) if xs else fallback
+
+    return Assumptions(
+        revenue_growth=production_growth,
+        operating_margin=_avg(margins, 0.20),
+        terminal_growth=0.0,  # ignored by compute_energy_projection
+        wacc=0.10,  # E&P sector WACC tends to run a bit above industrials given commodity beta
+        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        capex_ratio=_avg(capex_ratios, 0.20),  # E&P capex/revenue is much higher than industrials
+        da_ratio=_avg(da_ratios, 0.20),  # depletion is large
+        working_capital_ratio=DEFAULT_WORKING_CAPITAL_RATIO,
+    )
+
+
 def _default_reit_assumptions(periods: list) -> Assumptions:
     """REIT FFO-multiple-flavored defaults.
 
@@ -243,6 +319,8 @@ def default_assumptions(company: Company) -> Assumptions:
         return _default_insurer_assumptions(periods)
     if industry == Industry.REIT:
         return _default_reit_assumptions(periods)
+    if industry == Industry.ENERGY:
+        return _default_energy_assumptions(periods)
 
     margins: list[float] = []
     capex_ratios: list[float] = []
@@ -409,6 +487,81 @@ def compute_insurer_projection(company: Company, a: Assumptions) -> Projection:
     )
 
 
+def compute_energy_projection(company: Company, a: Assumptions) -> Projection:
+    """Reserve-life-capped FCFF DCF for E&P (no terminal value).
+
+    Standard FCFF math — NOPAT + D&A − Capex − ΔWC each year — projected
+    over a 10-year horizon (~typical proved-reserve life for US E&P) and
+    summed at the discount rate. The conceptual difference from the
+    industrial DCF: terminal_value = 0. Reserves deplete; you can't
+    extrapolate FCFF to infinity for an E&P asset, and Gordon-growth-to-
+    infinity produces materially wrong (too high) fair values for any
+    company whose primary asset is depleting.
+
+    `revenue_growth` here is the production growth/decline rate (the
+    frontend relabels the slider). `terminal_growth` is ignored. Other
+    ratios (op margin, capex/revenue, D&A/revenue, tax rate, WC) behave
+    like the standard path.
+
+    The horizon could be a slider in a future iteration ("reserve life"),
+    but a fixed 10-year window matches what most sell-side NAV models use
+    for the projection portion and avoids adding a new Assumptions field.
+    """
+    period = company.periods[0]
+    base_revenue = _line_value(period.income_statement.revenue) or 0.0
+    if base_revenue <= 0:
+        raise ValueError("Base revenue must be positive")
+
+    years: list[YearProjection] = []
+    prev_rev = base_revenue
+    for t in range(1, ENERGY_PROJECTION_YEARS + 1):
+        rev = prev_rev * (1 + a.revenue_growth)
+        op_income = rev * a.operating_margin
+        nopat = op_income * (1 - a.tax_rate)
+        da = rev * a.da_ratio
+        capex = rev * a.capex_ratio
+        delta_wc = (rev - prev_rev) * a.working_capital_ratio
+        fcff = nopat + da - capex - delta_wc
+        years.append(
+            YearProjection(
+                year=t,
+                revenue=rev,
+                operating_income=op_income,
+                nopat=nopat,
+                depreciation_amortization=da,
+                capital_expenditures=capex,
+                change_in_working_capital=delta_wc,
+                free_cash_flow=fcff,
+            )
+        )
+        prev_rev = rev
+
+    # No terminal value — reserves deplete. The 10-year window captures the
+    # productive life; everything past that is a salvage / abandonment story
+    # that's deliberately not modeled.
+    terminal_value = 0.0
+    pv_fcff = sum(y.free_cash_flow / (1 + a.wacc) ** y.year for y in years)
+    enterprise_value = pv_fcff
+
+    net_debt = _net_debt(company)
+    equity_value = enterprise_value - net_debt
+    shares = _diluted_shares(company)
+    fair_value_per_share = equity_value / shares if shares > 0 else 0.0
+
+    return Projection(
+        assumptions=a,
+        base_year=period.fiscal_year,
+        base_revenue=base_revenue,
+        years=years,
+        terminal_value=terminal_value,
+        enterprise_value=enterprise_value,
+        net_debt=net_debt,
+        equity_value=equity_value,
+        diluted_shares=shares,
+        fair_value_per_share=fair_value_per_share,
+    )
+
+
 def compute_reit_projection(company: Company, a: Assumptions) -> Projection:
     """FFO-multiple Gordon-growth model for REITs.
 
@@ -471,7 +624,7 @@ def compute_projection(company: Company, a: Assumptions) -> Projection:
     Bank: Dividend Discount Model (Gordon).
     Insurer: Justified P/B model — book value × (ROE−g)/(r−g).
     REIT: FFO-multiple Gordon model — FFO/share × (1+g)/(r−g).
-    Energy E&P: not yet implemented; falls through to the standard path.
+    Energy E&P: 10-year reserve-life-capped FCFF (no terminal value).
     """
     industry = _industry(company)
     if industry == Industry.BANK:
@@ -480,6 +633,8 @@ def compute_projection(company: Company, a: Assumptions) -> Projection:
         return compute_insurer_projection(company, a)
     if industry == Industry.REIT:
         return compute_reit_projection(company, a)
+    if industry == Industry.ENERGY:
+        return compute_energy_projection(company, a)
 
     if a.wacc <= a.terminal_growth:
         raise ValueError(

@@ -611,7 +611,7 @@ def _compose_company(
             continue
         segments_for_period = (
             revenue_segments
-            if pe == latest and industry == Industry.STANDARD
+            if pe == latest and industry in (Industry.STANDARD, Industry.ENERGY)
             else None
         )
         fp_list.append(
@@ -671,7 +671,12 @@ def _make_track_b(
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
 
-            if industry == Industry.STANDARD:
+            if industry in (Industry.STANDARD, Industry.ENERGY):
+                # Energy filers share the standard schema, and E&P companies
+                # often report meaningful basin / geography segments worth
+                # surfacing. Banks / insurers / REITs report segments
+                # differently (geographies, line of business) and the
+                # extraction prompt isn't tuned for those — skip there.
                 revenue_segments = await extract_revenue_segments(
                     client=anthropic_client,
                     ticker=state["ticker"],
