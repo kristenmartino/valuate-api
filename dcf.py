@@ -36,6 +36,11 @@ DEFAULT_WORKING_CAPITAL_RATIO = 0.05
 DEFAULT_BANK_COST_OF_EQUITY = 0.10
 DEFAULT_BANK_DIVIDEND_GROWTH = 0.04
 
+# Insurer justified-P/B defaults.
+DEFAULT_INSURER_COST_OF_EQUITY = 0.09
+DEFAULT_INSURER_GROWTH = 0.03
+DEFAULT_INSURER_ROE = 0.10
+
 
 def _line_value(line) -> Optional[float]:
     """Pull a float from a LineItem, or None if absent."""
@@ -113,6 +118,46 @@ def _default_bank_assumptions(periods: list) -> Assumptions:
     )
 
 
+def _default_insurer_assumptions(periods: list) -> Assumptions:
+    """Insurer justified-P/B-flavored defaults.
+
+    Same Assumptions schema repurposed slightly differently than banks:
+    - operating_margin → return on equity (ROE)
+    - terminal_growth → long-term sustainable growth (g)
+    - wacc → cost of equity (r)
+    No dividend-growth path here — the justified P/B formula uses growth
+    of book value, not of dividends.
+    """
+    roes: list[float] = []
+    tax_rates: list[float] = []
+
+    for p in periods:
+        is_, bs = p.income_statement, p.balance_sheet
+        ni = _line_value(is_.net_income)
+        eq = _line_value(bs.shareholders_equity)
+        if ni is not None and eq and eq > 0:
+            roes.append(ni / eq)
+
+        ibt = _line_value(is_.income_before_tax)
+        tax = _line_value(is_.income_tax_expense)
+        if ibt is not None and ibt > 0 and tax is not None:
+            tax_rates.append(max(0.0, min(0.5, tax / ibt)))
+
+    def _avg(xs: list[float], fallback: float) -> float:
+        return sum(xs) / len(xs) if xs else fallback
+
+    return Assumptions(
+        revenue_growth=0.0,
+        operating_margin=_avg(roes, DEFAULT_INSURER_ROE),
+        terminal_growth=DEFAULT_INSURER_GROWTH,
+        wacc=DEFAULT_INSURER_COST_OF_EQUITY,
+        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+
+
 def default_assumptions(company: Company) -> Assumptions:
     """Derive a starting-point Assumptions object from historical actuals.
 
@@ -133,8 +178,11 @@ def default_assumptions(company: Company) -> Assumptions:
     if not periods:
         raise ValueError("Company has no FinancialPeriod entries")
 
-    if _industry(company) == Industry.BANK:
+    industry = _industry(company)
+    if industry == Industry.BANK:
         return _default_bank_assumptions(periods)
+    if industry == Industry.INSURER:
+        return _default_insurer_assumptions(periods)
 
     margins: list[float] = []
     capex_ratios: list[float] = []
@@ -249,15 +297,71 @@ def compute_bank_projection(company: Company, a: Assumptions) -> Projection:
     )
 
 
+def compute_insurer_projection(company: Company, a: Assumptions) -> Projection:
+    """Justified-P/B model for insurers.
+
+    Justified P/B = (ROE − g) / (r − g)
+    Fair value per share = book_value_per_share × Justified P/B
+
+    where book_value_per_share = shareholders_equity / diluted_shares,
+    and Assumptions fields are repurposed as for bank DDM:
+    - operating_margin → ROE
+    - terminal_growth → long-term growth (g)
+    - wacc → cost of equity (r)
+
+    Returns the same Projection shape as the FCFF and DDM paths so the
+    frontend's dispatch is purely visual; `years` stays empty (no per-year
+    projection in this model).
+    """
+    if a.wacc <= a.terminal_growth:
+        raise ValueError(
+            f"Cost of equity ({a.wacc}) must exceed growth rate ({a.terminal_growth})"
+        )
+
+    period = company.periods[0]
+    is_ = period.income_statement
+    bs = period.balance_sheet
+
+    shares = _line_value(is_.diluted_shares_outstanding) or 0.0
+    if shares <= 0:
+        raise ValueError("Diluted shares must be positive")
+    equity = _line_value(bs.shareholders_equity) or 0.0
+    if equity <= 0:
+        raise ValueError("Shareholders' equity must be positive")
+
+    book_value_per_share = equity / shares
+    roe = a.operating_margin
+    justified_pb = (roe - a.terminal_growth) / (a.wacc - a.terminal_growth)
+    fair_value_per_share = book_value_per_share * justified_pb
+    equity_value = fair_value_per_share * shares
+
+    return Projection(
+        assumptions=a,
+        base_year=period.fiscal_year,
+        base_revenue=0.0,
+        years=[],
+        terminal_value=equity_value,
+        enterprise_value=equity_value,
+        net_debt=0.0,
+        equity_value=equity_value,
+        diluted_shares=shares,
+        fair_value_per_share=fair_value_per_share,
+    )
+
+
 def compute_projection(company: Company, a: Assumptions) -> Projection:
     """Dispatch to industry-appropriate valuation.
 
     Standard (industrial / tech): 5-year FCFF DCF (Gordon-growth terminal).
-    Bank: Dividend Discount Model.
-    Other industries fall through to the standard path for now (Phase 2-4).
+    Bank: Dividend Discount Model (Gordon).
+    Insurer: Justified P/B model — book value × (ROE−g)/(r−g).
+    REIT / Energy: not yet implemented; falls through to the standard path.
     """
-    if _industry(company) == Industry.BANK:
+    industry = _industry(company)
+    if industry == Industry.BANK:
         return compute_bank_projection(company, a)
+    if industry == Industry.INSURER:
+        return compute_insurer_projection(company, a)
 
     if a.wacc <= a.terminal_growth:
         raise ValueError(

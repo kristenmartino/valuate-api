@@ -41,7 +41,10 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
 `compute_projection` in `dcf.py` dispatches by industry:
 
 - **Standard** (industrials / tech): 5-year FCFF DCF with Gordon-growth terminal, plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid over (revenue growth × operating margin).
-- **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` is observed dividend CAGR capped 200bps under default `r` so the Gordon constraint holds out of the box. Monte Carlo still runs (effectively perturbing only g and r since revenue/margin axes don't enter DDM); sensitivity is hidden client-side because the grid axes don't apply.
+- **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` is observed dividend CAGR capped 200bps under default `r` so the Gordon constraint holds out of the box.
+- **Insurer**: justified price-to-book — `P/B = (ROE − g) / (r − g)`, then `fair_value/share = book_value/share × P/B`. Reserves and the general-account investment portfolio dominate the balance sheet, so book value is the economic anchor.
+
+Monte Carlo runs for all three flavors (degenerate axes are simply unsampled); sensitivity is hidden client-side for bank/insurer paths because the grid axes (revenue growth × operating margin) don't enter their formulas.
 
 ## HITL overrides
 
@@ -109,9 +112,7 @@ Required env vars (set in the Railway project UI):
 
 ## Universe
 
-11 hand-picked S&P 500 tickers — 10 industrial / tech filers (AAPL, MSFT, GOOGL, NVDA, COST, HD, NKE, JNJ, KO, CAT) plus one bank (JPM) demonstrating the industry-aware extraction path.
-
-Three of the standard tickers needed Track B or DERIVED fallback to compose successfully — XBRL tagging consistency is worse than the universe size suggests. JPM extracted cleanly through Track A alone (post-CECL bank tags are well-standardized across the major US banks), so the bank pipeline doubles as evidence the architecture isn't bound to one industry's accounting model.
+12 hand-picked S&P 500 tickers — 10 industrial / tech filers (AAPL, MSFT, GOOGL, NVDA, COST, HD, NKE, JNJ, KO, CAT), one bank (JPM), and one life insurer (PRU). Three of the original ten needed Track B or DERIVED fallback to compose successfully; JPM and PRU both extracted cleanly through Track A alone (their per-industry XBRL tags are well-standardized), so the multi-industry architecture earns its keep on filers it wasn't originally designed for.
 
 ## Industry coverage
 
@@ -119,11 +120,11 @@ Three of the standard tickers needed Track B or DERIVED fallback to compose succ
 |---|---|---|---|
 | Industrial / tech | shipped | 5-year FCFF DCF + Monte Carlo + sensitivity | AAPL, MSFT, ... |
 | Banks | shipped | Gordon DDM | JPM |
-| Insurers | not yet | embedded value (planned) | — |
+| Insurers | shipped | Justified P/B | PRU |
 | REITs | not yet | FFO-based DCF (planned) | — |
 | Energy E&P | not yet | reserve-based valuation (planned) | — |
 
-Insurer / REIT / energy E&P stubs are wired into `industry.py`'s SIC classifier but have no schema variants or DCF math yet. They're tracked as Phase 2-4 of [issue #4](https://github.com/kristenmartino/valuate-api/issues/4). Anything outside these classifications falls back to `Industry.STANDARD` and runs the FCFF path — which produces nonsense for filers it shouldn't apply to. The frontend's universe gate (the home page) keeps users on supported tickers.
+REIT and energy E&P stubs are wired into `industry.py`'s SIC classifier but have no schema variants or DCF math yet. They're tracked as Phases 3 and 4 of [issue #4](https://github.com/kristenmartino/valuate-api/issues/4). Anything outside these classifications falls back to `Industry.STANDARD` and runs the FCFF path — which produces nonsense for filers it shouldn't apply to. The frontend's universe gate (the home page) keeps users on supported tickers.
 
 Other items deliberately parked in the [`later` label](https://github.com/kristenmartino/valuate-api/issues?q=label%3Alater): segment-aware DCF (currently consolidated only), multi-period filing-accession attribution, saved scenarios.
 

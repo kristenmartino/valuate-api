@@ -466,6 +466,72 @@ def test_bank_ddm_rejects_growth_above_required_return():
         compute_bank_projection(company, bad)
 
 
+def test_insurer_justified_pb_matches_formula():
+    """compute_insurer_projection: BVPS × (ROE − g) / (r − g)."""
+    from datetime import date as date_
+
+    from dcf import compute_insurer_projection
+    from schemas import (
+        Assumptions,
+        Company,
+        FilingType,
+        FinancialPeriod,
+        InsuranceBalanceSheet,
+        InsuranceCashFlowStatement,
+        InsuranceIncomeStatement,
+    )
+    from industry import Industry
+
+    # Synthetic insurer: $30B equity, 0.4B diluted shares → BVPS = $75.
+    # ROE 10%, g 3%, r 9% → justified P/B = (10−3)/(9−3) = 7/6 ≈ 1.1667.
+    # Fair value = 75 × 1.1667 = $87.50.
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date_(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.INSURER,
+        income_statement=InsuranceIncomeStatement(
+            premiums_earned=_line(40_000_000_000),
+            income_before_tax=_line(4_000_000_000),
+            income_tax_expense=_line(800_000_000),
+            net_income=_line(3_000_000_000),
+            diluted_shares_outstanding=_line(400_000_000),
+        ),
+        balance_sheet=InsuranceBalanceSheet(
+            cash_and_equivalents=_line(20_000_000_000),
+            total_assets=_line(750_000_000_000),
+            total_liabilities=_line(720_000_000_000),
+            shareholders_equity=_line(30_000_000_000),
+        ),
+        cash_flow_statement=InsuranceCashFlowStatement(
+            cash_from_operations=_line(10_000_000_000),
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test Insurance",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+    assumptions = Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.10,  # ROE
+        terminal_growth=0.03,  # g
+        wacc=0.09,  # r
+        tax_rate=0.21,
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+    proj = compute_insurer_projection(company, assumptions)
+    # 75 × (0.10−0.03)/(0.09−0.03) = 75 × 1.16666... = 87.5
+    assert abs(proj.fair_value_per_share - 87.5) < 1e-6
+    assert abs(proj.equity_value - 35_000_000_000) < 1
+    assert proj.years == []
+
+
 def test_default_assumptions_averages_across_periods():
     """Ratios should average over every available period; CAGR drives the
     initial revenue_growth slider when ≥2 periods exist."""

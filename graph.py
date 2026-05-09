@@ -41,6 +41,9 @@ from schemas import (
     FilingType,
     FinancialPeriod,
     IncomeStatement,
+    InsuranceBalanceSheet,
+    InsuranceCashFlowStatement,
+    InsuranceIncomeStatement,
     LineItem,
     RevenueSegment,
 )
@@ -156,6 +159,50 @@ BANK_REQUIRED_BALANCE = {
 }
 BANK_REQUIRED_CASH_FLOW = {"cash_from_operations"}
 
+# --- Insurance fields -------------------------------------------------------
+
+INSURANCE_INCOME_FIELDS = [
+    "premiums_earned",
+    "net_investment_income",
+    "benefits_and_claims",
+    "operating_expenses",
+    "income_before_tax",
+    "income_tax_expense",
+    "net_income",
+    "diluted_shares_outstanding",
+]
+INSURANCE_BALANCE_FIELDS = [
+    "cash_and_equivalents",
+    "investments",
+    "insurance_reserves",
+    "total_assets",
+    "total_liabilities",
+    "shareholders_equity",
+]
+INSURANCE_CASH_FLOW_FIELDS = [
+    "cash_from_operations",
+    "cash_from_investing",
+    "cash_from_financing",
+    "dividends_paid",
+    "depreciation_amortization",
+    "capital_expenditures",
+]
+
+INSURANCE_REQUIRED_INCOME = {
+    "premiums_earned",
+    "income_before_tax",
+    "income_tax_expense",
+    "net_income",
+    "diluted_shares_outstanding",
+}
+INSURANCE_REQUIRED_BALANCE = {
+    "cash_and_equivalents",
+    "total_assets",
+    "total_liabilities",
+    "shareholders_equity",
+}
+INSURANCE_REQUIRED_CASH_FLOW = {"cash_from_operations"}
+
 
 def _industry_fields(industry: Industry) -> tuple[
     list[str], list[str], list[str], set[str], set[str], set[str]
@@ -170,6 +217,15 @@ def _industry_fields(industry: Industry) -> tuple[
             BANK_REQUIRED_INCOME,
             BANK_REQUIRED_BALANCE,
             BANK_REQUIRED_CASH_FLOW,
+        )
+    if industry == Industry.INSURER:
+        return (
+            INSURANCE_INCOME_FIELDS,
+            INSURANCE_BALANCE_FIELDS,
+            INSURANCE_CASH_FLOW_FIELDS,
+            INSURANCE_REQUIRED_INCOME,
+            INSURANCE_REQUIRED_BALANCE,
+            INSURANCE_REQUIRED_CASH_FLOW,
         )
     return (
         INCOME_STATEMENT_FIELDS,
@@ -407,6 +463,10 @@ def _build_financial_period(
         income_stmt = BankIncomeStatement(**income_kwargs)
         balance_stmt = BankBalanceSheet(**balance_kwargs)
         cash_flow_stmt = BankCashFlowStatement(**cash_flow_kwargs)
+    elif industry == Industry.INSURER:
+        income_stmt = InsuranceIncomeStatement(**income_kwargs)
+        balance_stmt = InsuranceBalanceSheet(**balance_kwargs)
+        cash_flow_stmt = InsuranceCashFlowStatement(**cash_flow_kwargs)
     else:
         if revenue_segments is not None:
             income_kwargs["revenue_segments"] = revenue_segments

@@ -321,6 +321,72 @@ BANK_CANONICAL_CONCEPTS: dict[str, list[str]] = {
 }
 
 
+# Insurers run on a fundamentally different P&L (premiums earned, investment
+# income, claims/benefits incurred) and balance sheet (huge invested-asset
+# portfolio, reserves replacing working capital). The concept keys here mirror
+# InsuranceIncomeStatement / InsuranceBalanceSheet / InsuranceCashFlowStatement.
+INSURANCE_CANONICAL_CONCEPTS: dict[str, list[str]] = {
+    # Income statement
+    "premiums_earned": [
+        "PremiumsEarnedNet",
+        "PremiumsEarnedNetLifeAndHealth",
+        "PremiumsEarnedNetPropertyAndCasualty",
+    ],
+    "net_investment_income": [
+        "NetInvestmentIncome",
+        "InterestAndDividendIncomeOperating",
+    ],
+    "benefits_and_claims": [
+        "PolicyholderBenefitsAndClaimsIncurredNet",
+        "LiabilityForClaimsAndClaimsAdjustmentExpensePeriodIncreaseDecrease",
+        "PolicyholderBenefitsAndClaimsIncurred",
+    ],
+    "operating_expenses": [
+        "OperatingExpenses",
+        "OtherCostAndExpenseOperating",
+        "GeneralAndAdministrativeExpense",
+    ],
+    "income_before_tax": [
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+    ],
+    "income_tax_expense": ["IncomeTaxExpenseBenefit"],
+    "net_income": ["NetIncomeLoss", "ProfitLoss"],
+    "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+    # Balance sheet
+    "cash_and_equivalents": [
+        "CashAndCashEquivalentsAtCarryingValue",
+        "Cash",
+    ],
+    "investments": [
+        "Investments",
+        "AvailableForSaleSecuritiesDebtSecurities",
+        "DebtSecuritiesAvailableForSaleExcludingAccruedInterest",
+    ],
+    "insurance_reserves": [
+        "LiabilityForFuturePolicyBenefits",
+        "LiabilityForFuturePolicyBenefitsAndUnpaidClaimsAndClaimsAdjustmentExpense",
+        "LiabilityForUnpaidClaimsAndClaimsAdjustmentExpense",
+    ],
+    "total_assets": ["Assets"],
+    "total_liabilities": ["Liabilities"],
+    "shareholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
+    # Cash flow
+    "cash_from_operations": ["NetCashProvidedByUsedInOperatingActivities"],
+    "cash_from_investing": ["NetCashProvidedByUsedInInvestingActivities"],
+    "cash_from_financing": ["NetCashProvidedByUsedInFinancingActivities"],
+    "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
+    "depreciation_amortization": [
+        "DepreciationDepletionAndAmortization",
+        "DepreciationAndAmortization",
+    ],
+    "capital_expenditures": ["PaymentsToAcquirePropertyPlantAndEquipment"],
+}
+
+
 # Backward-compat alias used by extract_track_a's older signature; new code
 # should reach for STANDARD_CANONICAL_CONCEPTS or call concepts_for(industry).
 CANONICAL_CONCEPTS = STANDARD_CANONICAL_CONCEPTS
@@ -330,8 +396,8 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
     """Return the right XBRL concept map for the given industry.
 
     Defaults to the standard map for industries we don't yet have a variant
-    for (insurer, REIT, energy E&P → Phase 2-4); Track A will still find
-    common fields like net_income / total_assets, just won't find the
+    for (REIT, energy E&P → Phase 3-4); Track A will still find common
+    fields like net_income / total_assets, just won't find the
     industry-specific ones until those phases land.
     """
     # Late import to avoid a circular dep (industry → schemas → edgar would
@@ -340,4 +406,6 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
 
     if industry == Industry.BANK:
         return BANK_CANONICAL_CONCEPTS
+    if industry == Industry.INSURER:
+        return INSURANCE_CANONICAL_CONCEPTS
     return STANDARD_CANONICAL_CONCEPTS

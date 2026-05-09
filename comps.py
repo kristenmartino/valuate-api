@@ -42,6 +42,7 @@ PEER_GROUPS: dict[str, list[str]] = {
     "KO": ["PEP", "KDP", "MNST"],
     "CAT": ["DE", "CMI", "OSK", "PCAR"],
     "JPM": ["BAC", "WFC", "C", "GS"],
+    "PRU": ["MET", "AIG", "ALL", "LNC"],
 }
 
 

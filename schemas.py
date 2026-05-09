@@ -117,10 +117,32 @@ class BankIncomeStatement(BaseModel):
     diluted_shares_outstanding: LineItem
 
 
+class InsuranceIncomeStatement(BaseModel):
+    """Insurance income statement.
+
+    Insurers' top line is `premiums_earned` plus `net_investment_income`
+    (investment income on the float / general account is a primary economic
+    driver, not a non-operating line item). The biggest expense is
+    `benefits_and_claims_incurred` — what was paid out plus reserve changes
+    for claims / future policy benefits. Operating expenses are run-the-shop
+    costs (commissions, underwriting, G&A).
+    """
+
+    kind: Literal["insurer"] = "insurer"
+    premiums_earned: LineItem
+    net_investment_income: Optional[LineItem] = None
+    benefits_and_claims: Optional[LineItem] = None
+    operating_expenses: Optional[LineItem] = None
+    income_before_tax: LineItem
+    income_tax_expense: LineItem
+    net_income: LineItem
+    diluted_shares_outstanding: LineItem
+
+
 # Discriminated union: Pydantic v2 uses the `kind` field to decide which
 # variant to validate against. Frontend TS gets the same narrowing semantics.
 AnyIncomeStatement = Annotated[
-    Union[IncomeStatement, BankIncomeStatement],
+    Union[IncomeStatement, BankIncomeStatement, InsuranceIncomeStatement],
     Field(discriminator="kind"),
 ]
 
@@ -165,8 +187,27 @@ class BankBalanceSheet(BaseModel):
     shareholders_equity: LineItem
 
 
+class InsuranceBalanceSheet(BaseModel):
+    """Insurance balance sheet — investments + reserves are the main lines.
+
+    Insurance balance sheets are dominated by the general-account investment
+    portfolio (debt + equity securities, alternatives) on the asset side and
+    the reserve liability for future policy benefits / unpaid claims on the
+    liability side. The reserve is the load-bearing line; book value is the
+    residual after subtracting it from invested assets.
+    """
+
+    kind: Literal["insurer"] = "insurer"
+    cash_and_equivalents: LineItem
+    investments: Optional[LineItem] = None
+    insurance_reserves: Optional[LineItem] = None  # future policy benefits + unpaid claims
+    total_assets: LineItem
+    total_liabilities: LineItem
+    shareholders_equity: LineItem
+
+
 AnyBalanceSheet = Annotated[
-    Union[BalanceSheet, BankBalanceSheet],
+    Union[BalanceSheet, BankBalanceSheet, InsuranceBalanceSheet],
     Field(discriminator="kind"),
 ]
 
@@ -202,8 +243,26 @@ class BankCashFlowStatement(BaseModel):
     capital_expenditures: Optional[LineItem] = None
 
 
+class InsuranceCashFlowStatement(BaseModel):
+    """Insurance cash flow — same shape as bank's, for the same reasons.
+
+    The insurance valuation flavor is justified P/B (BVPS × (ROE−g)/(r−g)),
+    which doesn't even consume cash flow data — but we still extract CFO/CFI/
+    CFF for transparency, and `dividends_paid` is useful for sanity-checking
+    the implied payout vs ROE−g.
+    """
+
+    kind: Literal["insurer"] = "insurer"
+    cash_from_operations: LineItem
+    cash_from_investing: Optional[LineItem] = None
+    cash_from_financing: Optional[LineItem] = None
+    dividends_paid: Optional[LineItem] = None
+    depreciation_amortization: Optional[LineItem] = None
+    capital_expenditures: Optional[LineItem] = None
+
+
 AnyCashFlowStatement = Annotated[
-    Union[CashFlowStatement, BankCashFlowStatement],
+    Union[CashFlowStatement, BankCashFlowStatement, InsuranceCashFlowStatement],
     Field(discriminator="kind"),
 ]
 
