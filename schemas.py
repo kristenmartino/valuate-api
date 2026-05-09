@@ -139,10 +139,40 @@ class InsuranceIncomeStatement(BaseModel):
     diluted_shares_outstanding: LineItem
 
 
+class REITIncomeStatement(BaseModel):
+    """REIT income statement.
+
+    REITs report rental / property revenue and own real-estate-heavy
+    balance sheets that depreciate aggressively under GAAP. Because the
+    accounting depreciation typically overstates economic depreciation
+    (well-maintained properties don't lose value at the GAAP rate), GAAP
+    net income understates the cash a REIT actually distributes — which
+    is why REIT analysts use FFO (net income + D&A) and AFFO as their
+    primary earnings measure.
+    """
+
+    kind: Literal["reit"] = "reit"
+    revenue: LineItem  # rental + service income
+    property_operating_expense: Optional[LineItem] = None
+    depreciation_amortization: LineItem  # load-bearing for the FFO calc
+    general_and_administrative: Optional[LineItem] = None
+    operating_income: Optional[LineItem] = None
+    interest_expense: Optional[LineItem] = None
+    income_before_tax: Optional[LineItem] = None
+    income_tax_expense: Optional[LineItem] = None
+    net_income: LineItem
+    diluted_shares_outstanding: LineItem
+
+
 # Discriminated union: Pydantic v2 uses the `kind` field to decide which
 # variant to validate against. Frontend TS gets the same narrowing semantics.
 AnyIncomeStatement = Annotated[
-    Union[IncomeStatement, BankIncomeStatement, InsuranceIncomeStatement],
+    Union[
+        IncomeStatement,
+        BankIncomeStatement,
+        InsuranceIncomeStatement,
+        REITIncomeStatement,
+    ],
     Field(discriminator="kind"),
 ]
 
@@ -206,8 +236,33 @@ class InsuranceBalanceSheet(BaseModel):
     shareholders_equity: LineItem
 
 
+class REITBalanceSheet(BaseModel):
+    """REIT balance sheet — real estate dominates the asset side.
+
+    A REIT's asset base is overwhelmingly investment property: land +
+    buildings at cost, less accumulated depreciation, equals net real
+    estate. We carry both the gross (`real_estate_at_cost`) and net
+    (`real_estate_net`) figures because the gap between them tells you
+    something — a REIT with $90B at cost and $80B net is much earlier
+    in its book's depreciation schedule than one at $90B / $40B, even
+    if both report identical NOI today. Long-term debt is the other
+    load-bearing line; REITs run high leverage by industrials' standards
+    and roll their secured/unsecured stack continuously.
+    """
+
+    kind: Literal["reit"] = "reit"
+    cash_and_equivalents: LineItem
+    real_estate_at_cost: Optional[LineItem] = None  # gross PPE in real estate
+    accumulated_depreciation: Optional[LineItem] = None  # contra-asset
+    real_estate_net: Optional[LineItem] = None  # at_cost − accumulated_depreciation
+    total_assets: LineItem
+    long_term_debt: Optional[LineItem] = None
+    total_liabilities: LineItem
+    shareholders_equity: LineItem
+
+
 AnyBalanceSheet = Annotated[
-    Union[BalanceSheet, BankBalanceSheet, InsuranceBalanceSheet],
+    Union[BalanceSheet, BankBalanceSheet, InsuranceBalanceSheet, REITBalanceSheet],
     Field(discriminator="kind"),
 ]
 
@@ -261,8 +316,35 @@ class InsuranceCashFlowStatement(BaseModel):
     capital_expenditures: Optional[LineItem] = None
 
 
+class REITCashFlowStatement(BaseModel):
+    """REIT cash flow — D&A and dividends carry most of the signal.
+
+    The FFO valuation flavor reads net income and D&A off the income
+    statement, so the cash flow statement is informational here — but
+    `cash_from_operations` is the standard sanity check (REIT FFO and
+    operating cash flow track loosely; AFFO closes most of the gap by
+    subtracting recurring capex). `dividends_paid` and `capital_expenditures`
+    matter to a finance reviewer — REITs are required by tax code to
+    distribute ≥90% of taxable income, so dividends are large and
+    structurally meaningful.
+    """
+
+    kind: Literal["reit"] = "reit"
+    cash_from_operations: LineItem
+    cash_from_investing: Optional[LineItem] = None
+    cash_from_financing: Optional[LineItem] = None
+    dividends_paid: Optional[LineItem] = None
+    depreciation_amortization: Optional[LineItem] = None
+    capital_expenditures: Optional[LineItem] = None
+
+
 AnyCashFlowStatement = Annotated[
-    Union[CashFlowStatement, BankCashFlowStatement, InsuranceCashFlowStatement],
+    Union[
+        CashFlowStatement,
+        BankCashFlowStatement,
+        InsuranceCashFlowStatement,
+        REITCashFlowStatement,
+    ],
     Field(discriminator="kind"),
 ]
 

@@ -387,6 +387,77 @@ INSURANCE_CANONICAL_CONCEPTS: dict[str, list[str]] = {
 }
 
 
+# REITs report rental / property revenue and own real-estate-heavy balance
+# sheets. Most REITs use the standard us-gaap revenue / net income tags but
+# add specialized real-estate balance-sheet tags (real estate at cost, the
+# accumulated-depreciation contra-asset, real estate net). The fields here
+# mirror REITIncomeStatement / REITBalanceSheet / REITCashFlowStatement.
+REIT_CANONICAL_CONCEPTS: dict[str, list[str]] = {
+    # Income statement
+    "revenue": [
+        "Revenues",
+        "RevenueFromContractWithCustomerExcludingAssessedTax",
+        "OperatingLeaseLeaseIncome",  # some REITs report rental income separately
+    ],
+    "property_operating_expense": [
+        "CostOfGoodsAndServicesSold",
+        "CostsAndExpenses",
+        "OperatingCostsAndExpenses",
+    ],
+    "depreciation_amortization": [
+        "DepreciationAndAmortization",
+        "DepreciationDepletionAndAmortization",
+        "Depreciation",
+    ],
+    "general_and_administrative": [
+        "GeneralAndAdministrativeExpense",
+        "SellingGeneralAndAdministrativeExpense",
+    ],
+    "operating_income": ["OperatingIncomeLoss"],
+    "interest_expense": ["InterestExpense"],
+    "income_before_tax": [
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+        "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+    ],
+    "income_tax_expense": ["IncomeTaxExpenseBenefit"],
+    "net_income": ["NetIncomeLoss", "ProfitLoss"],
+    "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+    # Balance sheet — the REIT-specific tags are the load-bearing additions.
+    "cash_and_equivalents": [
+        "CashAndCashEquivalentsAtCarryingValue",
+        "Cash",
+    ],
+    "real_estate_at_cost": [
+        "RealEstateInvestmentPropertyAtCost",
+        "RealEstateInvestments",
+    ],
+    "accumulated_depreciation": [
+        "RealEstateInvestmentPropertyAccumulatedDepreciation",
+        "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment",
+    ],
+    "real_estate_net": [
+        "RealEstateInvestmentPropertyNet",
+    ],
+    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "total_assets": ["Assets"],
+    "total_liabilities": ["Liabilities"],
+    "shareholders_equity": [
+        "StockholdersEquity",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    ],
+    # Cash flow
+    "cash_from_operations": ["NetCashProvidedByUsedInOperatingActivities"],
+    "cash_from_investing": ["NetCashProvidedByUsedInInvestingActivities"],
+    "cash_from_financing": ["NetCashProvidedByUsedInFinancingActivities"],
+    "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
+    "capital_expenditures": [
+        "PaymentsToAcquirePropertyPlantAndEquipment",
+        "PaymentsToAcquireRealEstate",
+        "PaymentsForCapitalImprovements",
+    ],
+}
+
+
 # Backward-compat alias used by extract_track_a's older signature; new code
 # should reach for STANDARD_CANONICAL_CONCEPTS or call concepts_for(industry).
 CANONICAL_CONCEPTS = STANDARD_CANONICAL_CONCEPTS
@@ -396,9 +467,9 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
     """Return the right XBRL concept map for the given industry.
 
     Defaults to the standard map for industries we don't yet have a variant
-    for (REIT, energy E&P → Phase 3-4); Track A will still find common
-    fields like net_income / total_assets, just won't find the
-    industry-specific ones until those phases land.
+    for (energy E&P → Phase 4); Track A will still find common fields like
+    net_income / total_assets, just won't find the industry-specific ones
+    until those phases land.
     """
     # Late import to avoid a circular dep (industry → schemas → edgar would
     # be a cycle; industry is small enough to import here on demand).
@@ -408,4 +479,6 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
         return BANK_CANONICAL_CONCEPTS
     if industry == Industry.INSURER:
         return INSURANCE_CANONICAL_CONCEPTS
+    if industry == Industry.REIT:
+        return REIT_CANONICAL_CONCEPTS
     return STANDARD_CANONICAL_CONCEPTS

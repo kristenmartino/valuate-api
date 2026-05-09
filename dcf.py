@@ -41,6 +41,13 @@ DEFAULT_INSURER_COST_OF_EQUITY = 0.09
 DEFAULT_INSURER_GROWTH = 0.03
 DEFAULT_INSURER_ROE = 0.10
 
+# REIT FFO-multiple defaults — REITs trade at higher multiples than industrials
+# because their cash distributions are large and tax-advantaged. r is set
+# below industrial WACC because REIT dividends are pass-through and
+# investors price them more like long-duration bond proxies.
+DEFAULT_REIT_COST_OF_EQUITY = 0.08
+DEFAULT_REIT_FFO_GROWTH = 0.03
+
 
 def _line_value(line) -> Optional[float]:
     """Pull a float from a LineItem, or None if absent."""
@@ -158,6 +165,57 @@ def _default_insurer_assumptions(periods: list) -> Assumptions:
     )
 
 
+def _default_reit_assumptions(periods: list) -> Assumptions:
+    """REIT FFO-multiple-flavored defaults.
+
+    The Assumptions schema is repurposed in the same pattern as banks /
+    insurers:
+    - terminal_growth → long-term FFO growth (g)
+    - wacc → cost of equity / required return on equity (r)
+    operating_margin and the cash-flow ratios aren't consumed by the
+    FFO-multiple formula and stay at zero / neutral.
+
+    Long-term FFO growth is anchored on observed period-over-period growth
+    (revenue is a reasonable proxy for FFO growth pace at REITs that grow
+    primarily through acquisitions + same-store rent inflation), capped
+    well below the default cost of equity so the Gordon constraint holds
+    out of the box.
+    """
+    revenues: list[float] = []  # newest-first
+    tax_rates: list[float] = []
+
+    for p in periods:
+        is_ = p.income_statement
+        rev = _line_value(is_.revenue)
+        if rev is not None and rev > 0:
+            revenues.append(rev)
+
+        ibt = _line_value(getattr(is_, "income_before_tax", None))
+        tax = _line_value(getattr(is_, "income_tax_expense", None))
+        if ibt is not None and ibt > 0 and tax is not None:
+            tax_rates.append(max(0.0, min(0.5, tax / ibt)))
+
+    ffo_growth = DEFAULT_REIT_FFO_GROWTH
+    if len(revenues) >= 2 and revenues[-1] > 0:
+        cagr = (revenues[0] / revenues[-1]) ** (1 / (len(revenues) - 1)) - 1
+        max_g = DEFAULT_REIT_COST_OF_EQUITY - 0.02  # leave 200bps headroom
+        ffo_growth = max(-0.02, min(max_g, cagr))
+
+    def _avg(xs: list[float], fallback: float) -> float:
+        return sum(xs) / len(xs) if xs else fallback
+
+    return Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.0,
+        terminal_growth=ffo_growth,
+        wacc=DEFAULT_REIT_COST_OF_EQUITY,
+        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+
+
 def default_assumptions(company: Company) -> Assumptions:
     """Derive a starting-point Assumptions object from historical actuals.
 
@@ -183,6 +241,8 @@ def default_assumptions(company: Company) -> Assumptions:
         return _default_bank_assumptions(periods)
     if industry == Industry.INSURER:
         return _default_insurer_assumptions(periods)
+    if industry == Industry.REIT:
+        return _default_reit_assumptions(periods)
 
     margins: list[float] = []
     capex_ratios: list[float] = []
@@ -349,19 +409,77 @@ def compute_insurer_projection(company: Company, a: Assumptions) -> Projection:
     )
 
 
+def compute_reit_projection(company: Company, a: Assumptions) -> Projection:
+    """FFO-multiple Gordon-growth model for REITs.
+
+    FFO = Net Income + D&A (the standard REIT cash-earnings adjustment;
+    GAAP depreciation overstates economic depreciation for well-maintained
+    real estate, so FFO is the conventional pre-distribution earnings
+    measure REIT investors anchor on).
+
+    Fair value per share = FFO_per_share × (1 + g) / (r − g)
+
+    where Assumptions fields are repurposed:
+    - terminal_growth → long-term FFO growth (g)
+    - wacc → cost of equity (r)
+    operating_margin and cash-flow ratios aren't used by this formula.
+
+    Returns the same Projection shape as the FCFF / DDM / P/B paths so the
+    frontend's dispatch is purely visual; `years` stays empty (no per-year
+    projection in this model, mirroring the bank / insurer flavors).
+    """
+    if a.wacc <= a.terminal_growth:
+        raise ValueError(
+            f"Cost of equity ({a.wacc}) must exceed FFO growth ({a.terminal_growth})"
+        )
+
+    period = company.periods[0]
+    is_ = period.income_statement  # REITIncomeStatement
+
+    shares = _line_value(is_.diluted_shares_outstanding) or 0.0
+    if shares <= 0:
+        raise ValueError("Diluted shares must be positive")
+
+    net_income = _line_value(is_.net_income) or 0.0
+    da = _line_value(getattr(is_, "depreciation_amortization", None)) or 0.0
+    ffo = net_income + da
+    if ffo <= 0:
+        raise ValueError("FFO (net income + D&A) must be positive for valuation")
+
+    ffo_per_share = ffo / shares
+    fair_value_per_share = ffo_per_share * (1 + a.terminal_growth) / (a.wacc - a.terminal_growth)
+    equity_value = fair_value_per_share * shares
+
+    return Projection(
+        assumptions=a,
+        base_year=period.fiscal_year,
+        base_revenue=0.0,  # not applicable for REITs
+        years=[],  # FFO multiple doesn't project FCFF year by year
+        terminal_value=equity_value,
+        enterprise_value=equity_value,  # for REITs we report on equity terms
+        net_debt=0.0,
+        equity_value=equity_value,
+        diluted_shares=shares,
+        fair_value_per_share=fair_value_per_share,
+    )
+
+
 def compute_projection(company: Company, a: Assumptions) -> Projection:
     """Dispatch to industry-appropriate valuation.
 
     Standard (industrial / tech): 5-year FCFF DCF (Gordon-growth terminal).
     Bank: Dividend Discount Model (Gordon).
     Insurer: Justified P/B model — book value × (ROE−g)/(r−g).
-    REIT / Energy: not yet implemented; falls through to the standard path.
+    REIT: FFO-multiple Gordon model — FFO/share × (1+g)/(r−g).
+    Energy E&P: not yet implemented; falls through to the standard path.
     """
     industry = _industry(company)
     if industry == Industry.BANK:
         return compute_bank_projection(company, a)
     if industry == Industry.INSURER:
         return compute_insurer_projection(company, a)
+    if industry == Industry.REIT:
+        return compute_reit_projection(company, a)
 
     if a.wacc <= a.terminal_growth:
         raise ValueError(

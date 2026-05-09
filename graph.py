@@ -45,6 +45,9 @@ from schemas import (
     InsuranceCashFlowStatement,
     InsuranceIncomeStatement,
     LineItem,
+    REITBalanceSheet,
+    REITCashFlowStatement,
+    REITIncomeStatement,
     RevenueSegment,
 )
 from section_extractor import extract_financial_statements_section
@@ -203,6 +206,59 @@ INSURANCE_REQUIRED_BALANCE = {
 }
 INSURANCE_REQUIRED_CASH_FLOW = {"cash_from_operations"}
 
+# --- REIT fields ------------------------------------------------------------
+
+REIT_INCOME_FIELDS = [
+    "revenue",
+    "property_operating_expense",
+    "depreciation_amortization",
+    "general_and_administrative",
+    "operating_income",
+    "interest_expense",
+    "income_before_tax",
+    "income_tax_expense",
+    "net_income",
+    "diluted_shares_outstanding",
+]
+REIT_BALANCE_FIELDS = [
+    "cash_and_equivalents",
+    "real_estate_at_cost",
+    "accumulated_depreciation",
+    "real_estate_net",
+    "total_assets",
+    "long_term_debt",
+    "total_liabilities",
+    "shareholders_equity",
+]
+REIT_CASH_FLOW_FIELDS = [
+    "cash_from_operations",
+    "cash_from_investing",
+    "cash_from_financing",
+    "dividends_paid",
+    "depreciation_amortization",
+    "capital_expenditures",
+]
+
+# FFO = net_income + D&A (income-statement D&A is the load-bearing input);
+# diluted shares anchors the per-share fair value; net_income closes out the
+# normal IBT/tax → NI flow that XBRL almost always tags. Dividends_paid lives
+# on the cash-flow statement and is informational rather than required —
+# REITs by tax code distribute ≥90% of taxable income, which is enough
+# context for a finance reviewer without hard-failing extraction on it.
+REIT_REQUIRED_INCOME = {
+    "revenue",
+    "depreciation_amortization",
+    "net_income",
+    "diluted_shares_outstanding",
+}
+REIT_REQUIRED_BALANCE = {
+    "cash_and_equivalents",
+    "total_assets",
+    "total_liabilities",
+    "shareholders_equity",
+}
+REIT_REQUIRED_CASH_FLOW = {"cash_from_operations"}
+
 
 def _industry_fields(industry: Industry) -> tuple[
     list[str], list[str], list[str], set[str], set[str], set[str]
@@ -226,6 +282,15 @@ def _industry_fields(industry: Industry) -> tuple[
             INSURANCE_REQUIRED_INCOME,
             INSURANCE_REQUIRED_BALANCE,
             INSURANCE_REQUIRED_CASH_FLOW,
+        )
+    if industry == Industry.REIT:
+        return (
+            REIT_INCOME_FIELDS,
+            REIT_BALANCE_FIELDS,
+            REIT_CASH_FLOW_FIELDS,
+            REIT_REQUIRED_INCOME,
+            REIT_REQUIRED_BALANCE,
+            REIT_REQUIRED_CASH_FLOW,
         )
     return (
         INCOME_STATEMENT_FIELDS,
@@ -410,6 +475,21 @@ def _derive_missing_required(
                 xbrl_tag=None,
             )
 
+    if industry == Industry.REIT and items.get("real_estate_net") is None:
+        rec = items.get("real_estate_at_cost")
+        ad = items.get("accumulated_depreciation")
+        if rec is not None and ad is not None:
+            items["real_estate_net"] = LineItem(
+                value=rec.value - ad.value,
+                source=ExtractionSource.DERIVED,
+                confidence=0.95,
+                source_quote=(
+                    f"Derived: real_estate_at_cost − accumulated_depreciation "
+                    f"({rec.value} − {ad.value})"
+                ),
+                xbrl_tag=None,
+            )
+
     if items.get("total_liabilities") is None:
         ta = items.get("total_assets")
         eq = items.get("shareholders_equity")
@@ -467,6 +547,10 @@ def _build_financial_period(
         income_stmt = InsuranceIncomeStatement(**income_kwargs)
         balance_stmt = InsuranceBalanceSheet(**balance_kwargs)
         cash_flow_stmt = InsuranceCashFlowStatement(**cash_flow_kwargs)
+    elif industry == Industry.REIT:
+        income_stmt = REITIncomeStatement(**income_kwargs)
+        balance_stmt = REITBalanceSheet(**balance_kwargs)
+        cash_flow_stmt = REITCashFlowStatement(**cash_flow_kwargs)
     else:
         if revenue_segments is not None:
             income_kwargs["revenue_segments"] = revenue_segments

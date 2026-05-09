@@ -590,3 +590,112 @@ def test_default_assumptions_averages_across_periods():
     assert abs(a.operating_margin - 0.20) < 1e-9
     # CAGR from 100 → 121 over 2 steps = 10%.
     assert abs(a.revenue_growth - 0.10) < 1e-9
+
+
+def test_reit_ffo_multiple_matches_formula():
+    """compute_reit_projection: FFO/share × (1+g)/(r−g)."""
+    from datetime import date as date_
+
+    from dcf import compute_reit_projection
+    from schemas import (
+        Assumptions,
+        Company,
+        FilingType,
+        FinancialPeriod,
+        REITBalanceSheet,
+        REITCashFlowStatement,
+        REITIncomeStatement,
+    )
+    from industry import Industry
+
+    # Synthetic REIT: $3.0B net income + $2.0B D&A → FFO $5.0B.
+    # 1B diluted shares → FFO/share $5.00.
+    # r = 8%, g = 3% → fair value = 5.00 × 1.03 / 0.05 = $103.00.
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date_(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.REIT,
+        income_statement=REITIncomeStatement(
+            revenue=_line(8_000_000_000),
+            depreciation_amortization=_line(2_000_000_000),
+            net_income=_line(3_000_000_000),
+            diluted_shares_outstanding=_line(1_000_000_000),
+        ),
+        balance_sheet=REITBalanceSheet(
+            cash_and_equivalents=_line(1_000_000_000),
+            real_estate_at_cost=_line(90_000_000_000),
+            accumulated_depreciation=_line(15_000_000_000),
+            real_estate_net=_line(75_000_000_000),
+            total_assets=_line(95_000_000_000),
+            long_term_debt=_line(35_000_000_000),
+            total_liabilities=_line(40_000_000_000),
+            shareholders_equity=_line(55_000_000_000),
+        ),
+        cash_flow_statement=REITCashFlowStatement(
+            cash_from_operations=_line(5_000_000_000),
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test REIT",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+    assumptions = Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.0,
+        terminal_growth=0.03,  # FFO growth
+        wacc=0.08,  # cost of equity
+        tax_rate=0.21,
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+    proj = compute_reit_projection(company, assumptions)
+    # 5.00 × 1.03 / 0.05 = 103.0
+    assert abs(proj.fair_value_per_share - 103.0) < 1e-6
+    # equity_value = 103.0 × 1B = $103B
+    assert abs(proj.equity_value - 103_000_000_000) < 1
+    assert proj.years == []  # no FCFF projection in the FFO model
+
+
+def test_reit_real_estate_net_derived_from_components():
+    """When XBRL tags real_estate_at_cost + accumulated_depreciation but not
+    real_estate_net, the derivation backstop fills it in (REITs that report
+    only the gross/contra split — common pattern)."""
+    from industry import Industry
+
+    items = {
+        "real_estate_at_cost": LineItem(
+            value=Decimal("90000000000"),
+            source=ExtractionSource.XBRL,
+            confidence=1.0,
+            xbrl_tag="us-gaap:RealEstateInvestmentPropertyAtCost",
+        ),
+        "accumulated_depreciation": LineItem(
+            value=Decimal("15000000000"),
+            source=ExtractionSource.XBRL,
+            confidence=1.0,
+            xbrl_tag="us-gaap:RealEstateInvestmentPropertyAccumulatedDepreciation",
+        ),
+        "real_estate_net": None,
+        "total_assets": LineItem(
+            value=Decimal("95000000000"),
+            source=ExtractionSource.XBRL,
+            confidence=1.0,
+        ),
+        "shareholders_equity": LineItem(
+            value=Decimal("55000000000"),
+            source=ExtractionSource.XBRL,
+            confidence=1.0,
+        ),
+    }
+    out = _derive_missing_required(items, industry=Industry.REIT)
+    ren = out["real_estate_net"]
+    assert ren is not None
+    assert ren.value == Decimal("75000000000")
+    assert ren.source == ExtractionSource.DERIVED
+    assert "real_estate_at_cost" in (ren.source_quote or "")
