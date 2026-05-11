@@ -86,16 +86,18 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-23 tests cover the bugs and edge cases that bit during development:
+23 tests cover the bugs that bit during development plus the per-industry valuation math:
 
 - `latest_value_per_period` keying by `end` date rather than the filing's `fy` (a 10-K filed for FY2025 reports comparative income statements for FY2024 and FY2023, all tagged `fy=2025`; grouping by `fy` collides three years of data into one slot)
 - restatement dedup picks the higher-accession version
 - alternate-tag fall-through with confidence 0.95 vs primary 1.0
 - missing concepts return `None`, never raise
-- the DERIVED fallbacks (op income from IBT + interest, total liabilities from the balance-sheet identity)
+- the DERIVED fallbacks (op income from IBT + interest, total liabilities from the balance-sheet identity, REIT real-estate-net from at-cost minus accumulated depreciation)
 - `_recent_period_ends` ordering and anchor clipping
 - `_compose_company` silently drops older periods with required-field gaps but raises on the latest
 - `default_assumptions` averages ratios across the multi-year window and estimates `revenue_growth` from observed CAGR
+- `classify_sic` routes the five industry buckets (and rejects malformed input)
+- per-industry valuation formulas match hand-computed expected values: Gordon DDM for banks (with `r > g` constraint enforcement), justified P/B for insurers, FFO-multiple Gordon for REITs, and 10-year FCFF with zero terminal value for energy E&P
 
 ## Deployment
 
