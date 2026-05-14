@@ -76,6 +76,7 @@ INCOME_STATEMENT_FIELDS = [
     "research_and_development",
     "selling_general_administrative",
     "depreciation_amortization",
+    "share_based_compensation",
     "operating_income",
     "interest_expense",
     "income_before_tax",

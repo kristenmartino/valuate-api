@@ -600,6 +600,24 @@ def compute_reit_projection(company: Company, a: Assumptions) -> Projection:
         raise ValueError("FFO (net income + D&A) must be positive for valuation")
 
     ffo_per_share = ffo / shares
+
+    # AFFO is the more conservative cash-earnings number REIT analysts use:
+    # FFO minus recurring capex (and sometimes a straight-line-rent
+    # adjustment, which we don't model). When the filer reports capex on
+    # the cash flow statement, deduct it directly; otherwise fall back to a
+    # convention-based haircut. We surface AFFO/share informationally — the
+    # primary fair-value math still anchors on FFO/share so existing fair
+    # values don't shift, but a REIT reviewer can compare the two.
+    cf = period.cash_flow_statement
+    capex = _line_value(getattr(cf, "capital_expenditures", None))
+    if capex is not None and capex > 0:
+        affo = ffo - capex
+    else:
+        # Industry-convention haircut: ~80% of FFO is a defensible AFFO floor
+        # for industrial / data-center REITs. Crude, but better than nothing.
+        affo = ffo * 0.80
+    affo_per_share = affo / shares if shares > 0 else 0.0
+
     fair_value_per_share = ffo_per_share * (1 + a.terminal_growth) / (a.wacc - a.terminal_growth)
     equity_value = fair_value_per_share * shares
 
@@ -614,6 +632,8 @@ def compute_reit_projection(company: Company, a: Assumptions) -> Projection:
         equity_value=equity_value,
         diluted_shares=shares,
         fair_value_per_share=fair_value_per_share,
+        ffo_per_share=ffo_per_share,
+        affo_per_share=affo_per_share,
     )
 
 

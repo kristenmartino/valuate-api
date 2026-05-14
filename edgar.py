@@ -222,6 +222,16 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
         "DepreciationAndAmortization",
         "Depreciation",  # GOOGL et al. report only depreciation as the CFO add-back
     ],
+    # Stock-based compensation — reported on the cash flow statement as an
+    # add-back from net income to CFO. It IS deducted from GAAP operating
+    # income at the income-statement level (so the FCFF math already
+    # accounts for its economic cost), but real finance reviewers want to
+    # see SBC as its own line — for SBC-heavy filers (AAPL, MSFT, NVDA,
+    # GOOGL, META) it's a major source of dilution worth surfacing.
+    "share_based_compensation": [
+        "ShareBasedCompensation",
+        "AllocatedShareBasedCompensationExpense",
+    ],
     "capital_expenditures": [
         "PaymentsToAcquirePropertyPlantAndEquipment",
         "PaymentsToAcquireProductiveAssets",  # NVDA, HD

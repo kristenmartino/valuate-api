@@ -86,7 +86,15 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-23 tests cover the bugs that bit during development plus the per-industry valuation math:
+34 tests across three files:
+
+- `test_extraction.py` (23) — bugs that bit during development plus per-industry valuation math
+- `test_auth_and_rate_limit.py` (10) — bearer-token auth on `/override` and the IP rate limiter for `/extract`
+- `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
+
+The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). The intent is that a weekly Railway cron runs it as a deploy health check.
+
+The extraction tests cover:
 
 - `latest_value_per_period` keying by `end` date rather than the filing's `fy` (a 10-K filed for FY2025 reports comparative income statements for FY2024 and FY2023, all tagged `fy=2025`; grouping by `fy` collides three years of data into one slot)
 - restatement dedup picks the higher-accession version
@@ -114,6 +122,14 @@ Required env vars (set in the Railway project UI):
 | `SEC_USER_AGENT` | yes | SEC blocks requests without one. Format: `"Your Name your.email@domain.com"` |
 | `ANTHROPIC_API_KEY` | yes | Track B and segment extraction need it; `sk-ant-...` from `console.anthropic.com/settings/keys` |
 | `DATABASE_URL` | optional | Auto-injected by Railway's Postgres plugin. Without it, persistence falls back to in-memory. |
+| `VALUATE_OVERRIDE_TOKEN` | optional | When set, `PUT /company/{ticker}/override` requires `Authorization: Bearer <token>`. The Vercel frontend injects the same token via its `proxy.ts` from a same-named env var. When unset, `/override` runs unauthenticated (fine for local dev). |
+| `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited (it's the Anthropic-burning endpoint); read endpoints aren't. |
+
+### Auth + rate-limit model
+
+The threat model is "random scraping / accidental corruption," not "sophisticated adversary." `/override` is the only destructive endpoint and is gated by a single shared bearer token; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth; the case study acknowledges this.
+
+Local dev with both env vars unset behaves identically to the pre-auth era — useful for poking at the override flow without setting up tokens.
 
 ## Universe
 

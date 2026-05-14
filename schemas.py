@@ -78,6 +78,13 @@ class IncomeStatement(BaseModel):
     research_and_development: Optional[LineItem] = None
     selling_general_administrative: Optional[LineItem] = None
     depreciation_amortization: Optional[LineItem] = None
+    # Stock-based compensation. Deducted from operating income at the GAAP
+    # level (FCFF already accounts for its economic cost), but surfaced as
+    # its own line because SBC is a major source of dilution for tech
+    # filers and finance reviewers expect to see it explicitly. Reported
+    # on the cash flow statement as an add-back from net income to CFO;
+    # we extract it from there and surface here for the income view.
+    share_based_compensation: Optional[LineItem] = None
     operating_income: LineItem
     interest_expense: Optional[LineItem] = None
     income_before_tax: Optional[LineItem] = None
@@ -438,6 +445,14 @@ class Projection(BaseModel):
     equity_value: float
     diluted_shares: float
     fair_value_per_share: float
+    # REIT-only: AFFO/share for cross-check against FFO/share. AFFO subtracts
+    # recurring capex (and analyst-discretion straight-line rent) from FFO,
+    # which gives a more conservative cash-earnings number. The Gordon-growth
+    # math here is still based on FFO/share (preserves prior fair values), but
+    # the AFFO/share field lets the workspace render both side by side so a
+    # REIT reviewer can sanity-check the magnitude.
+    ffo_per_share: Optional[float] = None
+    affo_per_share: Optional[float] = None
 
 
 class MonteCarloResult(BaseModel):

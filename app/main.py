@@ -16,9 +16,11 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from anthropic import AsyncAnthropic
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
+from app.auth import require_override_auth
+from app.rate_limit import require_extract_rate_limit
 from comps import get_peer_comps
 from dcf import (
     compute_projection,
@@ -120,7 +122,10 @@ async def _require_company(ticker: str) -> Company:
 
 
 @app.post("/extract", response_model=Company)
-async def extract(req: ExtractRequest) -> Company:
+async def extract(
+    req: ExtractRequest,
+    _ratelimit: None = Depends(require_extract_rate_limit),
+) -> Company:
     if _graph is None:
         raise HTTPException(503, "Service not ready")
     try:
@@ -142,7 +147,11 @@ async def get_company(ticker: str) -> Company:
 
 
 @app.put("/company/{ticker}/override", response_model=Company)
-async def override(ticker: str, req: OverrideRequest) -> Company:
+async def override(
+    ticker: str,
+    req: OverrideRequest,
+    _auth: None = Depends(require_override_auth),
+) -> Company:
     company = await _require_company(ticker)
     try:
         updated = apply_override(
