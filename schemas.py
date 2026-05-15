@@ -374,6 +374,15 @@ class FinancialPeriod(BaseModel):
     income_statement: AnyIncomeStatement
     balance_sheet: AnyBalanceSheet
     cash_flow_statement: AnyCashFlowStatement
+    # E&P-only: Standardized Measure of Discounted Future Net Cash Flows
+    # (ASC 932-235) — the SEC-mandated PV-10 of proved oil & gas reserves
+    # disclosed in supplementary information. Sell-side NAV models use
+    # this as the conventional anchor; we extract it via Track B when
+    # available (it isn't tagged in XBRL company-facts, so this is always
+    # an LLM_HTML source) and surface alongside the 10-year FCFF fair
+    # value as a cross-check. None for non-E&P filers and for E&P filers
+    # whose section extractor missed the disclosure.
+    standardized_measure: Optional[LineItem] = None
 
 
 class ExtractionFlag(BaseModel):
@@ -453,6 +462,12 @@ class Projection(BaseModel):
     # REIT reviewer can sanity-check the magnitude.
     ffo_per_share: Optional[float] = None
     affo_per_share: Optional[float] = None
+    # E&P-only: per-share Standardized Measure (SMOG / PV-10). The
+    # conventional sell-side NAV anchor — extracted via Track B from the
+    # supplementary oil & gas disclosure, surfaced alongside the 10-year-
+    # capped-FCFF fair value as a cross-check. None when the filer isn't
+    # E&P, isn't tagged with SMOG, or the section extractor missed it.
+    smog_per_share: Optional[float] = None
 
 
 class MonteCarloResult(BaseModel):

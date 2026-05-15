@@ -15,7 +15,7 @@ an empty result so Track A's partial Company is preserved.
 import json
 from datetime import date
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 from anthropic import AsyncAnthropic
 
@@ -143,6 +143,102 @@ async def extract_track_b(
             continue
         result[field_name] = line_item
     return result
+
+
+async def extract_standardized_measure(
+    client: AsyncAnthropic,
+    ticker: str,
+    company_name: str,
+    period_end: date,
+    accession_number: str,
+    supplemental_section_text: str,
+) -> Optional[LineItem]:
+    """Extract the Standardized Measure of Discounted Future Net Cash Flows.
+
+    SMOG (also referred to as the "standardized measure" or PV-10) is the
+    SEC-mandated PV-at-10% of proved oil & gas reserves, disclosed under
+    ASC 932-235 in supplementary information (typically at the tail of
+    Item 8 or in a separate unaudited section). It's the conventional
+    sell-side NAV anchor for E&P companies — surfaced alongside the
+    workspace's 10-year-capped FCFF fair value as a cross-check.
+
+    Not extractable via XBRL company-facts (we verified XOM/CVX/COP have
+    no SMOG XBRL tag), so this is always source=LLM_HTML. Returns None if
+    the section isn't found, Claude can't locate the value, or parsing
+    fails — best-effort, never raises.
+
+    Reuses the cached EXTRACTION_SYSTEM_PROMPT (same prompt-caching prefix
+    as the field-fill and segment calls) so the marginal token cost on top
+    of the existing Track B run for the same filing is just the user
+    message and the response.
+    """
+    if not supplemental_section_text.strip():
+        return None
+
+    user_prompt = (
+        f"Company: {company_name} ({ticker})\n"
+        f"Filing: 10-K for fiscal year ended {period_end.isoformat()}\n"
+        f"Accession: {accession_number}\n\n"
+        "Locate the Standardized Measure of Discounted Future Net Cash Flows "
+        "(SMOG) relating to proved oil and gas reserves in the filing excerpt "
+        "below. This is the SEC-mandated PV-10 disclosure under ASC 932-235, "
+        'typically labeled "Standardized Measure of Discounted Future Net '
+        'Cash Flows" or "Standardized Measure of Discounted Cash Flows" in '
+        "supplementary information. Return the most-recent fiscal year's "
+        "total value (the bottom line, after deducting estimated future "
+        "income taxes), not the comparative prior year.\n\n"
+        "Schema:\n"
+        "{\n"
+        '  "value": <number in actual USD>,\n'
+        '  "source_quote": "<5-30 word verbatim quote including the number>",\n'
+        '  "confidence": <float 0-1>\n'
+        "}\n\n"
+        "Return value in actual USD (multiply through if the section reports "
+        "in millions or thousands — most filers report E&P supplementary in "
+        "millions, so a reported '12,345' typically means $12,345,000,000).\n\n"
+        "If the filing does not include this disclosure (e.g. the company has "
+        'no oil & gas activities), return {"value": null}.\n\n'
+        "FILING EXCERPT (oil & gas supplemental section):\n"
+        "---\n"
+        f"{supplemental_section_text}\n"
+        "---\n\n"
+        "Return only the JSON object. No prose, no markdown."
+    )
+
+    response = await client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        thinking={"type": "disabled"},
+        output_config={"effort": "low"},
+        system=[
+            {
+                "type": "text",
+                "text": EXTRACTION_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_prompt}],
+    )
+
+    text = next((b.text for b in response.content if b.type == "text"), "")
+    data = _parse_response_text(text)
+    value = data.get("value")
+    if value is None:
+        return None
+    try:
+        confidence = float(data.get("confidence", 0.8))
+    except (TypeError, ValueError):
+        confidence = 0.8
+    confidence = max(0.0, min(1.0, confidence))
+    try:
+        return LineItem(
+            value=Decimal(str(value)),
+            source=ExtractionSource.LLM_HTML,
+            confidence=confidence,
+            source_quote=data.get("source_quote"),
+        )
+    except (ValueError, TypeError):
+        return None
 
 
 async def extract_revenue_segments(

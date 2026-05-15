@@ -548,6 +548,18 @@ def compute_energy_projection(company: Company, a: Assumptions) -> Projection:
     shares = _diluted_shares(company)
     fair_value_per_share = equity_value / shares if shares > 0 else 0.0
 
+    # SMOG cross-check: if the filing's standardized-measure disclosure was
+    # extracted by Track B, surface it as the per-share equivalent. The
+    # SMOG is already a PV-10 of proved reserves net of estimated taxes,
+    # so we treat it as a direct NAV alternative — equity value, not EV.
+    # Doesn't change the primary fair_value_per_share (which is still the
+    # 10-year FCFF anchor); just hands the reviewer a sell-side-style
+    # PV-10/share number to compare against.
+    smog_per_share: Optional[float] = None
+    smog_item = _line_value(getattr(period, "standardized_measure", None))
+    if smog_item is not None and shares > 0:
+        smog_per_share = smog_item / shares
+
     return Projection(
         assumptions=a,
         base_year=period.fiscal_year,
@@ -559,6 +571,7 @@ def compute_energy_projection(company: Company, a: Assumptions) -> Projection:
         equity_value=equity_value,
         diluted_shares=shares,
         fair_value_per_share=fair_value_per_share,
+        smog_per_share=smog_per_share,
     )
 
 

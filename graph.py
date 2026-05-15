@@ -27,7 +27,11 @@ from langgraph.graph import END, StateGraph
 
 from edgar import EdgarClient, concepts_for, latest_value_per_period
 from extract_track_a import extract_track_a
-from extract_track_b import extract_revenue_segments, extract_track_b
+from extract_track_b import (
+    extract_revenue_segments,
+    extract_standardized_measure,
+    extract_track_b,
+)
 from industry import Industry, classify_sic
 from schemas import (
     BalanceSheet,
@@ -50,7 +54,10 @@ from schemas import (
     REITIncomeStatement,
     RevenueSegment,
 )
-from section_extractor import extract_financial_statements_section
+from section_extractor import (
+    extract_financial_statements_section,
+    extract_oil_and_gas_supplemental_section,
+)
 
 
 CONFIDENCE_FLAG_THRESHOLD = 0.80
@@ -534,6 +541,7 @@ def _build_financial_period(
     items: dict[str, Optional[LineItem]],
     industry: Industry = Industry.STANDARD,
     revenue_segments: Optional[list[RevenueSegment]] = None,
+    standardized_measure: Optional[LineItem] = None,
 ) -> FinancialPeriod:
     income_fields, balance_fields, cashflow_fields, *_ = _industry_fields(industry)
     income_kwargs: dict[str, Any] = {f: items.get(f) for f in income_fields}
@@ -568,6 +576,7 @@ def _build_financial_period(
         income_statement=income_stmt,
         balance_sheet=balance_stmt,
         cash_flow_statement=cash_flow_stmt,
+        standardized_measure=standardized_measure,
     )
 
 
@@ -580,6 +589,7 @@ def _compose_company(
     periods_items: dict[date, dict[str, Optional[LineItem]]],
     industry: Industry = Industry.STANDARD,
     revenue_segments: Optional[list[RevenueSegment]] = None,
+    standardized_measure: Optional[LineItem] = None,
 ) -> Company:
     """Build a Company from per-period field dicts, dispatching by industry.
 
@@ -590,7 +600,10 @@ def _compose_company(
 
     `revenue_segments` only applies to standard-industry filers (banks
     don't report segment revenue in the same way) and is attached to the
-    latest period's IncomeStatement only.
+    latest period's IncomeStatement only. `standardized_measure` is E&P-
+    only (SMOG disclosure from supplementary information) and is attached
+    to the latest period only — historical periods' SMOG numbers exist
+    in the same disclosure but aren't worth the extra Track B call.
     """
     if not period_ends:
         raise CompositionError(f"No fiscal periods to compose for {ticker}")
@@ -615,6 +628,11 @@ def _compose_company(
             if pe == latest and industry in (Industry.STANDARD, Industry.ENERGY)
             else None
         )
+        smog_for_period = (
+            standardized_measure
+            if pe == latest and industry == Industry.ENERGY
+            else None
+        )
         fp_list.append(
             _build_financial_period(
                 pe,
@@ -622,6 +640,7 @@ def _compose_company(
                 items,
                 industry=industry,
                 revenue_segments=segments_for_period,
+                standardized_measure=smog_for_period,
             )
         )
 
@@ -653,6 +672,7 @@ def _make_track_b(
         # system prompt on the Anthropic side.
         missing = _missing_fields(latest_items, industry)
         revenue_segments: list[RevenueSegment] = []
+        standardized_measure: Optional[LineItem] = None
 
         try:
             html = await edgar_client.get_filing_html(state["filing_url"])
@@ -686,6 +706,24 @@ def _make_track_b(
                     accession_number=state["filing_accession"],
                     filing_section_text=section_text,
                 )
+
+            if industry == Industry.ENERGY:
+                # SMOG / Standardized Measure of Discounted Future Net Cash
+                # Flows lives outside Item 8 (in a separate supplementary
+                # disclosure under ASC 932-235), so we re-slice the HTML
+                # with a different anchor pattern and run a dedicated Track B
+                # call against it. Best-effort — None when the filer doesn't
+                # have proved-reserve disclosures or the anchor pattern misses.
+                supplemental_text = extract_oil_and_gas_supplemental_section(html)
+                if supplemental_text:
+                    standardized_measure = await extract_standardized_measure(
+                        client=anthropic_client,
+                        ticker=state["ticker"],
+                        company_name=state["company_name"],
+                        period_end=latest,
+                        accession_number=state["filing_accession"],
+                        supplemental_section_text=supplemental_text,
+                    )
         except Exception as e:
             # Best-effort: log and let _compose_company decide if the
             # remaining gaps are tolerable (i.e. all-optional).
@@ -706,6 +744,7 @@ def _make_track_b(
             periods_items=periods_items,
             industry=industry,
             revenue_segments=revenue_segments,
+            standardized_measure=standardized_measure,
         )
         return {"company": company}
 

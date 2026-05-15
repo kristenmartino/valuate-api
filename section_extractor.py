@@ -62,3 +62,63 @@ def extract_financial_statements_section(html: str) -> str:
     section_end = next_section.start() if next_section else len(text)
 
     return text[section_start:section_end]
+
+
+# Keywords that anchor the SMOG / standardized-measure disclosure. The
+# SEC-mandated section (ASC 932-235) is usually titled some variant of
+# "Standardized Measure of Discounted Future Net Cash Flows" or
+# "Supplemental Information on Oil and Gas Producing Activities".
+_SMOG_ANCHOR_RE = re.compile(
+    r"standardized\s+measure\s+of\s+discounted\s+future\s+net\s+cash\s+flows?",
+    re.IGNORECASE,
+)
+_SMOG_BACKUP_ANCHOR_RE = re.compile(
+    r"supplemental(?:ary)?\s+(?:information|disclosures?)\s+(?:on|relating\s+to)?\s*oil\s+and\s+gas",
+    re.IGNORECASE,
+)
+
+
+def extract_oil_and_gas_supplemental_section(
+    html: str,
+    window_chars: int = 6_000,
+) -> str:
+    """Return the oil & gas supplemental section text from a 10-K HTML.
+
+    Targets the SEC-mandated standardized-measure disclosure (ASC 932-235)
+    that lives outside the standard financial statements — usually in
+    "Supplementary Information on Oil and Gas Producing Activities
+    (Unaudited)" at the tail of Item 8 or in a separate unaudited section.
+
+    Strategy: find all anchor matches and use the LAST one. The phrase
+    "standardized measure of discounted future net cash flows" appears
+    early in 10-Ks as a forward reference in footnotes, and again later
+    as the actual disclosure table heading. The table is what we want,
+    and it consistently appears as the LAST occurrence in the supplementary
+    information section (the "Changes in Standardized Measure" reconciliation
+    table that immediately follows it is captured by the window).
+
+    Falls back to a broader anchor ("Supplementary Information ... Oil and
+    Gas") if the canonical phrase is absent. Returns an empty string if
+    neither matches — Track B sees nothing rather than getting noise.
+
+    Returns:
+        Section text (typically 5-15kB) suitable for Claude extraction,
+        or empty string if no oil-and-gas section is detected.
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    for tag in soup(["script", "style"]):
+        tag.decompose()
+
+    text = soup.get_text(separator="\n")
+    lines = (re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n"))
+    text = "\n".join(line for line in lines if line)
+
+    matches = list(_SMOG_ANCHOR_RE.finditer(text))
+    match = matches[-1] if matches else _SMOG_BACKUP_ANCHOR_RE.search(text)
+    if match is None:
+        return ""
+
+    start = max(0, match.start() - window_chars // 2)
+    end = min(len(text), match.end() + window_chars // 2)
+    return text[start:end]
