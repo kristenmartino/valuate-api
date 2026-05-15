@@ -32,6 +32,31 @@ PROJECTION_YEARS = 5
 DEFAULT_TAX_RATE = 0.21  # US federal corporate rate
 DEFAULT_WORKING_CAPITAL_RATIO = 0.05
 
+# CAPM-style cost-of-equity baseline for the standard FCFF path. Approximates
+# rf (~4.5%) + beta (~1.0) × ERP (~5%) for a mid-cap industrial. Used as the
+# unlevered cost of equity in the WACC calculation; combined with an observed
+# cost of debt (interest_expense / total_debt) and the company's actual
+# debt-to-capital ratio to produce a per-company WACC default.
+DEFAULT_COST_OF_EQUITY = 0.095
+DEFAULT_COST_OF_DEBT = 0.05  # fallback when interest expense or debt is missing
+DEFAULT_FALLBACK_WACC = 0.09  # used when even the capital-structure approximation can't be computed
+WACC_BOUNDS = (0.07, 0.18)  # cap the computed WACC to defensible analyst range — 7% floor catches debt-heavy filers (AAPL, etc.) whose interest-expense / debt understates cost of capital
+
+# Normalized tax rate clipping. Observed effective tax rate (interest expense
+# / IBT) can be wonky for filers with R&D credits, foreign mix, one-time
+# items. We use the observed rate but clip to the 15-30% band that captures
+# the structural rate for most US C-corps after typical deductions/credits.
+NORMALIZED_TAX_BOUNDS = (0.15, 0.30)
+
+# Monte Carlo sigma-from-volatility scaling. We derive σ from the standard
+# deviation of historical year-over-year ratios (revenue growth, op margin)
+# and clip to plausible ranges. Falls back to the prior hardcoded defaults
+# when too few historical periods exist.
+MC_REVENUE_GROWTH_SIGMA_BOUNDS = (0.005, 0.10)
+MC_OPERATING_MARGIN_SIGMA_BOUNDS = (0.005, 0.05)
+MC_TERMINAL_GROWTH_SIGMA = 0.005  # WACC and terminal-growth aren't observed; fixed
+MC_WACC_SIGMA = 0.005
+
 # Bank DDM defaults — used when historicals are too thin to derive.
 DEFAULT_BANK_COST_OF_EQUITY = 0.10
 DEFAULT_BANK_DIVIDEND_GROWTH = 0.04
@@ -71,6 +96,99 @@ def _industry(company: Company) -> Industry:
     return company.periods[0].industry
 
 
+def _normalize_tax_rate(observed: float) -> float:
+    """Clip an observed effective tax rate to the structural-rate band.
+
+    Filers with R&D credits (NVDA), foreign earnings mix (AAPL, MSFT), or
+    one-time settlements (JNJ in some years) report observed ETRs that swing
+    well outside the structural rate. Clipping to 15-30% lands the default
+    closer to the steady-state rate a forward projection should use, without
+    ignoring the historical signal entirely.
+    """
+    return max(NORMALIZED_TAX_BOUNDS[0], min(NORMALIZED_TAX_BOUNDS[1], observed))
+
+
+def _operating_lease_liabilities(company: Company) -> float:
+    """Pull operating-lease liabilities from the latest period's balance sheet.
+
+    Under ASC 842 (effective FY19+), operating leases sit on the balance
+    sheet as right-of-use assets and lease liabilities. Real DCFs add lease
+    liabilities to net debt because they're contractually committed cash
+    outflows. AAPL's are ~$11B; ignored by the prior _net_debt computation.
+
+    The bs.standardized_measure path doesn't apply here — we extract this
+    line via XBRL when the filer tags it. Returns 0.0 when the lease
+    liability isn't extracted (legacy filers, or non-extracted Optional
+    fields), preserving the prior _net_debt behavior as the floor.
+    """
+    bs = company.periods[0].balance_sheet
+    val = _line_value(getattr(bs, "operating_lease_liabilities", None))
+    return val if val is not None else 0.0
+
+
+def _wacc_from_capital_structure(company: Company) -> float:
+    """Compute a CAPM-style WACC default from the company's actual capital
+    structure: WACC = (E/V) × Re + (D/V) × Rd × (1 − tax_rate).
+
+    Re (cost of equity) is the CAPM-style baseline (rf + β × ERP) at ~9.5%
+    — we don't have per-company beta from XBRL, so the baseline holds for
+    most large industrials/tech filers. Rd (cost of debt) is interest_expense
+    / total_debt observed from the financials, falling back to 5% when
+    either is missing or zero. The result is clipped to [5%, 18%] which
+    captures the defensible analyst range.
+
+    For filers where the computation can't run (no balance sheet, zero
+    debt and equity), falls back to DEFAULT_FALLBACK_WACC. Specifically
+    for the standard-industry path; banks/insurers/REITs/E&P use their
+    own per-industry cost-of-equity defaults instead.
+    """
+    bs = company.periods[0].balance_sheet
+    is_ = company.periods[0].income_statement
+
+    long_term = _line_value(getattr(bs, "long_term_debt", None)) or 0.0
+    short_term = _line_value(getattr(bs, "short_term_debt", None)) or 0.0
+    debt = long_term + short_term
+    equity = _line_value(getattr(bs, "shareholders_equity", None)) or 0.0
+    capital = debt + equity
+    if capital <= 0:
+        return DEFAULT_FALLBACK_WACC
+
+    interest_expense = _line_value(getattr(is_, "interest_expense", None))
+    if interest_expense is not None and debt > 0:
+        cost_of_debt = max(0.02, min(0.12, abs(interest_expense) / debt))
+    else:
+        cost_of_debt = DEFAULT_COST_OF_DEBT
+
+    ibt = _line_value(getattr(is_, "income_before_tax", None))
+    tax = _line_value(getattr(is_, "income_tax_expense", None))
+    if ibt and ibt > 0 and tax is not None:
+        tax_rate = _normalize_tax_rate(tax / ibt)
+    else:
+        tax_rate = DEFAULT_TAX_RATE
+
+    weight_e = equity / capital
+    weight_d = debt / capital
+    after_tax_cost_of_debt = cost_of_debt * (1 - tax_rate)
+    wacc = weight_e * DEFAULT_COST_OF_EQUITY + weight_d * after_tax_cost_of_debt
+    return max(WACC_BOUNDS[0], min(WACC_BOUNDS[1], wacc))
+
+
+def _sigma_from_series(values: list[float], bounds: tuple[float, float]) -> Optional[float]:
+    """Sample standard deviation of a series of ratios, clipped to bounds.
+
+    Used for Monte Carlo σ calibration on revenue growth and op margin.
+    Returns None when there aren't enough data points to compute a sample
+    σ (need ≥3, since the year-over-year YoY-growth series has length n-1
+    and a sample-σ over a length-2 series is degenerate at 0).
+    """
+    if len(values) < 3:
+        return None
+    mean = sum(values) / len(values)
+    variance = sum((v - mean) ** 2 for v in values) / (len(values) - 1)
+    sigma = math.sqrt(variance)
+    return max(bounds[0], min(bounds[1], sigma))
+
+
 def _default_bank_assumptions(periods: list) -> Assumptions:
     """Bank DDM-flavored defaults.
 
@@ -107,24 +225,35 @@ def _default_bank_assumptions(periods: list) -> Assumptions:
             if div_value is not None:
                 div_per_share.append(div_value / shares)
 
-    # Dividend CAGR derived from history, but capped well below the default
-    # cost of equity so the Gordon constraint (r > g) holds out of the box.
-    # Recent post-COVID dividend hikes at major banks hit double digits — not
-    # sustainable as terminal growth.
-    div_growth = DEFAULT_BANK_DIVIDEND_GROWTH
-    if len(div_per_share) >= 2 and div_per_share[-1] > 0:
-        cagr = (
-            div_per_share[0] / div_per_share[-1]
-        ) ** (1 / (len(div_per_share) - 1)) - 1
-        max_g = DEFAULT_BANK_COST_OF_EQUITY - 0.02  # leave 200bps headroom
-        div_growth = max(-0.02, min(max_g, cagr))
-
     def _avg(xs: list[float], fallback: float) -> float:
         return sum(xs) / len(xs) if xs else fallback
 
+    avg_roe = _avg(roes, 0.12)
+
+    # Sustainable-growth-rate (SGR) anchor for dividend growth: g = b × ROE
+    # where b is the retention ratio (1 − payout). This is the textbook bank
+    # DDM convention and what sell-side analysts actually use, vs. the prior
+    # naive dividend CAGR that captured one-off post-COVID dividend hikes
+    # at JPM/BAC and lifted defaults to non-sustainable rates. The CAGR
+    # path is kept as an upper bound for filers with thin payout history.
+    payout_ratio = 0.0
+    if div_per_share and roes:
+        # Latest-year payout = dividends per share / EPS; EPS ≈ ROE × BVPS.
+        # We approximate with the latest year's div/share / (NI/share). For
+        # the bank universe this is a reasonable proxy.
+        latest_ni = _line_value(periods[0].income_statement.net_income)
+        latest_shares = _line_value(periods[0].income_statement.diluted_shares_outstanding)
+        if latest_ni and latest_shares and latest_shares > 0 and latest_ni > 0:
+            eps = latest_ni / latest_shares
+            payout_ratio = min(1.0, max(0.0, div_per_share[0] / eps)) if eps > 0 else 0.0
+
+    sgr = (1.0 - payout_ratio) * avg_roe
+    max_g = DEFAULT_BANK_COST_OF_EQUITY - 0.02  # leave 200bps headroom under r
+    div_growth = max(-0.02, min(max_g, sgr if sgr > 0 else DEFAULT_BANK_DIVIDEND_GROWTH))
+
     return Assumptions(
         revenue_growth=0.0,
-        operating_margin=_avg(roes, 0.12),
+        operating_margin=avg_roe,
         terminal_growth=div_growth,
         wacc=DEFAULT_BANK_COST_OF_EQUITY,
         tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
@@ -363,12 +492,23 @@ def default_assumptions(company: Company) -> Assumptions:
         cagr = (revenues[0] / revenues[-1]) ** (1 / (len(revenues) - 1)) - 1
         revenue_growth = max(-0.10, min(0.25, cagr))
 
+    # Tax rate: average observed ETR across the multi-year window, clipped
+    # to the 15-30% structural-rate band so credits/foreign mix don't pull
+    # the default outside what a forward projection should plan for.
+    avg_observed_tax = _avg(tax_rates, DEFAULT_TAX_RATE)
+    tax_rate = _normalize_tax_rate(avg_observed_tax)
+
+    # WACC: per-company CAPM-style computation over the actual capital
+    # structure, instead of a flat 8% across all filers. Equity-heavy
+    # filers like AAPL/NVDA land near 9-10%; debt-heavy industrials lower.
+    wacc = _wacc_from_capital_structure(company)
+
     return Assumptions(
         revenue_growth=revenue_growth,
         operating_margin=_avg(margins, 0.20),
         terminal_growth=0.025,
-        wacc=0.08,
-        tax_rate=_avg(tax_rates, DEFAULT_TAX_RATE),
+        wacc=wacc,
+        tax_rate=tax_rate,
         capex_ratio=_avg(capex_ratios, 0.04),
         da_ratio=_avg(da_ratios, 0.04),
         working_capital_ratio=DEFAULT_WORKING_CAPITAL_RATIO,
@@ -376,11 +516,18 @@ def default_assumptions(company: Company) -> Assumptions:
 
 
 def _net_debt(company: Company) -> float:
+    """Total debt − cash, plus operating-lease liabilities (ASC 842).
+
+    Operating leases are contractually committed cash outflows that real
+    DCFs include in the EV → equity bridge; AAPL's operating-lease
+    liabilities are ~$11B, material enough that ignoring them was a
+    real-analyst credibility flag from the senior review.
+    """
     bs = company.periods[0].balance_sheet
     long_term = _line_value(bs.long_term_debt) or 0.0
     short_term = _line_value(bs.short_term_debt) or 0.0
     cash = _line_value(bs.cash_and_equivalents) or 0.0
-    return long_term + short_term - cash
+    return long_term + short_term + _operating_lease_liabilities(company) - cash
 
 
 def _diluted_shares(company: Company) -> float:
@@ -744,22 +891,70 @@ def _histogram(values: list[float], bins: int = 50) -> list[tuple[float, int]]:
     return [(lo + i * width, c) for i, c in enumerate(counts)]
 
 
+def _historical_volatility(company: Company) -> tuple[Optional[float], Optional[float]]:
+    """Sample standard deviations of revenue growth (YoY) and operating margin
+    over the company's historical FinancialPeriod window. Returns (None, None)
+    when too few periods exist to compute a sample σ — caller falls back to
+    the prior hardcoded defaults in that case.
+
+    Used to calibrate Monte Carlo σ — the prior hardcoded 2% / 2% / 0.5% / 0.5%
+    σ values were arbitrary and the same for AAPL (low volatility) as for NVDA
+    (very high volatility). Anchoring on observed history makes the p10-p90
+    intervals defensible to a research analyst.
+    """
+    revenues: list[float] = []  # newest-first
+    margins: list[float] = []
+    for p in company.periods:
+        rev = _line_value(p.income_statement.revenue)
+        if rev is None or rev <= 0:
+            continue
+        revenues.append(rev)
+        op = _line_value(p.income_statement.operating_income)
+        if op is not None:
+            margins.append(op / rev)
+    # YoY growth needs n+1 revenue observations to produce n growth ratios
+    growth_yoy: list[float] = []
+    for i in range(len(revenues) - 1):
+        if revenues[i + 1] > 0:
+            growth_yoy.append((revenues[i] / revenues[i + 1]) - 1.0)
+    rg_sigma = _sigma_from_series(growth_yoy, MC_REVENUE_GROWTH_SIGMA_BOUNDS)
+    om_sigma = _sigma_from_series(margins, MC_OPERATING_MARGIN_SIGMA_BOUNDS)
+    return rg_sigma, om_sigma
+
+
 def monte_carlo(
     company: Company,
     base: Assumptions,
     iterations: int = 10_000,
-    revenue_growth_std: float = 0.02,
-    operating_margin_std: float = 0.02,
-    terminal_growth_std: float = 0.005,
-    wacc_std: float = 0.005,
+    revenue_growth_std: Optional[float] = None,
+    operating_margin_std: Optional[float] = None,
+    terminal_growth_std: float = MC_TERMINAL_GROWTH_SIGMA,
+    wacc_std: float = MC_WACC_SIGMA,
     seed: Optional[int] = None,
 ) -> MonteCarloResult:
     """Run `iterations` DCFs with the four key drivers sampled from normals.
+
+    The revenue-growth and operating-margin sigmas default to per-company
+    historical sample-σ values (YoY growth volatility and margin volatility
+    over the available FinancialPeriod window), instead of the prior
+    universal 2% / 2% defaults — an SBC-heavy mature filer like KO and a
+    high-growth filer like NVDA shouldn't share the same MC envelope.
+    Falls back to 2% when fewer than 3 historical observations are available.
+
+    Terminal growth and WACC σ stay at the small fixed values (0.5%) since
+    those aren't observed inputs and the user-set slider position is the
+    central estimate.
 
     WACC is clipped to stay strictly above terminal_growth; a sample that
     would invert the relationship gets WACC pulled up to terminal_growth + 1%
     rather than discarded, keeping the iteration count stable.
     """
+    if revenue_growth_std is None or operating_margin_std is None:
+        rg_obs, om_obs = _historical_volatility(company)
+        if revenue_growth_std is None:
+            revenue_growth_std = rg_obs if rg_obs is not None else 0.02
+        if operating_margin_std is None:
+            operating_margin_std = om_obs if om_obs is not None else 0.02
     rng = random.Random(seed)
     results: list[float] = []
     for _ in range(iterations):

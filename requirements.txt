@@ -18,3 +18,9 @@ asyncpg>=0.29
 # Test-only; kept here so a fresh clone gets to a runnable `pytest tests/` in
 # one step. Tiny footprint, fine to include in production install.
 pytest>=7
+
+# Optional. Sentry error reporting — uncomment to enable, or
+# `pip install sentry-sdk[fastapi]` ad hoc. Runtime activation is gated on
+# SENTRY_DSN being set; the import itself is lazy in app/sentry_setup.py
+# so leaving this commented + SENTRY_DSN unset is the no-op default.
+# sentry-sdk[fastapi]>=2.0

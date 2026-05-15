@@ -242,6 +242,14 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
     "cash_and_equivalents": ["CashAndCashEquivalentsAtCarryingValue"],
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    # Operating-lease liabilities (ASC 842). Some filers report only the
+    # noncurrent portion; some only the total. We try the total first to
+    # capture both current + noncurrent, then fall back to the noncurrent
+    # tag (which is the larger of the two for most filers).
+    "operating_lease_liabilities": [
+        "OperatingLeaseLiability",
+        "OperatingLeaseLiabilityNoncurrent",
+    ],
     "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],

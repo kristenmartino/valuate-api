@@ -9,9 +9,16 @@ The system prompt encodes:
 - Confidence calibration ladder (so 0.85 means the same thing across companies)
 - Common edge cases (units, label variations, capex vs. acquisitions)
 
+The prompt is hash-tracked: PROMPT_HASH (sha256, 12 hex chars) is computed
+at module load and surfaced through /version. Changes to the prompt change
+the hash, so a prod regression that's "we're running an unexpected prompt
+version" is one curl-and-diff away.
+
 Iterate on this prompt against real failure cases. Don't over-engineer it
 before you've seen what Claude actually gets wrong on AAPL/MSFT/JNJ etc.
 """
+
+import hashlib
 
 EXTRACTION_SYSTEM_PROMPT = """You are a financial analyst extracting line items from SEC 10-K filings into structured JSON for use in a DCF valuation model.
 
@@ -104,7 +111,53 @@ Things to notice in the example:
 1. Income statement values are multiplied by 1,000,000 because the statement is "in millions"; the diluted-share count is multiplied by 1,000 because the share footnote says "in thousands". Two different unit footnotes in the same statement is a common pattern — read each line item's footnote.
 2. Source quotes are verbatim contiguous slices that contain the number. They include the prior-year comparative column when it sits next to the current-year value, since cutting it out would not be a contiguous quote.
 3. Confidences land in the 0.95-0.98 band — high because each value is a single labeled line, but reserving 1.0 for cases with literally zero ambiguity (no thousands/millions footnote, single column, exact label match).
-4. The most-recent fiscal year is extracted (Sept 28, 2024), not the comparative column."""
+4. The most-recent fiscal year is extracted (Sept 28, 2024), not the comparative column.
+
+A SECOND, HARDER EXAMPLE — extracting from a footnote at lower confidence:
+
+Sometimes the income statement bundles items together and the breakout
+lives in a footnote. Suppose the requested field is `share_based_compensation`
+and the income statement shows only "Cost of revenue" and "Operating
+expenses" totals, but a footnote elsewhere reads:
+
+  Stock-Based Compensation Expense
+  The following table summarizes our stock-based compensation expense for
+  the years ended September 28, 2024 and September 30, 2023:
+                                          2024       2023
+  Cost of revenue                       $ 2,143    $ 1,942
+  Research and development                7,895      7,162
+  Selling, general and administrative     2,825      2,506
+  Total stock-based compensation        $ 12,863   $ 11,610
+
+The correct response is:
+
+{
+  "fields": {
+    "share_based_compensation": {
+      "value": 12863000000,
+      "source_quote": "Total stock-based compensation $ 12,863 $ 11,610",
+      "confidence": 0.92
+    }
+  }
+}
+
+Things to notice:
+1. The value is from a footnote, not the income statement face — confidence
+   is 0.92 (lower than the 0.95-0.98 band for face-of-statement extractions)
+   because the footnote location adds a small bit of uncertainty about
+   whether this is the canonical SBC figure for the filing.
+2. The total row is the right one to extract. Resist the temptation to
+   sum the sub-rows manually (that would be 0.5 confidence territory at
+   best — let the filer's own total do the math).
+3. Even though the footnote's text says "for the years ended September 28,
+   2024 and September 30, 2023", the value extracted is FY2024 ($12,863M),
+   not the comparative FY2023 column."""
+
+
+# sha256 of the system prompt — surfaces in /version so a "is the deployed
+# prompt the one I expect?" check is one curl-and-diff away. First 12 hex
+# chars is plenty of collision resistance for ad-hoc human comparison.
+PROMPT_HASH = hashlib.sha256(EXTRACTION_SYSTEM_PROMPT.encode("utf-8")).hexdigest()[:12]
 
 
 EXTRACTION_USER_PROMPT_TEMPLATE = """Company: {company_name} ({ticker})

@@ -207,6 +207,12 @@ class BalanceSheet(BaseModel):
     short_term_debt: Optional[LineItem] = None
     total_current_liabilities: Optional[LineItem] = None
     long_term_debt: Optional[LineItem] = None
+    # Operating-lease liabilities (ASC 842, effective FY19+). Real DCFs
+    # add these to net debt in the EV → equity bridge — they're contractually
+    # committed cash outflows. AAPL has ~$11B; ignoring them was a real-
+    # analyst credibility flag from the senior review. Optional because
+    # pre-ASC-842 historical periods don't tag it.
+    operating_lease_liabilities: Optional[LineItem] = None
     total_liabilities: LineItem
     shareholders_equity: LineItem
 

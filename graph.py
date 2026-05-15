@@ -103,6 +103,7 @@ BALANCE_SHEET_FIELDS = [
     "short_term_debt",
     "total_current_liabilities",
     "long_term_debt",
+    "operating_lease_liabilities",
     "total_liabilities",
     "shareholders_equity",
 ]

@@ -20,7 +20,10 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
 from app.auth import require_override_auth
+from app.logging_middleware import install_structured_logging
 from app.rate_limit import require_extract_rate_limit
+from app.sentry_setup import init_sentry
+from app.version import get_version_info
 from comps import get_peer_comps
 from dcf import (
     compute_projection,
@@ -98,12 +101,32 @@ async def lifespan(app: FastAPI):
         _repo = None
 
 
+# Optional Sentry: activates when SENTRY_DSN is set in the env. Initialized
+# before app construction so any startup-phase exception (lifespan failures,
+# config problems) is captured. No-op when SENTRY_DSN is absent.
+init_sentry()
+
 app = FastAPI(title="Valuate API", lifespan=lifespan)
+
+# Structured request logging with X-Request-ID correlation. Skipped only
+# when VALUATE_DISABLE_STRUCTURED_LOGGING=1 (local dev where you'd rather
+# see plain Python tracebacks).
+install_structured_logging(app)
 
 
 @app.get("/healthz")
 async def healthz() -> dict[str, bool]:
     return {"ok": True}
+
+
+@app.get("/version")
+async def version() -> dict[str, str | None]:
+    """Build-time identity for the running container. Useful for
+    diagnosing 'is the deploy stale?' without needing to probe behavior.
+    Returns commit SHA, deployment ID, start timestamp, and environment —
+    all pulled from Railway's auto-injected env vars (None for fields
+    that aren't set, e.g. when running locally)."""
+    return get_version_info()
 
 
 def _require_repo() -> CompanyRepo:
