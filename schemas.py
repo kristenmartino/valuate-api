@@ -14,7 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from industry import Industry
 
@@ -34,9 +34,13 @@ class ExtractionSource(str, Enum):
 
 
 class LineItem(BaseModel):
-    """A single financial line item with provenance."""
+    """A single financial line item with provenance.
 
-    model_config = ConfigDict(json_encoders={Decimal: str})
+    The `value` field is serialized as a string so cents-of-precision survive
+    the JSON round-trip — JS Number can't hold integer USD-cents past ~$90T.
+    Pydantic v2 dropped the `json_encoders` config in favor of per-field
+    `field_serializer`; we use the latter on the `value` field below.
+    """
 
     value: Decimal = Field(..., description="Value in USD (not millions/thousands)")
     source: ExtractionSource
@@ -49,6 +53,10 @@ class LineItem(BaseModel):
         None,
         description="Canonical XBRL concept tag, e.g. 'us-gaap:Revenues' (Track A)",
     )
+
+    @field_serializer("value")
+    def _serialize_value_as_str(self, v: Decimal) -> str:
+        return str(v)
 
 
 class RevenueSegment(BaseModel):
