@@ -13,10 +13,12 @@ The case study has the full design narrative; this README is a working reference
 POST /extract { ticker } ──▶ Company (cached server-side)
                               │
                               ├──▶ GET  /company/{ticker}                    read cached
-                              ├──▶ PUT  /company/{ticker}/override           HITL correction
+                              ├──▶ PUT  /company/{ticker}/override           HITL correction (Bearer-token auth)
                               ├──▶ GET  /value/{ticker}/defaults             starting Assumptions
                               ├──▶ POST /value/{ticker}                      DCF + MC + sensitivity
                               └──▶ GET  /comps/{ticker}                      peer multiples
+GET /healthz                                                                liveness probe
+GET /version                                                                commit SHA + prompt hash + start time
 ```
 
 A single FastAPI app serving a LangGraph state machine that extracts financial line items from a company's most recent 10-K, lets a reviewer override flagged extractions, then computes a 5-year DCF projection plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid.
@@ -124,6 +126,24 @@ Required env vars (set in the Railway project UI):
 | `DATABASE_URL` | optional | Auto-injected by Railway's Postgres plugin. Without it, persistence falls back to in-memory. |
 | `VALUATE_OVERRIDE_TOKEN` | optional | When set, `PUT /company/{ticker}/override` requires `Authorization: Bearer <token>`. The Vercel frontend injects the same token via its `proxy.ts` from a same-named env var. When unset, `/override` runs unauthenticated (fine for local dev). |
 | `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited (it's the Anthropic-burning endpoint); read endpoints aren't. |
+| `VALUATE_DISABLE_STRUCTURED_LOGGING` | optional | Set to `1` to skip the JSON-per-request middleware (`app/logging_middleware.py`). Useful for local dev when reading plain Python tracebacks in stderr is preferable. |
+| `SENTRY_DSN` | optional | When set, FastAPI exceptions get reported to Sentry. Requires `pip install sentry-sdk[fastapi]` (commented out in `requirements.txt`; uncomment to bake in). Off by default; lazy-imports the SDK so the dep is opt-in. |
+
+### Observability
+
+- **`/version`** returns the running commit SHA (from Railway's auto-injected `RAILWAY_GIT_COMMIT_SHA`), deployment ID, service start timestamp, environment name, and the **system-prompt sha256** — a "did the deployed prompt change?" diagnostic distinct from the commit SHA, since the prompt can change without a code commit (e.g. after a prompt-eval iteration).
+- **Structured request logging** (`app/logging_middleware.py`) emits one JSON line per request to stdout with `request_id`, `method`, `path`, `status`, `duration_ms`, `client_ip`. The `X-Request-ID` header is set on every response so error reports are grep-able. Skipped via `VALUATE_DISABLE_STRUCTURED_LOGGING=1`.
+- **Optional Sentry** (`app/sentry_setup.py`) activates when `SENTRY_DSN` is set in the env. Lazy-imports `sentry-sdk` so it's truly opt-in.
+
+### Track B extraction eval
+
+`eval/` holds hand-pinned ground-truth values for AAPL, MSFT, JPM, PLD, EOG (income / balance / cash-flow line items copied from the actual 10-Ks). The runner scores Claude's Track B extractions within ±0.5% tolerance per field:
+
+```bash
+SEC_USER_AGENT="..." ANTHROPIC_API_KEY="..." python -m eval.run_eval
+```
+
+Optional `--tickers AAPL,JPM` and `--json` flags. Exit-non-zero on any field miss, suitable for a cron. Intended use: run before merging changes to `extraction_prompt.py`, and on a weekly cadence to catch model-version regressions.
 
 ### Auth + rate-limit model
 
