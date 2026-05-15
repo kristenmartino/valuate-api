@@ -50,7 +50,61 @@ EDGE CASES TO HANDLE CORRECTLY
 - Capex: appears in cash flow as "Purchases of property, plant and equipment" or similar. Do NOT include acquisitions, intangible asset purchases, or investment securities purchases.
 - D&A: the cash flow statement add-back is the canonical figure. The income statement may bundle D&A into COGS or opex and may not break it out separately.
 - Diluted shares: use the weighted-average diluted share count from the income statement, not basic share count and not period-end share count.
-- Operating income: use the line that the company itself labels "Operating income" or "Income from operations". Do not recompute by subtracting opex from gross profit unless the company doesn't report it directly."""
+- Operating income: use the line that the company itself labels "Operating income" or "Income from operations". Do not recompute by subtracting opex from gross profit unless the company doesn't report it directly.
+
+WORKED EXAMPLE
+
+Suppose the filing excerpt contains:
+
+  CONSOLIDATED STATEMENTS OF OPERATIONS
+  (In millions, except per-share data)
+                                          Fiscal Year Ended
+                                       Sept 28, 2024   Sept 30, 2023
+  Net sales                              $   391,035    $   383,285
+  Cost of sales                              210,352        214,137
+  Gross margin                               180,683        169,148
+  Research and development                    31,370         29,915
+  Selling, general & administrative           26,097         24,932
+  Operating income                           123,216        114,301
+  Provision for income taxes                  16,741         16,741
+  Net income                              $   93,736    $   96,995
+  Weighted-average diluted shares          15,408,095     15,812,547
+                                            (in thousands)
+
+And the requested fields are: revenue, operating_income, net_income, diluted_shares_outstanding.
+
+The correct response is:
+
+{
+  "fields": {
+    "revenue": {
+      "value": 391035000000,
+      "source_quote": "Net sales $ 391,035 $ 383,285",
+      "confidence": 0.98
+    },
+    "operating_income": {
+      "value": 123216000000,
+      "source_quote": "Operating income 123,216 114,301",
+      "confidence": 0.97
+    },
+    "net_income": {
+      "value": 93736000000,
+      "source_quote": "Net income $ 93,736 $ 96,995",
+      "confidence": 0.98
+    },
+    "diluted_shares_outstanding": {
+      "value": 15408095000,
+      "source_quote": "Weighted-average diluted shares 15,408,095 15,812,547",
+      "confidence": 0.96
+    }
+  }
+}
+
+Things to notice in the example:
+1. Income statement values are multiplied by 1,000,000 because the statement is "in millions"; the diluted-share count is multiplied by 1,000 because the share footnote says "in thousands". Two different unit footnotes in the same statement is a common pattern — read each line item's footnote.
+2. Source quotes are verbatim contiguous slices that contain the number. They include the prior-year comparative column when it sits next to the current-year value, since cutting it out would not be a contiguous quote.
+3. Confidences land in the 0.95-0.98 band — high because each value is a single labeled line, but reserving 1.0 for cases with literally zero ambiguity (no thousands/millions footnote, single column, exact label match).
+4. The most-recent fiscal year is extracted (Sept 28, 2024), not the comparative column."""
 
 
 EXTRACTION_USER_PROMPT_TEMPLATE = """Company: {company_name} ({ticker})
