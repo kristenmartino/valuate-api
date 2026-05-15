@@ -16,7 +16,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: runtime.txt  # 3.11.10
+          # Pin to 3.11 to match runtime.txt's 3.11.10 on Railway.
+          # (setup-python's python-version-file: runtime.txt mis-parses the
+          # Heroku-style "python-3.11.10" prefix; cleaner to hard-code.)
+          python-version: '3.11'
           cache: pip
           cache-dependency-path: requirements.txt
 
