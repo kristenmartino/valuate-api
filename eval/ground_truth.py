@@ -1,8 +1,11 @@
 """Ground-truth values for Track B extraction-quality scoring.
 
-Each entry is a (ticker, fiscal_year, field) → value triple, sourced
-manually from the actual SEC filing. The score is "how often does Track
-B return a value within ±0.5% of the ground-truth number?"
+Each ticker pins (a) the fiscal year the values correspond to, and
+(b) a dict of {field_name: expected_value_in_actual_USD}. The runner
+checks the FY before scoring — if the live 10-K has rolled to a newer
+fiscal year, the runner emits a "ground truth needs refresh" warning
+and skips the ticker rather than falsely reporting an extraction
+regression.
 
 Why ±0.5%: most line items are reported in millions in the filing, and
 the extraction multiplies through to actual USD. A round-off in the
@@ -15,66 +18,85 @@ items per ticker so a fresh hand-source pass on each new fiscal year
 isn't a major undertaking. Add new tickers / fields here as the prompt
 gets exercised against new failure modes.
 
-Sources of truth: each filing's URL is in EXPECTED_FILINGS. Numbers are
-copy-pasted from the income statement / cash flow / balance sheet face
-of the actual 10-K. Prior-year (comparative) values are used only when
-they happen to equal the latest year by coincidence; otherwise this map
-holds the latest year only.
+Sources of truth: each filing is identified by its (ticker, fiscal_year)
+key. Numbers are copy-pasted from the income statement / cash flow /
+balance sheet face of the actual 10-K. When a filer rolls to a new
+fiscal year, refresh the entire entry — bump `fiscal_year`, update
+`fields`, and update EVAL_LAST_REFRESHED.
 """
 
 from __future__ import annotations
 
-# Ground truth dict structure:
-#   {ticker: {field_name: expected_value_in_actual_USD}}
-# Values are pinned to the LATEST 10-K available at the time the eval
-# was last run (see the date pinned in EVAL_LAST_REFRESHED below).
-GROUND_TRUTH: dict[str, dict[str, float]] = {
-    "AAPL": {
-        # FY2025 10-K (period ended Sept 27, 2025) — values from the
-        # consolidated statements of operations / cash flows / balance.
-        "revenue": 416_161_000_000,
-        "operating_income": 133_050_000_000,
-        "net_income": 112_010_000_000,
-        "share_based_compensation": 12_863_000_000,
-        "total_assets": 359_241_000_000,
-        "shareholders_equity": 73_733_000_000,
-        "long_term_debt": 90_678_000_000,
-        "depreciation_amortization": 11_698_000_000,
-        "capital_expenditures": 12_715_000_000,
-        "cash_from_operations": 111_482_000_000,
-    },
-    "MSFT": {
-        # FY2025 10-K. Pin to the bottom-line totals only — Microsoft's
-        # segment / cloud breakouts churn most years and aren't worth
-        # re-pinning every time.
-        "revenue": 281_725_000_000,
-        "operating_income": 128_528_000_000,
-        "net_income": 96_641_000_000,
-        "total_assets": 620_587_000_000,
-    },
-    "JPM": {
-        # FY2025 10-K. Bank tags — net interest income is the canonical
-        # bank top-line; everything else is a sanity check.
-        "net_interest_income": 92_649_000_000,
-        "net_income": 58_471_000_000,
-        "total_assets": 4_357_897_000_000,
-    },
-    "PLD": {
-        # FY2025 10-K. REIT — revenue here is rental + service income.
-        "revenue": 8_790_127_000,
-        "net_income": 3_328_231_000,
-        "depreciation_amortization": 2_626_028_000,
-    },
-    "EOG": {
-        # FY2025 10-K.
-        "revenue": 22_634_000_000,
-        "operating_income": 6_375_000_000,
-        "net_income": 4_983_000_000,
-    },
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class TickerGroundTruth:
+    """Ground truth for one ticker, anchored to a specific fiscal year.
+
+    The runner compares against this only when the extracted Company's
+    latest period's fiscal_year matches `fiscal_year` here. If the live
+    filer has moved on (new annual 10-K dropped), the runner reports
+    "needs refresh" instead of false-positiving an extraction regression.
+    """
+
+    fiscal_year: int
+    fields: dict[str, float]
+
+
+GROUND_TRUTH: dict[str, TickerGroundTruth] = {
+    "AAPL": TickerGroundTruth(
+        fiscal_year=2025,  # AAPL FY ends late September; FY2025 ended Sept 27, 2025
+        fields={
+            "revenue": 416_161_000_000,
+            "operating_income": 133_050_000_000,
+            "net_income": 112_010_000_000,
+            "share_based_compensation": 12_863_000_000,
+            "total_assets": 359_241_000_000,
+            "shareholders_equity": 73_733_000_000,
+            "long_term_debt": 90_678_000_000,
+            "depreciation_amortization": 11_698_000_000,
+            "capital_expenditures": 12_715_000_000,
+            "cash_from_operations": 111_482_000_000,
+        },
+    ),
+    "MSFT": TickerGroundTruth(
+        fiscal_year=2025,
+        fields={
+            "revenue": 281_725_000_000,
+            "operating_income": 128_528_000_000,
+            "net_income": 96_641_000_000,
+            "total_assets": 620_587_000_000,
+        },
+    ),
+    "JPM": TickerGroundTruth(
+        fiscal_year=2025,
+        fields={
+            "net_interest_income": 92_649_000_000,
+            "net_income": 58_471_000_000,
+            "total_assets": 4_357_897_000_000,
+        },
+    ),
+    "PLD": TickerGroundTruth(
+        fiscal_year=2025,
+        fields={
+            "revenue": 8_790_127_000,
+            "net_income": 3_328_231_000,
+            "depreciation_amortization": 2_626_028_000,
+        },
+    ),
+    "EOG": TickerGroundTruth(
+        fiscal_year=2025,
+        fields={
+            "revenue": 22_634_000_000,
+            "operating_income": 6_375_000_000,
+            "net_income": 4_983_000_000,
+        },
+    ),
 }
 
 
-# Toleance: ±0.5% per field. Anything within this is "correct"; anything
+# Tolerance: ±0.5% per field. Anything within this is "correct"; anything
 # outside is a regression worth flagging.
 TOLERANCE = 0.005
 

@@ -67,7 +67,13 @@ BALANCE_SHEET_TOLERANCE = Decimal("0.005")  # 50bps of total assets
 # always included; we fill backwards from there. XBRL company-facts already
 # carries every year the filer has tagged, so the only cost of N>1 is more
 # in-process LineItem objects — no extra HTTP fetches.
-N_HISTORICAL_PERIODS = 3
+#
+# Bumped from 3 → 5 in Tier-3+. With N=3 we got 2 YoY growth observations
+# after differencing, which kept the historical-volatility-derived Monte
+# Carlo σ permanently dormant (the _sigma_from_series threshold was ≥3).
+# N=5 gives 4 YoY observations, well above threshold, and lets the MC σ
+# computation actually fire on the production universe.
+N_HISTORICAL_PERIODS = 5
 
 
 # Schema field names per statement, grouped by industry. Each tuple is the

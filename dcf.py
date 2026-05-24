@@ -39,6 +39,22 @@ DEFAULT_WORKING_CAPITAL_RATIO = 0.05
 # debt-to-capital ratio to produce a per-company WACC default.
 DEFAULT_COST_OF_EQUITY = 0.095
 DEFAULT_COST_OF_DEBT = 0.05  # fallback when interest expense or debt is missing
+
+# Floor for the *observed* cost of debt. The naive computation
+# (interest_expense / total_debt) reads the coupon the company actually
+# pays today on bonds it issued in past years — for AAPL, MSFT, and other
+# filers that issued heavily during ZIRP, the historical coupon understates
+# what they'd pay today to refinance. Pinning a 5% floor approximates
+# "current 10Y Treasury (~4.5%) + a small IG credit spread" without
+# requiring a live rates feed.
+#
+# Methodology limitation: a production-grade WACC would derive cost of
+# debt from the company's *current bond yields* (which the SDK could pull
+# from a rates feed by CUSIP), and cost of equity from the company's
+# *current beta* (a market-data vendor lookup). The simplification here
+# is honest about being a baseline.
+CURRENT_COST_OF_DEBT_FLOOR = 0.05
+
 DEFAULT_FALLBACK_WACC = 0.09  # used when even the capital-structure approximation can't be computed
 WACC_BOUNDS = (0.07, 0.18)  # cap the computed WACC to defensible analyst range — 7% floor catches debt-heavy filers (AAPL, etc.) whose interest-expense / debt understates cost of capital
 
@@ -130,12 +146,23 @@ def _wacc_from_capital_structure(company: Company) -> float:
     """Compute a CAPM-style WACC default from the company's actual capital
     structure: WACC = (E/V) × Re + (D/V) × Rd × (1 − tax_rate).
 
-    Re (cost of equity) is the CAPM-style baseline (rf + β × ERP) at ~9.5%
-    — we don't have per-company beta from XBRL, so the baseline holds for
-    most large industrials/tech filers. Rd (cost of debt) is interest_expense
-    / total_debt observed from the financials, falling back to 5% when
-    either is missing or zero. The result is clipped to [5%, 18%] which
-    captures the defensible analyst range.
+    Re (cost of equity) is held at DEFAULT_COST_OF_EQUITY (~9.5%) — the
+    CAPM baseline (rf + β × ERP) without per-company beta. A production
+    deployment would replace this with a market-data lookup; the demo
+    uses the baseline.
+
+    Rd (cost of debt) is the larger of (a) the observed coupon
+    (interest_expense / total_debt) and (b) CURRENT_COST_OF_DEBT_FLOOR
+    (~5%). Without the floor, ZIRP-era debt at AAPL/MSFT produces a
+    historical coupon of ~2% — far below what the filer would pay today
+    to refinance, and the model would overstate fair value as a result.
+    Capping at 12% catches distressed filers without misrepresenting
+    their refinancing cost.
+
+    The result is clipped to WACC_BOUNDS [7%, 18%]. The 7% floor is a
+    second-line defense: even after the cost-of-debt floor, a very debt-
+    heavy filer can produce a weighted WACC below 7% because Rd × (1−t)
+    is still small. 7% reflects the long-run US corporate WACC mean.
 
     For filers where the computation can't run (no balance sheet, zero
     debt and equity), falls back to DEFAULT_FALLBACK_WACC. Specifically
@@ -155,7 +182,11 @@ def _wacc_from_capital_structure(company: Company) -> float:
 
     interest_expense = _line_value(getattr(is_, "interest_expense", None))
     if interest_expense is not None and debt > 0:
-        cost_of_debt = max(0.02, min(0.12, abs(interest_expense) / debt))
+        observed_coupon = abs(interest_expense) / debt
+        # Floor at current refinancing cost (~5%), cap at distressed-credit
+        # range (12%). Without the floor, AAPL/MSFT's ZIRP-era debt would
+        # price in at ~2%, materially understating WACC.
+        cost_of_debt = max(CURRENT_COST_OF_DEBT_FLOOR, min(0.12, observed_coupon))
     else:
         cost_of_debt = DEFAULT_COST_OF_DEBT
 
@@ -177,13 +208,23 @@ def _sigma_from_series(values: list[float], bounds: tuple[float, float]) -> Opti
     """Sample standard deviation of a series of ratios, clipped to bounds.
 
     Used for Monte Carlo σ calibration on revenue growth and op margin.
-    Returns None when there aren't enough data points to compute a sample
-    σ (need ≥3, since the year-over-year YoY-growth series has length n-1
-    and a sample-σ over a length-2 series is degenerate at 0).
+    Threshold is ≥2: with n=2 the sample-σ is well-defined (|a−b|/√1) and
+    the bounds clip the obvious extremes. The Tier-3 universe extracts 5
+    historical periods (N_HISTORICAL_PERIODS in graph.py), yielding 4 YoY
+    growth observations — comfortably above threshold. The ≥2 floor is the
+    belt-and-suspenders case for filers whose older periods are dropped
+    during composition for missing required fields.
+
+    Returns None when fewer than 2 observations remain (no meaningful σ
+    to compute), in which case the caller falls back to the prior
+    hardcoded defaults.
     """
-    if len(values) < 3:
+    if len(values) < 2:
         return None
     mean = sum(values) / len(values)
+    # Sample variance uses Bessel's correction (n-1) for n≥2. At n=2 this
+    # equals |a−b|² which gives σ = |a−b| — degenerate but bounded by the
+    # clip range below.
     variance = sum((v - mean) ** 2 for v in values) / (len(values) - 1)
     sigma = math.sqrt(variance)
     return max(bounds[0], min(bounds[1], sigma))
