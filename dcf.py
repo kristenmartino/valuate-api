@@ -935,8 +935,23 @@ def _histogram(values: list[float], bins: int = 50) -> list[tuple[float, int]]:
 def _historical_volatility(company: Company) -> tuple[Optional[float], Optional[float]]:
     """Sample standard deviations of revenue growth (YoY) and operating margin
     over the company's historical FinancialPeriod window. Returns (None, None)
-    when too few periods exist to compute a sample σ — caller falls back to
-    the prior hardcoded defaults in that case.
+    when too few periods exist to compute a sample σ, or when the schema
+    variant doesn't expose the underlying fields — caller falls back to the
+    prior hardcoded defaults in that case.
+
+    Schema-variant handling:
+    - STANDARD / ENERGY income statements have `revenue` + `operating_income`
+      directly; both σ values get computed and meaningfully enter MC.
+    - REIT has `revenue` but no `operating_income` (well, optional); σ
+      values get computed but only revenue σ would enter the FFO formula
+      (which it doesn't — REIT MC only varies wacc + terminal_growth).
+      Returning σ is harmless overhead, not a correctness issue.
+    - BANK and INSURER have no `revenue` field (net_interest_income /
+      premiums_earned instead). Returning (None, None) for them; their
+      MC formulas don't read revenue_growth or operating_margin as
+      revenue/op-income ratios anyway (insurers use operating_margin as
+      ROE, which is net_income/equity — a different volatility series we
+      don't yet compute).
 
     Used to calibrate Monte Carlo σ — the prior hardcoded 2% / 2% / 0.5% / 0.5%
     σ values were arbitrary and the same for AAPL (low volatility) as for NVDA
@@ -946,11 +961,15 @@ def _historical_volatility(company: Company) -> tuple[Optional[float], Optional[
     revenues: list[float] = []  # newest-first
     margins: list[float] = []
     for p in company.periods:
-        rev = _line_value(p.income_statement.revenue)
+        # Use getattr so banks (net_interest_income) and insurers
+        # (premiums_earned) skip silently instead of AttributeError-ing.
+        rev_item = getattr(p.income_statement, "revenue", None)
+        rev = _line_value(rev_item)
         if rev is None or rev <= 0:
             continue
         revenues.append(rev)
-        op = _line_value(p.income_statement.operating_income)
+        op_item = getattr(p.income_statement, "operating_income", None)
+        op = _line_value(op_item)
         if op is not None:
             margins.append(op / rev)
     # YoY growth needs n+1 revenue observations to produce n growth ratios

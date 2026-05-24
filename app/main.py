@@ -57,8 +57,15 @@ class OverrideRequest(BaseModel):
 
 class MonteCarloParams(BaseModel):
     iterations: int = 10_000
-    revenue_growth_std: float = 0.02
-    operating_margin_std: float = 0.02
+    # None defaults let monte_carlo() derive these from each filer's
+    # historical sample-σ (revenue growth YoY, op margin). The prior
+    # hardcoded 2% / 2% / 0.5% / 0.5% defaults masked the historical-vol
+    # derivation by always providing concrete values to the function.
+    # Frontend doesn't pass these explicitly; backend derives per company.
+    revenue_growth_std: Optional[float] = None
+    operating_margin_std: Optional[float] = None
+    # terminal_growth and wacc aren't observable from financials (they're
+    # forward inputs the user sets), so their σ stays fixed.
     terminal_growth_std: float = 0.005
     wacc_std: float = 0.005
     seed: Optional[int] = None
