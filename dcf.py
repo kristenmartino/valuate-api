@@ -933,36 +933,61 @@ def _histogram(values: list[float], bins: int = 50) -> list[tuple[float, int]]:
 
 
 def _historical_volatility(company: Company) -> tuple[Optional[float], Optional[float]]:
-    """Sample standard deviations of revenue growth (YoY) and operating margin
-    over the company's historical FinancialPeriod window. Returns (None, None)
-    when too few periods exist to compute a sample σ, or when the schema
-    variant doesn't expose the underlying fields — caller falls back to the
-    prior hardcoded defaults in that case.
+    """Per-industry sample standard deviations for the two MC drivers that
+    `Assumptions.revenue_growth` and `Assumptions.operating_margin` map to
+    in each valuation flavor. Returns `(rg_sigma, om_sigma)`; either can be
+    None when the flavor doesn't read that driver (in which case the caller
+    falls back to the prior hardcoded defaults, which is harmless for those
+    paths since the value isn't multiplied through anyway).
 
-    Schema-variant handling:
-    - STANDARD / ENERGY income statements have `revenue` + `operating_income`
-      directly; both σ values get computed and meaningfully enter MC.
-    - REIT has `revenue` but no `operating_income` (well, optional); σ
-      values get computed but only revenue σ would enter the FFO formula
-      (which it doesn't — REIT MC only varies wacc + terminal_growth).
-      Returning σ is harmless overhead, not a correctness issue.
-    - BANK and INSURER have no `revenue` field (net_interest_income /
-      premiums_earned instead). Returning (None, None) for them; their
-      MC formulas don't read revenue_growth or operating_margin as
-      revenue/op-income ratios anyway (insurers use operating_margin as
-      ROE, which is net_income/equity — a different volatility series we
-      don't yet compute).
+    Per-industry breakdown:
 
-    Used to calibrate Monte Carlo σ — the prior hardcoded 2% / 2% / 0.5% / 0.5%
-    σ values were arbitrary and the same for AAPL (low volatility) as for NVDA
-    (very high volatility). Anchoring on observed history makes the p10-p90
-    intervals defensible to a research analyst.
+    - **STANDARD / ENERGY** (5-year FCFF, 10-year FCFF): the formula reads
+      both. σ_rev_growth = sample-σ of historical YoY revenue growth.
+      σ_op_margin = sample-σ of historical (op_income / revenue).
+
+    - **BANK** (Gordon DDM): the formula reads only `wacc` and
+      `terminal_growth`. `revenue_growth` and `operating_margin` from
+      Assumptions don't enter the per-iteration fair value. Returns
+      (None, None) — sampling those axes is wasted variance, and the
+      hardcoded fallback is harmless.
+
+    - **INSURER** (justified P/B): the formula reads `operating_margin`
+      (re-interpreted as ROE), `terminal_growth`, and `wacc`. So σ on
+      operating_margin DOES matter for insurer MC. Compute it as the
+      sample-σ of historical ROE = net_income / shareholders_equity —
+      NOT the op-income/revenue formula used for standard filers, since
+      that's not what `operating_margin` means in the insurer flavor.
+
+    - **REIT** (FFO multiple): the formula reads only `wacc` and
+      `terminal_growth`. Same skip-and-fallback as bank.
+
+    Sample-σ bounds (MC_*_SIGMA_BOUNDS) clip the result to defensible
+    ranges so a degenerate n=2 series can't produce a runaway σ.
     """
+    industry = _industry(company)
+
+    if industry == Industry.BANK or industry == Industry.REIT:
+        # Neither MC driver enters the bank DDM or REIT FFO formula.
+        return None, None
+
+    if industry == Industry.INSURER:
+        # operating_margin is ROE for insurers; compute σ over historical
+        # net_income / shareholders_equity.
+        roes: list[float] = []
+        for p in company.periods:
+            ni = _line_value(getattr(p.income_statement, "net_income", None))
+            eq = _line_value(getattr(p.balance_sheet, "shareholders_equity", None))
+            if ni is not None and eq and eq > 0:
+                roes.append(ni / eq)
+        roe_sigma = _sigma_from_series(roes, MC_OPERATING_MARGIN_SIGMA_BOUNDS)
+        # revenue_growth doesn't enter the P/B formula either.
+        return None, roe_sigma
+
+    # STANDARD / ENERGY: standard FCFF math, both drivers matter.
     revenues: list[float] = []  # newest-first
     margins: list[float] = []
     for p in company.periods:
-        # Use getattr so banks (net_interest_income) and insurers
-        # (premiums_earned) skip silently instead of AttributeError-ing.
         rev_item = getattr(p.income_statement, "revenue", None)
         rev = _line_value(rev_item)
         if rev is None or rev <= 0:
