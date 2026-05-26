@@ -365,25 +365,27 @@ def test_classify_sic_routes_known_codes():
 
 
 def test_ticker_overrides_take_precedence_over_sic():
-    """BRK-B's SIC classifies it as INSURER (Berkshire is technically an
-    insurance holding co), but the consolidated 10-K doesn't surface the
-    insurance line items the schema variant requires. The hand-override
-    forces STANDARD so composition succeeds.
+    """Hand-overrides for diversified holding companies where SIC classifies
+    them as INSURER (because of their insurance subsidiary) but the
+    consolidated 10-K's tagging is more standard-industrial-shaped.
     """
     from industry import Industry, classify_with_overrides
 
     # Override wins regardless of SIC
-    assert classify_with_overrides("BRK-B", "6311") == Industry.STANDARD
-    assert classify_with_overrides("BRK-A", "6311") == Industry.STANDARD
     assert classify_with_overrides("MKL", "6331") == Industry.STANDARD
+    assert classify_with_overrides("L", "6311") == Industry.STANDARD
 
     # Case-insensitive ticker lookup
-    assert classify_with_overrides("brk-b", "6311") == Industry.STANDARD
+    assert classify_with_overrides("mkl", "6331") == Industry.STANDARD
 
     # Non-overridden tickers fall through to classify_sic
     assert classify_with_overrides("JPM", "6020") == Industry.BANK
     assert classify_with_overrides("PRU", "6311") == Industry.INSURER
     assert classify_with_overrides("AAPL", "3571") == Industry.STANDARD
+    # BRK-B was tried and dropped from the override list because its own
+    # XBRL tagging is unusual enough that re-routing to STANDARD doesn't
+    # fix extraction — classify_with_overrides falls through to classify_sic.
+    assert classify_with_overrides("BRK-B", "6311") == Industry.INSURER
 
 
 def test_bank_ddm_fair_value_matches_gordon_formula():

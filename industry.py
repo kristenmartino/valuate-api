@@ -62,24 +62,34 @@ def classify_sic(sic: Optional[str | int]) -> Industry:
 
 # Hand-overrides for tickers where SIC mis-classifies the consolidated 10-K.
 # These are diversified holding companies where the SIC code reflects the
-# largest subsidiary (typically insurance, because that's where Berkshire-
-# style entities started) but the consolidated filing is more accurately
-# treated as a standard industrial — premiums_earned, insurance_reserves,
-# etc. live in segment breakdowns, not at the consolidated top line.
+# largest subsidiary (typically insurance, because that's where these
+# entities historically started) but the consolidated filing is more
+# accurately treated as a standard industrial.
+#
+# The override fixes industry-classification only. It does NOT fix
+# missing-XBRL-tag issues that the same filers may also have. Verified
+# cases:
+#
+# - MKL (Markel Corp): override flips to STANDARD; extraction expected
+#   to succeed (similar XBRL coverage to standard industrials).
+# - L (Loews Corp): override flips to STANDARD; similar expectation.
+#
+# Notable case we tried and removed:
+#
+# - BRK-B (Berkshire Hathaway): the override flips classification, but
+#   Berkshire's own XBRL tagging is genuinely unusual — they stopped
+#   tagging `OperatingIncomeLoss` after 2012 and never tag
+#   `WeightedAverageNumberOfDilutedSharesOutstanding` (A/B share
+#   structure makes the standard concept inapplicable). Even with the
+#   override, composition fails on those two required fields. A real
+#   Berkshire valuation is sum-of-the-parts, which is out of scope for
+#   the demo. Leaving BRK-B to fail loudly with the friendly error UI
+#   is more honest than overriding it into a different kind of failure.
 #
 # The override is checked AFTER classify_sic in the graph's ingest step.
-# Honest framing: standard FCFF doesn't really "fit" a Berkshire (a real
-# valuation is sum-of-the-parts), but standard FCFF produces SOMETHING
-# the user can interact with, and the search caveat already warns that
-# "anything outside the supported industries... may not fit the business."
-# Failing extraction entirely is worse UX than a defensible-but-imperfect
-# answer plus the caveat.
 TICKER_INDUSTRY_OVERRIDES: dict[str, Industry] = {
-    "BRK-B": Industry.STANDARD,  # Berkshire Hathaway (insurance holding co)
-    "BRK-A": Industry.STANDARD,  # same, A shares
-    "MKL": Industry.STANDARD,    # Markel Corp (specialty insurance holding co)
-    "L": Industry.STANDARD,      # Loews Corp (diversified holdings)
-    "Y": Industry.STANDARD,      # Alleghany (acquired by BRK 2022 but listed here defensively)
+    "MKL": Industry.STANDARD,  # Markel Corp (specialty insurance holding co)
+    "L": Industry.STANDARD,    # Loews Corp (diversified holdings)
 }
 
 

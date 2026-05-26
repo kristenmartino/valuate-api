@@ -240,7 +240,16 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "cash_from_investing": ["NetCashProvidedByUsedInInvestingActivities"],
     "cash_from_financing": ["NetCashProvidedByUsedInFinancingActivities"],
     "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
-    "cash_and_equivalents": ["CashAndCashEquivalentsAtCarryingValue"],
+    "cash_and_equivalents": [
+        "CashAndCashEquivalentsAtCarryingValue",
+        # Post-ASC-230 (effective FY18+): some filers stopped tagging the
+        # plain cash concept and moved to the combined restricted+
+        # unrestricted tag. Falls through with 0.95 confidence — we don't
+        # subtract the "Restricted" portion since it's usually negligible
+        # for the cash-rich filers this tag covers, and over-stating cash
+        # is a smaller error than missing it entirely.
+        "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+    ],
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
     # Operating-lease liabilities (ASC 842). Some filers report only the
     # noncurrent portion; some only the total. We try the total first to
@@ -250,7 +259,18 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
         "OperatingLeaseLiability",
         "OperatingLeaseLiabilityNoncurrent",
     ],
-    "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+    "diluted_shares": [
+        "WeightedAverageNumberOfDilutedSharesOutstanding",
+        # Berkshire and a handful of other multi-share-class filers (A/B
+        # voting structures, founder-class shares) tag only the basic
+        # share count, not the diluted one — for filers without
+        # convertibles or options, basic ≈ diluted, so this is defensible
+        # as an alternate. The confidence-0.95 fall-through from the
+        # primary tag is correct: it's a less-precise number for filers
+        # that DO have dilutive securities the diluted count would
+        # capture, but the only practical alternative is failing extraction.
+        "WeightedAverageNumberOfSharesOutstandingBasic",
+    ],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
     "shareholders_equity": [
