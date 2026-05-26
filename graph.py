@@ -32,7 +32,7 @@ from extract_track_b import (
     extract_standardized_measure,
     extract_track_b,
 )
-from industry import Industry, classify_sic
+from industry import Industry, classify_with_overrides
 from schemas import (
     BalanceSheet,
     BankBalanceSheet,
@@ -355,7 +355,9 @@ def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphS
         # Classify industry from the SIC code on submissions. Routes the
         # whole rest of the graph (Track A concept map, required fields,
         # composition variant). Defaults to STANDARD on unknown SIC.
-        industry = classify_sic(submissions.get("sic"))
+        # Use the override-aware classifier so known holding-co
+        # mis-classifications (BRK-B et al.) get corrected before composition.
+        industry = classify_with_overrides(ticker, submissions.get("sic"))
         filing_meta = await client.get_latest_10k(cik)
         period_end = date.fromisoformat(filing_meta["period_of_report"])
         facts = await client.get_company_facts(cik)

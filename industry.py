@@ -60,6 +60,42 @@ def classify_sic(sic: Optional[str | int]) -> Industry:
     return Industry.STANDARD
 
 
+# Hand-overrides for tickers where SIC mis-classifies the consolidated 10-K.
+# These are diversified holding companies where the SIC code reflects the
+# largest subsidiary (typically insurance, because that's where Berkshire-
+# style entities started) but the consolidated filing is more accurately
+# treated as a standard industrial — premiums_earned, insurance_reserves,
+# etc. live in segment breakdowns, not at the consolidated top line.
+#
+# The override is checked AFTER classify_sic in the graph's ingest step.
+# Honest framing: standard FCFF doesn't really "fit" a Berkshire (a real
+# valuation is sum-of-the-parts), but standard FCFF produces SOMETHING
+# the user can interact with, and the search caveat already warns that
+# "anything outside the supported industries... may not fit the business."
+# Failing extraction entirely is worse UX than a defensible-but-imperfect
+# answer plus the caveat.
+TICKER_INDUSTRY_OVERRIDES: dict[str, Industry] = {
+    "BRK-B": Industry.STANDARD,  # Berkshire Hathaway (insurance holding co)
+    "BRK-A": Industry.STANDARD,  # same, A shares
+    "MKL": Industry.STANDARD,    # Markel Corp (specialty insurance holding co)
+    "L": Industry.STANDARD,      # Loews Corp (diversified holdings)
+    "Y": Industry.STANDARD,      # Alleghany (acquired by BRK 2022 but listed here defensively)
+}
+
+
+def classify_with_overrides(ticker: str, sic: Optional[str | int]) -> Industry:
+    """Same as classify_sic, but consults TICKER_INDUSTRY_OVERRIDES first.
+
+    Use this from the ingest node so SIC-driven mis-classification gets
+    corrected for known diversified holding companies. Falls through to
+    classify_sic for the common case (no override).
+    """
+    override = TICKER_INDUSTRY_OVERRIDES.get(ticker.upper())
+    if override is not None:
+        return override
+    return classify_sic(sic)
+
+
 # Human-friendly label per industry, used in the UI / error messages.
 INDUSTRY_LABEL: dict[Industry, str] = {
     Industry.STANDARD: "Industrial / Tech",
