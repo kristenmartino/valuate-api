@@ -153,7 +153,7 @@ Local dev with both env vars unset behaves identically to the pre-auth era — u
 
 ## Universe
 
-14 hand-picked S&P 500 tickers — 10 industrial / tech filers (AAPL, MSFT, GOOGL, NVDA, COST, HD, NKE, JNJ, KO, CAT), one bank (JPM), one life insurer (PRU), one industrial REIT (PLD), and one pure-play E&P (EOG). Three of the original ten needed Track B or DERIVED fallback to compose successfully; JPM, PRU, PLD, and EOG all extracted cleanly through Track A alone — their per-industry XBRL tags are well-standardized — so the multi-industry architecture earns its keep on filers it wasn't originally designed for.
+18 hand-picked S&P 500 tickers — 14 industrial / tech filers (AAPL, MSFT, GOOGL, AMZN, META, NVDA, COST, WMT, HD, NKE, JNJ, KO, F, CAT), one bank (JPM), one life insurer (PRU), one industrial REIT (PLD), and one pure-play E&P (EOG). Three of the original ten industrials needed Track B or DERIVED fallback to compose successfully; the four variant-industry filers (JPM, PRU, PLD, EOG) and the four later-added megacaps (AMZN, META, WMT, F) all extracted cleanly. WMT specifically needed Track B to fill `depreciation_amortization` from the filing text — exactly the case Track B was designed for.
 
 ## Industry coverage
 
