@@ -20,10 +20,31 @@ development:
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from edgar import latest_value_per_period
 from extract_track_a import extract_track_a
-from graph import _derive_missing_required
 from schemas import ExtractionSource, LineItem
+
+# graph.py eagerly imports the production agent stack (anthropic, langgraph,
+# the EDGAR client, …) at module load. Those deps aren't always present in a
+# lightweight test env, and a hard top-level `from graph import …` used to make
+# this entire file uncollectable — taking the dcf / edgar / extract_track_a
+# tests down with it. Import defensively so collection never depends on the
+# agent stack; the handful of tests that exercise graph helpers skip cleanly
+# (via `requires_graph`) when it can't be imported.
+try:
+    from graph import _derive_missing_required
+
+    _GRAPH_IMPORT_ERROR = None
+except Exception as exc:  # pragma: no cover - depends on optional prod deps
+    _derive_missing_required = None
+    _GRAPH_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
+
+requires_graph = pytest.mark.skipif(
+    _GRAPH_IMPORT_ERROR is not None,
+    reason=f"graph stack unavailable (needs anthropic/langgraph/etc.): {_GRAPH_IMPORT_ERROR}",
+)
 
 
 def _entry(end: str, val: int, accn: str = "0000000-25-000001", fp: str = "FY"):
@@ -195,6 +216,7 @@ def _line(value: int, source: ExtractionSource = ExtractionSource.XBRL) -> LineI
     return LineItem(value=Decimal(str(value)), source=source, confidence=1.0)
 
 
+@requires_graph
 def test_derive_operating_income_from_ibt_plus_interest():
     """JNJ doesn't tag operating_income at all. Derive: IBT + interest."""
     items = {
@@ -210,6 +232,7 @@ def test_derive_operating_income_from_ibt_plus_interest():
     assert "Derived" in (result["operating_income"].source_quote or "")
 
 
+@requires_graph
 def test_derive_total_liabilities_from_accounting_identity():
     """NKE/KO don't tag total_liabilities. Derive: total_assets - equity."""
     items = {
@@ -224,6 +247,7 @@ def test_derive_total_liabilities_from_accounting_identity():
     assert result["total_liabilities"].confidence == 0.99
 
 
+@requires_graph
 def test_derive_skips_when_inputs_missing():
     """If we don't have IBT or interest_expense, op_income stays None."""
     items = {
@@ -235,6 +259,7 @@ def test_derive_skips_when_inputs_missing():
     assert result.get("operating_income") is None
 
 
+@requires_graph
 def test_derive_doesnt_overwrite_existing_values():
     """If a field is already filled, derivation skips it."""
     existing = _line(50_000_000_000, source=ExtractionSource.LLM_HTML)
@@ -251,6 +276,7 @@ def test_derive_doesnt_overwrite_existing_values():
 # --- multi-year extraction ---------------------------------------------------
 
 
+@requires_graph
 def test_recent_period_ends_returns_latest_n_descending():
     """_recent_period_ends finds the N newest FY ends across high-coverage tags."""
     from graph import _recent_period_ends
@@ -284,6 +310,7 @@ def test_recent_period_ends_returns_latest_n_descending():
     assert out == [date(2025, 12, 31), date(2024, 12, 31), date(2023, 12, 31)]
 
 
+@requires_graph
 def test_recent_period_ends_clips_to_latest_anchor():
     """Future-dated entries (rare but possible from forward-looking forecasts
     occasionally tagged) shouldn't show up — anchor is the 10-K's reported end."""
@@ -309,6 +336,7 @@ def test_recent_period_ends_clips_to_latest_anchor():
     assert out[0] == date(2025, 12, 31)
 
 
+@requires_graph
 def test_compose_company_skips_older_periods_with_missing_required():
     """Older periods that don't have all required fields are dropped; the
     latest period must be complete or composition raises."""
@@ -490,6 +518,71 @@ def test_bank_ddm_rejects_growth_above_required_return():
         compute_bank_projection(company, bad)
 
 
+def test_bank_ddm_rejects_zero_dividends():
+    """A pure DDM can't value a non-dividend-paying bank: D0 = 0 zeroes the
+    Gordon numerator, so the model used to hand back a silent $0.00 fair value.
+    Raise instead — same spirit as the insurer ROE>g and REIT FFO>0 guards —
+    so the /value route returns a clean 400 and monte_carlo() drops the draw.
+    """
+    from dcf import compute_bank_projection
+    from schemas import (
+        Assumptions,
+        BankBalanceSheet,
+        BankCashFlowStatement,
+        BankIncomeStatement,
+        Company,
+        FilingType,
+        FinancialPeriod,
+    )
+    from industry import Industry
+
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.BANK,
+        income_statement=BankIncomeStatement(
+            net_interest_income=_line(95_000_000_000),
+            income_before_tax=_line(70_000_000_000),
+            income_tax_expense=_line(15_000_000_000),
+            net_income=_line(55_000_000_000),
+            diluted_shares_outstanding=_line(2_500_000_000),
+        ),
+        balance_sheet=BankBalanceSheet(
+            cash_and_equivalents=_line(400_000_000_000),
+            total_loans=_line(1_400_000_000_000),
+            total_deposits=_line(2_400_000_000_000),
+            total_assets=_line(4_200_000_000_000),
+            total_liabilities=_line(3_900_000_000_000),
+            shareholders_equity=_line(300_000_000_000),
+        ),
+        cash_flow_statement=BankCashFlowStatement(
+            cash_from_operations=_line(80_000_000_000),
+            dividends_paid=_line(0),  # no dividend → DDM is undefined
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test Bank",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+    assumptions = Assumptions(
+        revenue_growth=0.0,
+        operating_margin=0.18,
+        terminal_growth=0.04,
+        wacc=0.10,
+        tax_rate=0.21,
+        capex_ratio=0.0,
+        da_ratio=0.0,
+        working_capital_ratio=0.0,
+    )
+    with pytest.raises(ValueError, match="dividend"):
+        compute_bank_projection(company, assumptions)
+
+
 def test_insurer_justified_pb_matches_formula():
     """compute_insurer_projection: BVPS × (ROE − g) / (r − g)."""
     from datetime import date as date_
@@ -554,6 +647,89 @@ def test_insurer_justified_pb_matches_formula():
     assert abs(proj.fair_value_per_share - 87.5) < 1e-6
     assert abs(proj.equity_value - 35_000_000_000) < 1
     assert proj.years == []
+
+
+def test_insurer_justified_pb_rejects_roe_below_growth():
+    """Justified P/B = (ROE − g)/(r − g) goes NEGATIVE once ROE < g, which fed
+    back a nonsensical negative fair value per share — and, worse, negative
+    draws got silently averaged into the Monte Carlo mean / std / p10.
+
+    Guard it the way the REIT path guards FFO ≤ 0 and the insurer already
+    guards equity ≤ 0: raise ValueError so the /value route 400s cleanly and
+    monte_carlo()'s except clause drops the degenerate iteration.
+
+    Regression anchor: ROE=2%, g=6%, r=9%, BVPS=$75 used to return
+    fair_value_per_share = 75 × (0.02 − 0.06)/(0.09 − 0.06) = −$100.00.
+    """
+    from dcf import compute_insurer_projection
+    from schemas import (
+        Assumptions,
+        Company,
+        FilingType,
+        FinancialPeriod,
+        InsuranceBalanceSheet,
+        InsuranceCashFlowStatement,
+        InsuranceIncomeStatement,
+    )
+    from industry import Industry
+
+    # Same $30B equity / 0.4B shares → BVPS $75 as the happy-path test above.
+    period = FinancialPeriod(
+        fiscal_year=2025,
+        fiscal_period_end=date(2025, 12, 31),
+        filing_accession="0000000-25-000001",
+        filing_type=FilingType.FORM_10K,
+        industry=Industry.INSURER,
+        income_statement=InsuranceIncomeStatement(
+            premiums_earned=_line(40_000_000_000),
+            income_before_tax=_line(4_000_000_000),
+            income_tax_expense=_line(800_000_000),
+            net_income=_line(3_000_000_000),
+            diluted_shares_outstanding=_line(400_000_000),
+        ),
+        balance_sheet=InsuranceBalanceSheet(
+            cash_and_equivalents=_line(20_000_000_000),
+            total_assets=_line(750_000_000_000),
+            total_liabilities=_line(720_000_000_000),
+            shareholders_equity=_line(30_000_000_000),
+        ),
+        cash_flow_statement=InsuranceCashFlowStatement(
+            cash_from_operations=_line(10_000_000_000),
+        ),
+    )
+    company = Company(
+        ticker="TEST",
+        cik="0000000001",
+        name="Test Insurance",
+        fiscal_year_end_month=12,
+        periods=[period],
+    )
+
+    def _assumptions(roe: float, g: float) -> Assumptions:
+        # r (wacc) stays comfortably above g so the EXISTING r > g guard never
+        # fires — this isolates the new ROE > g invariant.
+        return Assumptions(
+            revenue_growth=0.0,
+            operating_margin=roe,  # ROE
+            terminal_growth=g,  # g
+            wacc=0.09,  # r
+            tax_rate=0.21,
+            capex_ratio=0.0,
+            da_ratio=0.0,
+            working_capital_ratio=0.0,
+        )
+
+    # ROE < g → negative justified P/B → must raise (the -$100 regression).
+    with pytest.raises(ValueError, match="ROE"):
+        compute_insurer_projection(company, _assumptions(roe=0.02, g=0.06))
+
+    # ROE == g → justified P/B = 0 → $0 price; degenerate, also rejected.
+    with pytest.raises(ValueError, match="ROE"):
+        compute_insurer_projection(company, _assumptions(roe=0.06, g=0.06))
+
+    # ROE just above g → valid again: the guard is a boundary, not over-broad.
+    proj = compute_insurer_projection(company, _assumptions(roe=0.0601, g=0.06))
+    assert proj.fair_value_per_share > 0
 
 
 def test_default_assumptions_averages_across_periods():
@@ -770,6 +946,7 @@ def test_energy_projection_has_zero_terminal_value():
     assert abs(proj.fair_value_per_share - expected_equity / 500_000_000) < 1e-3
 
 
+@requires_graph
 def test_reit_real_estate_net_derived_from_components():
     """When XBRL tags real_estate_at_cost + accumulated_depreciation but not
     real_estate_net, the derivation backstop fills it in (REITs that report
