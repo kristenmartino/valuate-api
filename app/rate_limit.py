@@ -2,7 +2,8 @@
 
 In-memory and per-process. Across multiple Railway replicas it would
 become per-replica, but we run a single replica — for a portfolio demo
-this is fine. A production deployment would back this with Redis.
+this is fine. A production deployment would back this with Redis-backed
+quotas keyed by an authenticated user rather than a client IP.
 
 The /extract endpoint is the expensive one: each first-time call invokes
 Claude (Track B) and burns Anthropic credits. /value, /comps, and
@@ -15,6 +16,7 @@ Default: 10 extracts/hour/IP. Configurable via VALUATE_EXTRACT_RATE_LIMIT
 
 from __future__ import annotations
 
+import ipaddress
 import os
 from collections import defaultdict, deque
 from time import monotonic
@@ -23,17 +25,49 @@ from typing import Deque, Optional
 from fastapi import HTTPException, Request
 
 
-def _client_ip(request: Request) -> str:
-    """Resolve the real client IP, accounting for Railway's edge proxy.
+def _trusted_proxy_hops() -> int:
+    """Number of trusted reverse-proxy hops in front of the app.
 
-    Railway sits behind a proxy that sets X-Forwarded-For. The leftmost
-    value in XFF is the original client (Railway's own hops come after).
-    Falls back to the direct connection IP if XFF is absent.
+    Railway's edge is a single hop, so the default is 1. Override via
+    VALUATE_TRUSTED_PROXY_HOPS for other deployment topologies.
     """
+    try:
+        return max(1, int(os.environ.get("VALUATE_TRUSTED_PROXY_HOPS", "1")))
+    except (TypeError, ValueError):
+        return 1
+
+
+def _is_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _client_ip(request: Request) -> str:
+    """Resolve the client IP for rate-limiting, trusting only proxy-appended hops.
+
+    X-Forwarded-For is caller-controllable: a client can prepend arbitrary
+    values, so the *leftmost* entry must NOT be trusted — keying off it lets a
+    caller mint a fresh rate-limit bucket per request by rotating a spoofed
+    header. Behind N trusted proxies (Railway's edge = 1), the trustworthy
+    client address is the entry the outermost trusted proxy appended — i.e.
+    counting `hops` in from the right. We validate it parses as an IP and
+    otherwise fall back to the direct connection IP rather than to an
+    attacker-supplied value.
+    """
+    direct = request.client.host if request.client else "unknown"
     xff = request.headers.get("X-Forwarded-For")
-    if xff:
-        return xff.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    if not xff:
+        return direct
+    parts = [p.strip() for p in xff.split(",") if p.strip()]
+    if not parts:
+        return direct
+    idx = len(parts) - _trusted_proxy_hops()
+    if 0 <= idx < len(parts) and _is_ip(parts[idx]):
+        return parts[idx]
+    return direct
 
 
 class IPRateLimiter:
