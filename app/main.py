@@ -11,6 +11,8 @@ Run locally:
     uvicorn app.main:app --reload
 """
 
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from typing import Any, Optional
@@ -130,7 +132,7 @@ async def healthz() -> dict[str, bool]:
 
 
 @app.get("/version")
-async def version() -> dict[str, str | None]:
+async def version() -> dict[str, Optional[str]]:
     """Build-time identity for the running container. Useful for
     diagnosing 'is the deploy stale?' without needing to probe behavior.
     Returns commit SHA, deployment ID, start timestamp, and environment —
