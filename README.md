@@ -161,10 +161,10 @@ Last refreshed: 2026-05-30
 | Scope | Tickers | Fields | Accuracy |
 |---|---:|---:|---:|
 | XBRL Track A | 11 | 39 | 100.0% |
-| Claude Track B | 3 | 4 | _populated on first keyed run_ |
-| Overall | 11 | 43 | — |
+| Claude Track B | 3 | 4 | 75.0% |
+| Overall | 11 | 43 | 97.7% |
 
-XBRL Track A is measured: across 11 filers in five industries, all 39 canonical-concept fields reproduce the filer's officially-tagged value within ±0.5%. The Claude Track B accuracy is populated by running `python -m eval.run_eval --readme` with an `ANTHROPIC_API_KEY` set — the four Track-B fields are the income-tax lines (`income_before_tax`, `income_tax_expense`) that the XBRL concept map intentionally leaves to Claude.
+Measured across 11 filers in five industries. Track A (XBRL) reproduces every filer's officially-tagged value for all 39 canonical-concept fields within ±0.5%. Track B (Claude) covers the four income-tax fields the XBRL concept map intentionally leaves to the LLM (`income_before_tax` / `income_tax_expense`): 3 of 4 within ±0.5%. The single miss is an *omission*, not a wrong number — Claude returned no value for MSFT's `income_before_tax` (`not_extracted`), a field that isn't required for the DCF. (Refresh these figures with `python -m eval.run_eval --readme`.)
 
 This is an eval baseline over a curated public-filer set, not a guarantee across all SEC filers.
 
