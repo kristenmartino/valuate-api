@@ -151,3 +151,25 @@ def test_extract_rate_limit_dep_uses_x_forwarded_for_when_present():
         require_extract_rate_limit(_FakeRequest("203.0.113.1"))
 
     _reset_limiter_for_tests()
+
+
+def test_extract_rate_limit_ignores_spoofed_leftmost_xff():
+    """A caller can prepend a fake X-Forwarded-For value, but the trusted edge
+    proxy (Railway, 1 hop) appends the real client IP on the right. The limiter
+    must key off that proxy-appended rightmost entry — otherwise a caller mints
+    a fresh bucket per request by rotating the spoofed leftmost value."""
+    _reset_limiter_for_tests(max_requests=1, window_seconds=60.0)
+
+    class _FakeRequest:
+        def __init__(self, xff: str, direct: str = "10.0.0.1"):
+            self.client = type("c", (), {"host": direct})()
+            self.headers = {"X-Forwarded-For": xff}
+
+    # Same real client (203.0.113.7, appended on the right), two different
+    # spoofed leftmost values. The old leftmost-trusting code saw two distinct
+    # IPs and allowed both; the fixed code sees one client and blocks the 2nd.
+    require_extract_rate_limit(_FakeRequest("9.9.9.9, 203.0.113.7"))  # allowed
+    with pytest.raises(HTTPException):
+        require_extract_rate_limit(_FakeRequest("8.8.8.8, 203.0.113.7"))
+
+    _reset_limiter_for_tests()

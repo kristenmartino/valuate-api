@@ -28,7 +28,7 @@ A single FastAPI app serving a LangGraph state machine that extracts financial l
 The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END`:
 
 1. **Ingest** — `EdgarClient` fetches the latest 10-K's metadata, the XBRL company-facts JSON, and the filing's primary HTML URL. The SIC code from the SEC submissions response routes the rest of the pipeline through the right industry path (`industry.py` → `Industry.STANDARD` for industrials/tech, `Industry.BANK` for depositories, `Industry.INSURER` for insurance carriers, `Industry.REIT` for real estate trusts, `Industry.ENERGY` for oil & gas E&P / refining). Rate-limited to SEC's 10 req/s limit.
-2. **Track A — XBRL** (`extract_track_a.py`). Walks the industry-specific concept map (`STANDARD_CANONICAL_CONCEPTS` for industrials, `BANK_CANONICAL_CONCEPTS` for banks — banks tag net interest income, loans, deposits, etc. that don't exist in the standard schema; `REIT_CANONICAL_CONCEPTS` adds the real-estate-at-cost / accumulated-depreciation contra-asset / real-estate-net trio that REITs report on the balance sheet). Returns a flat dict of LineItems for the **3 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
+2. **Track A — XBRL** (`extract_track_a.py`). Walks the industry-specific concept map (`STANDARD_CANONICAL_CONCEPTS` for industrials, `BANK_CANONICAL_CONCEPTS` for banks — banks tag net interest income, loans, deposits, etc. that don't exist in the standard schema; `REIT_CANONICAL_CONCEPTS` adds the real-estate-at-cost / accumulated-depreciation contra-asset / real-estate-net trio that REITs report on the balance sheet). Returns a flat dict of LineItems for the **5 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
 3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. Every value carries a verbatim source quote and a confidence score.
 4. **Derivation backstop** (in `graph.py`). For fields neither track filled, applies accounting-identity fallbacks:
    - `operating_income ≈ income_before_tax + interest_expense` (handles JNJ, NKE)
@@ -36,7 +36,7 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
    - `real_estate_net = real_estate_at_cost − accumulated_depreciation` (REIT-only, for filers that tag the components but not the net)
 
    All write `source=DERIVED` with a synthetic source quote.
-5. **Composition** — builds a `Company` with up to 3 `FinancialPeriod`s, dispatching to the right schema variants per the industry: `IncomeStatement` / `BalanceSheet` / `CashFlowStatement` for standard *and* energy filers (E&P companies report on the same shape as industrials — what differs is the *valuation*, not the line items), `BankIncomeStatement` / `BankBalanceSheet` / `BankCashFlowStatement` for banks, the equivalent `Insurance*` triples for insurers, and `REIT*` triples for REITs. Pydantic discriminated unions on each statement (`kind` literal) keep the JSON shape unambiguous on the wire. The latest period must be complete or `CompositionError` raises (HTTP 422); older periods with thin coverage are silently dropped.
+5. **Composition** — builds a `Company` with up to 5 `FinancialPeriod`s, dispatching to the right schema variants per the industry: `IncomeStatement` / `BalanceSheet` / `CashFlowStatement` for standard *and* energy filers (E&P companies report on the same shape as industrials — what differs is the *valuation*, not the line items), `BankIncomeStatement` / `BankBalanceSheet` / `BankCashFlowStatement` for banks, the equivalent `Insurance*` triples for insurers, and `REIT*` triples for REITs. Pydantic discriminated unions on each statement (`kind` literal) keep the JSON shape unambiguous on the wire. The latest period must be complete or `CompositionError` raises (HTTP 422); older periods with thin coverage are silently dropped.
 6. **Validate** — flags low-confidence items (<0.80) and balance-sheet identity violations (>50bps tolerance) as `ExtractionFlag`s on the response.
 
 ## Valuation flavors
@@ -58,7 +58,7 @@ Monte Carlo runs for all five flavors (degenerate axes are simply unsampled); se
 Two repos back this:
 
 - **InMemoryRepo** (default in local dev) — process-local dict, wiped on restart.
-- **PostgresRepo** — turns on automatically when `DATABASE_URL` is set. One JSONB-backed `companies` table; the override audit trail lives inside the Company JSON itself (every overridden LineItem keeps its history via `source` + `source_quote`).
+- **PostgresRepo** — turns on automatically when `DATABASE_URL` is set. One JSONB-backed `companies` table; an override is recorded inline on the Company JSON — the corrected LineItem is replaced by one tagged `source=user_override` (confidence 1.0) carrying the reviewer's `source_quote`. It's a current-state snapshot, not a change-history log.
 
 ## Tech stack
 
@@ -88,13 +88,15 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-34 tests across three files:
+56 tests across five files:
 
-- `test_extraction.py` (23) — bugs that bit during development plus per-industry valuation math
-- `test_auth_and_rate_limit.py` (10) — bearer-token auth on `/override` and the IP rate limiter for `/extract`
+- `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
+- `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
+- `test_overrides.py` (10) — HITL override across every industry variant, with multi-period history preserved
+- `test_auth_and_rate_limit.py` (12) — bearer-token auth on `/override` and the IP rate limiter for `/extract` (incl. X-Forwarded-For spoof resistance)
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
-The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). The intent is that a weekly Railway cron runs it as a deploy health check.
+The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
 
 The extraction tests cover:
 
@@ -165,7 +167,7 @@ Local dev with both env vars unset behaves identically to the pre-auth era — u
 | REITs | shipped | FFO-multiple Gordon growth | PLD |
 | Energy E&P | shipped | 10-year reserve-life-capped FCFF (no terminal) | EOG |
 
-E&P is the only industry that doesn't carry a separate schema variant — the line items E&P companies report (revenue, op income, capex, D&A) are standard us-gaap; the conceptual difference is the *valuation*, not the data shape. The architecture supports both: schema variants when the line-item set fundamentally differs (banks, insurers, REITs), and dispatch-only when only the valuation differs (E&P). Anything classified outside these five falls back to `Industry.STANDARD` and runs the FCFF path with Gordon terminal — which produces nonsense for filers it shouldn't apply to. The home page surfaces the 14 curated tickers as the primary entry point and a free-text search box as an escape hatch; the search copy makes the fallback caveat explicit.
+E&P is the only industry that doesn't carry a separate schema variant — the line items E&P companies report (revenue, op income, capex, D&A) are standard us-gaap; the conceptual difference is the *valuation*, not the data shape. The architecture supports both: schema variants when the line-item set fundamentally differs (banks, insurers, REITs), and dispatch-only when only the valuation differs (E&P). Anything classified outside these five falls back to `Industry.STANDARD` and runs the FCFF path with Gordon terminal — which produces nonsense for filers it shouldn't apply to. The home page surfaces the 18 curated tickers as the primary entry point and a free-text search box as an escape hatch; the search copy makes the fallback caveat explicit.
 
 Other items deliberately parked in the [`later` label](https://github.com/kristenmartino/valuate-api/issues?q=label%3Alater): segment-aware DCF (currently consolidated only), multi-period filing-accession attribution, saved scenarios.
 

@@ -11,13 +11,15 @@ Run locally:
     uvicorn app.main:app --reload
 """
 
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from typing import Any, Optional
 
 from anthropic import AsyncAnthropic
 from fastapi import Depends, FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.auth import require_override_auth
 from app.logging_middleware import install_structured_logging
@@ -56,7 +58,10 @@ class OverrideRequest(BaseModel):
 
 
 class MonteCarloParams(BaseModel):
-    iterations: int = 10_000
+    # Bounded so a direct POST /value can't pin a worker with a huge iteration
+    # count (the endpoint isn't auth'd or rate-limited; /extract is the gated
+    # one). 25k is well above the 10k the frontend uses.
+    iterations: int = Field(10_000, ge=100, le=25_000)
     # None defaults let monte_carlo() derive these from each filer's
     # historical sample-σ (revenue growth YoY, op margin). The prior
     # hardcoded 2% / 2% / 0.5% / 0.5% defaults masked the historical-vol
@@ -74,10 +79,10 @@ class MonteCarloParams(BaseModel):
 class SensitivityParams(BaseModel):
     revenue_growth_min: Optional[float] = None
     revenue_growth_max: Optional[float] = None
-    revenue_growth_steps: int = 7
+    revenue_growth_steps: int = Field(7, ge=2, le=15)
     operating_margin_min: Optional[float] = None
     operating_margin_max: Optional[float] = None
-    operating_margin_steps: int = 7
+    operating_margin_steps: int = Field(7, ge=2, le=15)
 
 
 class ValuationRequest(BaseModel):
@@ -127,7 +132,7 @@ async def healthz() -> dict[str, bool]:
 
 
 @app.get("/version")
-async def version() -> dict[str, str | None]:
+async def version() -> dict[str, Optional[str]]:
     """Build-time identity for the running container. Useful for
     diagnosing 'is the deploy stale?' without needing to probe behavior.
     Returns commit SHA, deployment ID, start timestamp, and environment —

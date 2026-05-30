@@ -603,6 +603,12 @@ def compute_bank_projection(company: Company, a: Assumptions) -> Projection:
         raise ValueError("Diluted shares must be positive")
 
     div_paid = _line_value(getattr(cf, "dividends_paid", None)) or 0.0
+    if div_paid <= 0:
+        raise ValueError(
+            "Dividend-discount model requires positive dividends "
+            f"(got dividends_paid={div_paid}); a DDM cannot value a "
+            "non-dividend-paying bank"
+        )
     div_per_share_now = div_paid / shares
 
     next_year_div = div_per_share_now * (1 + a.terminal_growth)
@@ -657,6 +663,11 @@ def compute_insurer_projection(company: Company, a: Assumptions) -> Projection:
 
     book_value_per_share = equity / shares
     roe = a.operating_margin
+    if roe <= a.terminal_growth:
+        raise ValueError(
+            f"Justified P/B requires ROE > growth rate "
+            f"(got ROE={roe}, g={a.terminal_growth})"
+        )
     justified_pb = (roe - a.terminal_growth) / (a.wacc - a.terminal_growth)
     fair_value_per_share = book_value_per_share * justified_pb
     equity_value = fair_value_per_share * shares
