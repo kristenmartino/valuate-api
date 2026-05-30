@@ -137,15 +137,36 @@ Required env vars (set in the Railway project UI):
 - **Structured request logging** (`app/logging_middleware.py`) emits one JSON line per request to stdout with `request_id`, `method`, `path`, `status`, `duration_ms`, `client_ip`. The `X-Request-ID` header is set on every response so error reports are grep-able. Skipped via `VALUATE_DISABLE_STRUCTURED_LOGGING=1`.
 - **Optional Sentry** (`app/sentry_setup.py`) activates when `SENTRY_DSN` is set in the env. Lazy-imports `sentry-sdk` so it's truly opt-in.
 
-### Track B extraction eval
+### Extraction eval
 
-`eval/` holds hand-pinned ground-truth values for AAPL, MSFT, JPM, PLD, EOG (income / balance / cash-flow line items copied from the actual 10-Ks). The runner scores Claude's Track B extractions within ±0.5% tolerance per field:
+`eval/` holds hand-pinned, SEC-sourced ground-truth values spanning all five industry categories — standard/tech (AAPL, MSFT, GOOGL, AMZN, NKE, KO), banks (JPM, BAC), insurer (PRU), REIT (PLD), and energy E&P (EOG). The runner scores **both** extraction tracks per field within ±0.5% tolerance:
+
+- **Track A (XBRL)** — `extract_track_a` over the filer's company-facts, for fields in the industry's canonical concept map.
+- **Track B (Claude)** — `extract_track_b` reading the filing HTML, for fields XBRL doesn't cover (e.g. `income_before_tax` / `income_tax_expense` on standard filers).
+
+Each field resolves to `PASS` / `FAIL` / `REFRESH` (filer rolled to a fiscal year newer than the pinned ground truth — a refresh is needed, not an extraction bug) / `SKIP` (the field's track wasn't run).
 
 ```bash
 SEC_USER_AGENT="..." ANTHROPIC_API_KEY="..." python -m eval.run_eval
+#   --readme         emit the baseline table below      --json    machine-readable
+#   --tickers AAPL,JPM   run a subset                    --track-a-only   XBRL only, no API key
 ```
 
-Optional `--tickers AAPL,JPM` and `--json` flags. Exit-non-zero on any field miss, suitable for a cron. Intended use: run before merging changes to `extraction_prompt.py`, and on a weekly cadence to catch model-version regressions.
+Exit codes: `0` all pass, `1` a real extraction mismatch, `2` no fails but a ground-truth refresh is needed (so a cron can tell "model regressed" from "human action needed"). Intended use: run before merging changes to `extraction_prompt.py`, and on a cadence to catch model-version regressions.
+
+### Extraction eval baseline
+
+Last refreshed: 2026-05-30
+
+| Scope | Tickers | Fields | Accuracy |
+|---|---:|---:|---:|
+| XBRL Track A | 11 | 39 | 100.0% |
+| Claude Track B | 3 | 4 | _populated on first keyed run_ |
+| Overall | 11 | 43 | — |
+
+XBRL Track A is measured: across 11 filers in five industries, all 39 canonical-concept fields reproduce the filer's officially-tagged value within ±0.5%. The Claude Track B accuracy is populated by running `python -m eval.run_eval --readme` with an `ANTHROPIC_API_KEY` set — the four Track-B fields are the income-tax lines (`income_before_tax`, `income_tax_expense`) that the XBRL concept map intentionally leaves to Claude.
+
+This is an eval baseline over a curated public-filer set, not a guarantee across all SEC filers.
 
 ### Auth + rate-limit model
 
