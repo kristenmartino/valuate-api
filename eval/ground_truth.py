@@ -1,118 +1,226 @@
-"""Ground-truth values for Track B extraction-quality scoring.
+"""Ground-truth values for extraction-quality scoring.
 
-Each ticker pins (a) the fiscal year the values correspond to, and
-(b) a dict of {field_name: expected_value_in_actual_USD}. The runner
-checks the FY before scoring — if the live 10-K has rolled to a newer
-fiscal year, the runner emits a "ground truth needs refresh" warning
-and skips the ticker rather than falsely reporting an extraction
-regression.
+Each ticker pins (a) the industry (which concept map / statement shape it
+uses), (b) the fiscal year the values correspond to, and (c) a dict of
+`{field_name: FieldTruth(value, source)}`. The runner checks the FY before
+scoring — if the live 10-K has rolled to a newer fiscal year, the runner
+emits a "ground truth needs refresh" warning and skips the ticker rather
+than falsely reporting an extraction regression.
 
-Why ±0.5%: most line items are reported in millions in the filing, and
-the extraction multiplies through to actual USD. A round-off in the
-millions place (e.g., $94,930M reported, $94,929,500,000 internal) is
-within tolerance; a units-multiplication error (e.g., $94,930 instead
-of $94,930,000,000) blows past it.
+`source` records which extraction track our *pipeline* is expected to use
+for the field, so the eval can report accuracy per track:
 
-Ground-truth values are deliberately limited to a few high-confidence
-items per ticker so a fresh hand-source pass on each new fiscal year
-isn't a major undertaking. Add new tickers / fields here as the prompt
-gets exercised against new failure modes.
+    "xbrl"      Track A pulls it from XBRL company-facts (it's in the
+                industry's canonical concept map in edgar.py).
+    "llm_html"  Not in our concept map → Track B (Claude) fills the gap by
+                reading the filing HTML. (The filer still tags the value in
+                XBRL under a non-canonical concept, which is how we can
+                source authoritative ground truth for it.)
+    "derived"   Produced by the accounting-identity backstop in graph.py.
+    "either"    Acceptable from Track A or Track B (scored against whichever
+                produced a value, Track A first).
 
-Sources of truth: each filing is identified by its (ticker, fiscal_year)
-key. Numbers are copy-pasted from the income statement / cash flow /
-balance sheet face of the actual 10-K. When a filer rolls to a new
-fiscal year, refresh the entire entry — bump `fiscal_year`, update
-`fields`, and update EVAL_LAST_REFRESHED.
+Why ±0.5%: most line items are reported in millions in the filing and the
+extraction multiplies through to actual USD. A round-off in the millions
+place is within tolerance; a units-multiplication error (e.g. $94,930
+instead of $94,930,000,000) blows past it.
+
+Sources of truth: values are the filer's official figures, read from SEC
+XBRL company-facts for the pinned fiscal year (see eval/README or the
+`fetch` notes in the PR). When a filer rolls to a new fiscal year, refresh
+the entry — bump `fiscal_year`, update `fields`, and bump EVAL_LAST_REFRESHED.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Valid `source` markers (see module docstring).
+SOURCE_XBRL = "xbrl"
+SOURCE_LLM = "llm_html"
+SOURCE_DERIVED = "derived"
+SOURCE_EITHER = "either"
+VALID_SOURCES = frozenset({SOURCE_XBRL, SOURCE_LLM, SOURCE_DERIVED, SOURCE_EITHER})
+
+
+@dataclass(frozen=True)
+class FieldTruth:
+    """One expected line item: its value (actual USD) and the track our
+    pipeline is expected to source it from."""
+
+    value: float
+    source: str = SOURCE_XBRL
+
+    def __post_init__(self) -> None:
+        if self.source not in VALID_SOURCES:
+            raise ValueError(
+                f"FieldTruth.source must be one of {sorted(VALID_SOURCES)}, got {self.source!r}"
+            )
+
 
 @dataclass(frozen=True)
 class TickerGroundTruth:
     """Ground truth for one ticker, anchored to a specific fiscal year.
 
-    The runner compares against this only when the extracted Company's
-    latest period's fiscal_year matches `fiscal_year` here. If the live
-    filer has moved on (new annual 10-K dropped), the runner reports
-    "needs refresh" instead of false-positiving an extraction regression.
+    `industry` selects the concept map / statement shape (std, bank,
+    insurer, reit, energy). The runner compares against `fields` only when
+    the live filer's latest-period fiscal_year matches `fiscal_year`; if the
+    filer has moved on, the runner reports "needs refresh" instead of
+    false-positiving an extraction regression.
     """
 
+    industry: str  # "std" | "bank" | "insurer" | "reit" | "energy"
     fiscal_year: int
-    fields: dict[str, float]
+    fields: dict[str, FieldTruth]
 
 
+def _x(value: float) -> FieldTruth:
+    """XBRL-sourced field (Track A)."""
+    return FieldTruth(value, SOURCE_XBRL)
+
+
+def _llm(value: float) -> FieldTruth:
+    """LLM-sourced field (Track B) — not in our canonical XBRL concept map."""
+    return FieldTruth(value, SOURCE_LLM)
+
+
+# Values read from SEC XBRL company-facts for each filer's pinned FY.
+# Coverage spans all five industry categories; `_llm(...)` fields demonstrate
+# the cases where XBRL alone is insufficient and Claude fills the gap.
 GROUND_TRUTH: dict[str, TickerGroundTruth] = {
+    # --- Standard / tech-industrial -----------------------------------------
     "AAPL": TickerGroundTruth(
-        fiscal_year=2025,  # AAPL FY ends late September; FY2025 ended Sept 27, 2025
+        industry="std",
+        fiscal_year=2025,  # FY ends late September; FY2025 ended 2025-09-27
         fields={
-            "revenue": 416_161_000_000,
-            "operating_income": 133_050_000_000,
-            "net_income": 112_010_000_000,
-            "share_based_compensation": 12_863_000_000,
-            "total_assets": 359_241_000_000,
-            "shareholders_equity": 73_733_000_000,
-            "long_term_debt": 90_678_000_000,
-            "depreciation_amortization": 11_698_000_000,
-            "capital_expenditures": 12_715_000_000,
-            "cash_from_operations": 111_482_000_000,
+            "revenue": _x(416_161_000_000),
+            "operating_income": _x(133_050_000_000),
+            "net_income": _x(112_010_000_000),
+            "total_assets": _x(359_241_000_000),
+            "shareholders_equity": _x(73_733_000_000),
+            "cash_from_operations": _x(111_482_000_000),
+            # Not in STANDARD_CANONICAL_CONCEPTS → Track B fills these.
+            "income_before_tax": _llm(132_729_000_000),
+            "income_tax_expense": _llm(20_719_000_000),
         },
     ),
     "MSFT": TickerGroundTruth(
-        fiscal_year=2025,
+        industry="std",
+        fiscal_year=2025,  # FY ends 2025-06-30
         fields={
-            "revenue": 281_725_000_000,
-            "operating_income": 128_528_000_000,
-            "net_income": 96_641_000_000,
-            "total_assets": 620_587_000_000,
+            "revenue": _x(281_724_000_000),
+            "operating_income": _x(128_528_000_000),
+            "net_income": _x(101_832_000_000),
+            "total_assets": _x(619_003_000_000),
+            "income_before_tax": _llm(123_627_000_000),
         },
     ),
+    "GOOGL": TickerGroundTruth(
+        industry="std",
+        fiscal_year=2025,
+        fields={
+            "revenue": _x(402_836_000_000),
+            "operating_income": _x(129_039_000_000),
+            "net_income": _x(132_170_000_000),
+            "total_assets": _x(595_281_000_000),
+            "income_before_tax": _llm(158_826_000_000),
+        },
+    ),
+    "AMZN": TickerGroundTruth(
+        industry="std",
+        fiscal_year=2025,
+        fields={
+            "revenue": _x(716_924_000_000),
+            "operating_income": _x(79_975_000_000),
+            "net_income": _x(77_670_000_000),
+            "total_assets": _x(818_042_000_000),
+        },
+    ),
+    "NKE": TickerGroundTruth(
+        industry="std",
+        fiscal_year=2025,  # FY ends 2025-05-31
+        fields={
+            "revenue": _x(46_309_000_000),
+            "net_income": _x(3_219_000_000),
+            "total_assets": _x(36_579_000_000),
+        },
+    ),
+    "KO": TickerGroundTruth(
+        industry="std",
+        fiscal_year=2025,
+        fields={
+            "revenue": _x(47_941_000_000),
+            "net_income": _x(13_107_000_000),
+            "total_assets": _x(104_816_000_000),
+        },
+    ),
+    # --- Banks --------------------------------------------------------------
     "JPM": TickerGroundTruth(
+        industry="bank",
         fiscal_year=2025,
         fields={
-            "net_interest_income": 92_649_000_000,
-            "net_income": 58_471_000_000,
-            "total_assets": 4_357_897_000_000,
+            "net_interest_income": _x(95_443_000_000),
+            "net_income": _x(57_048_000_000),
+            "total_assets": _x(4_424_900_000_000),
         },
     ),
+    "BAC": TickerGroundTruth(
+        industry="bank",
+        fiscal_year=2025,
+        fields={
+            "net_interest_income": _x(60_096_000_000),
+            "net_income": _x(30_509_000_000),
+            "total_assets": _x(3_411_738_000_000),
+        },
+    ),
+    # --- Insurer ------------------------------------------------------------
+    "PRU": TickerGroundTruth(
+        industry="insurer",
+        fiscal_year=2025,
+        fields={
+            "premiums_earned": _x(30_797_000_000),
+            "net_income": _x(3_576_000_000),
+            "total_assets": _x(773_740_000_000),
+        },
+    ),
+    # --- REIT ---------------------------------------------------------------
     "PLD": TickerGroundTruth(
+        industry="reit",
         fiscal_year=2025,
         fields={
-            "revenue": 8_790_127_000,
-            "net_income": 3_328_231_000,
-            "depreciation_amortization": 2_626_028_000,
+            "revenue": _x(8_790_127_000),
+            "net_income": _x(3_328_231_000),
+            "depreciation_amortization": _x(2_626_028_000),
         },
     ),
+    # --- Energy E&P (standard schema, NAV/reserve-life valuation) -----------
     "EOG": TickerGroundTruth(
+        industry="energy",
         fiscal_year=2025,
         fields={
-            "revenue": 22_634_000_000,
-            "operating_income": 6_375_000_000,
-            "net_income": 4_983_000_000,
+            "revenue": _x(22_632_000_000),
+            "operating_income": _x(6_385_000_000),
+            "net_income": _x(4_980_000_000),
         },
     ),
 }
 
 
-# Tolerance: ±0.5% per field. Anything within this is "correct"; anything
-# outside is a regression worth flagging.
+# Tolerance: ±0.5% per field. Within this is "correct"; outside is a
+# regression worth flagging.
 TOLERANCE = 0.005
 
 
-# Bookkeeping. Update this when re-pinning ground-truth values to a newer
-# fiscal year (so the "last refreshed" line in the eval report is accurate
-# without needing to git-blame).
-EVAL_LAST_REFRESHED = "2026-05-15"
+# Bump this whenever ground-truth values are re-pinned to a newer fiscal year.
+EVAL_LAST_REFRESHED = "2026-05-30"
 
 
 def is_within_tolerance(extracted: float, expected: float) -> bool:
     """True iff `extracted` is within ±TOLERANCE of `expected`.
 
-    Uses relative tolerance (|diff| / |expected|) to make the threshold
-    scale-invariant — $5M off on a $300B revenue line is acceptable;
-    $5M off on a $50M expense isn't.
+    Relative tolerance (|diff| / |expected|) so the threshold is
+    scale-invariant — $5M off on a $300B revenue line is acceptable; $5M off
+    on a $50M expense is not.
     """
     if expected == 0:
         return extracted == 0
