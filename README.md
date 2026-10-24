@@ -176,7 +176,7 @@ This is an eval baseline over a curated public-filer set, not a guarantee across
 
 ### Auth + rate-limit model
 
-The threat model is "random scraping / accidental corruption," not "sophisticated adversary." `/override` is the only destructive endpoint and is gated by a single shared bearer token; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth; the case study acknowledges this.
+The threat model is "random scraping / accidental corruption," not "sophisticated adversary." `/override` is the only destructive endpoint and is gated by a single shared bearer token; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth.
 
 Local dev with both env vars unset behaves identically to the pre-auth era — useful for poking at the override flow without setting up tokens.
 
