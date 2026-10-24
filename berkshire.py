@@ -104,7 +104,8 @@ def extract_berkshire_filing(
                 value=insurance_cash + rail_cash, source=ExtractionSource.DERIVED, confidence=0.95,
                 source_quote=f"Derived consolidated cash at {pe}: insurance and other ({insurance_cash}) + "
                              f"railroad, utilities and energy ({rail_cash}) USD. Both are {cash_tag} "
-                             f"with members {_INSURANCE} and {_RAIL_ENERGY}. Excludes restricted cash and Treasury bills.",
+                             f"with members {_INSURANCE} and {_RAIL_ENERGY}. Retains Treasury bills classified as cash equivalents. "
+                             "Excludes separately reported restricted cash and short-term investments in Treasury bills.",
             )
         output[pe] = items
     return output

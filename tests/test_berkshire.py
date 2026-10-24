@@ -28,7 +28,8 @@ def test_filing_facts_are_class_specific_scaled_and_not_double_counted():
     cash = b["cash_and_equivalents"]
     assert cash.value == 47_719_000_000 + 4_158_000_000
     assert cash.source == ExtractionSource.DERIVED
-    assert "Excludes restricted cash and Treasury bills" in cash.source_quote
+    assert "Retains Treasury bills classified as cash equivalents" in cash.source_quote
+    assert "Excludes separately reported restricted cash and short-term investments in Treasury bills" in cash.source_quote
     shares = b["diluted_shares_outstanding"]
     assert shares.source == ExtractionSource.XBRL
     assert "EquivalentClassBMember" in shares.source_quote

@@ -63,7 +63,7 @@ The SEC company-facts feed omits the required dimensioned facts. `berkshire.py` 
 
 - `WeightedAverageNumberOfSharesOutstandingBasic` with the requested `EquivalentClassA/BMember`. These are reported equivalent shares, not generic diluted shares. The existing wire field `diluted_shares_outstanding` carries them with an explicit source note and `Company.share_count_label` for display.
 - `PremiumsEarnedNet` for `InsuranceAndOtherMember`.
-- Cash from `InsuranceAndOtherMember` plus `RailroadUtilitiesAndEnergyMember`, labeled as a calculation. Restricted cash, parent-only cash, and Treasury bills are not substituted.
+- Cash from `InsuranceAndOtherMember` plus `RailroadUtilitiesAndEnergyMember`, labeled as a calculation. Treasury bills already classified as cash equivalents remain included. Separately reported restricted cash and short-term Treasury-bill investments are excluded; parent-only cash is not added again.
 
 Facts must match Berkshire's CIK, annual dates (or year-end cash instant), exact dimension set, and units. Scales/signs are applied; matching repeats are deduplicated and conflicts remain missing. Claude cannot fill these three fields if the tagged contexts are unavailable. Missing required data still fails explicitly.
 
