@@ -30,6 +30,7 @@ from typing import Any, Optional, Protocol
 import asyncpg
 
 from schemas import Company
+from tickers import normalize_ticker
 
 
 _SCHEMA_DDL = """
@@ -54,10 +55,10 @@ class InMemoryRepo:
         self._store: dict[str, Company] = {}
 
     async def get(self, ticker: str) -> Optional[Company]:
-        return self._store.get(ticker.upper())
+        return self._store.get(normalize_ticker(ticker))
 
     async def set(self, ticker: str, company: Company) -> None:
-        self._store[ticker.upper()] = company
+        self._store[normalize_ticker(ticker)] = company
 
     async def close(self) -> None:
         self._store.clear()
@@ -96,7 +97,7 @@ class PostgresRepo:
         async with self._pool.acquire() as conn:
             row = await conn.fetchrow(
                 "SELECT payload FROM companies WHERE ticker = $1",
-                ticker.upper(),
+                normalize_ticker(ticker),
             )
         if row is None:
             return None
@@ -116,7 +117,7 @@ class PostgresRepo:
                 SET payload = EXCLUDED.payload,
                     updated_at = NOW()
                 """,
-                ticker.upper(),
+                normalize_ticker(ticker),
                 payload,
             )
 

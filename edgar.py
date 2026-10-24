@@ -19,6 +19,7 @@ import os
 from typing import Any, Optional
 
 import httpx
+from tickers import normalize_ticker
 
 SEC_DATA_BASE = "https://data.sec.gov"
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -79,7 +80,7 @@ class EdgarClient:
     async def get_cik_from_ticker(self, ticker: str) -> str:
         """Look up CIK (zero-padded to 10 digits) from ticker symbol."""
         ticker_map = await self._load_ticker_map()
-        cik = ticker_map.get(ticker.upper())
+        cik = ticker_map.get(normalize_ticker(ticker))
         if cik is None:
             raise ValueError(f"Ticker {ticker!r} not found in SEC database")
         return cik

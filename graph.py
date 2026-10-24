@@ -33,6 +33,7 @@ from extract_track_b import (
     extract_track_b,
 )
 from industry import Industry, classify_with_overrides
+from tickers import normalize_ticker
 from schemas import (
     BalanceSheet,
     BankBalanceSheet,
@@ -348,7 +349,7 @@ class GraphState(TypedDict, total=False):
 
 def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphState]]:
     async def ingest(state: GraphState) -> GraphState:
-        ticker = state["ticker"]
+        ticker = normalize_ticker(state["ticker"])
         cik = await client.get_cik_from_ticker(ticker)
         submissions = await client.get_submissions(cik)
         name = submissions.get("name", ticker)
@@ -362,6 +363,7 @@ def _make_ingest(client: EdgarClient) -> Callable[[GraphState], Awaitable[GraphS
         period_end = date.fromisoformat(filing_meta["period_of_report"])
         facts = await client.get_company_facts(cik)
         return {
+            "ticker": ticker,
             "cik": cik,
             "company_name": name,
             "period_end": period_end,

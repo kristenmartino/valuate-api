@@ -23,6 +23,8 @@ GET /version                                                                comm
 
 A FastAPI app serving a LangGraph state machine for SEC filing extraction, flagged-value corrections, and five simplified valuation models. The workspace reads saved company records when available; uncached tickers require extraction and can fail when required values remain missing. Saved records do not establish filing freshness. Standard and energy models include a sensitivity grid; all models support Monte Carlo simulation.
 
+Ticker aliases are trimmed, uppercased, and normalized to the SEC/Yahoo hyphen form (`BRK.B` → `BRK-B`) for lookup, extraction state, repository keys, and comps. Dot and hyphen requests share saved records and corrections. A resolved ticker can still fail composition when required financial values are missing; normalization does not establish model coverage.
+
 ## Pipeline
 
 The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END`:
@@ -90,13 +92,14 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-60 collected tests across six files (the network integration test is skipped by default):
+67 collected tests across seven files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
 - `test_overrides.py` (10) — HITL override across every industry variant, with multi-period history preserved
 - `test_auth_and_rate_limit.py` (12) — bearer-token auth on `/override` and the IP rate limiter for `/extract` (incl. X-Forwarded-For spoof resistance)
 - `test_histogram_view.py` (4) — central-window binning, ties, sample accounting, and empty simulations
+- `test_ticker_aliases.py` (7) — SEC lookup aliases, shared repository/value/correction state, and canonical Postgres keys
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

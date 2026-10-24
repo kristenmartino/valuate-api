@@ -37,6 +37,7 @@ from edgar import EdgarClient
 from graph import CompositionError, build_graph, validate_company
 from overrides import apply_override
 from repository import CompanyRepo, make_repo
+from tickers import normalize_ticker
 from schemas import (
     Assumptions,
     Company,
@@ -164,7 +165,7 @@ async def extract(
     if _graph is None:
         raise HTTPException(503, "Service not ready")
     try:
-        result = await _graph.ainvoke({"ticker": req.ticker})
+        result = await _graph.ainvoke({"ticker": normalize_ticker(req.ticker)})
     except ValueError as e:
         # Unknown ticker, missing 10-K in recent filings, etc.
         raise HTTPException(400, str(e))
@@ -261,4 +262,4 @@ async def comps(ticker: str) -> CompsResponse:
     to an empty peers list if Yahoo Finance is unreachable rather than
     failing the request.
     """
-    return await get_peer_comps(ticker.upper())
+    return await get_peer_comps(normalize_ticker(ticker))
