@@ -21,7 +21,7 @@ GET /healthz                                                                live
 GET /version                                                                commit SHA + prompt hash + start time
 ```
 
-A single FastAPI app serving a LangGraph state machine that extracts financial line items from a company's most recent 10-K, lets a reviewer override flagged extractions, then computes a 5-year DCF projection plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid.
+A FastAPI app serving a LangGraph state machine for SEC filing extraction, flagged-value corrections, and five simplified valuation models. The workspace reads saved company records when available; uncached tickers require extraction and can fail when required values remain missing. Saved records do not establish filing freshness. Standard and energy models include a sensitivity grid; all models support Monte Carlo simulation.
 
 ## Pipeline
 
@@ -29,7 +29,7 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
 
 1. **Ingest** — `EdgarClient` fetches the latest 10-K's metadata, the XBRL company-facts JSON, and the filing's primary HTML URL. The SIC code from the SEC submissions response routes the rest of the pipeline through the right industry path (`industry.py` → `Industry.STANDARD` for industrials/tech, `Industry.BANK` for depositories, `Industry.INSURER` for insurance carriers, `Industry.REIT` for real estate trusts, `Industry.ENERGY` for oil & gas E&P / refining). Rate-limited to SEC's 10 req/s limit.
 2. **Track A — XBRL** (`extract_track_a.py`). Walks the industry-specific concept map (`STANDARD_CANONICAL_CONCEPTS` for industrials, `BANK_CANONICAL_CONCEPTS` for banks — banks tag net interest income, loans, deposits, etc. that don't exist in the standard schema; `REIT_CANONICAL_CONCEPTS` adds the real-estate-at-cost / accumulated-depreciation contra-asset / real-estate-net trio that REITs report on the balance sheet). Returns a flat dict of LineItems for the **5 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
-3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. Every value carries a verbatim source quote and a confidence score.
+3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. AI values carry a model-reported score and a supporting excerpt where available. The score is not a calibrated probability of correctness; the excerpt must be checked against the filing.
 4. **Derivation backstop** (in `graph.py`). For fields neither track filled, applies accounting-identity fallbacks:
    - `operating_income ≈ income_before_tax + interest_expense` (handles JNJ, NKE)
    - `total_liabilities = total_assets − shareholders_equity` (handles NKE, KO)
@@ -46,10 +46,12 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
 - **Standard** (industrials / tech): 5-year FCFF DCF with Gordon-growth terminal, plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid over (revenue growth × operating margin).
 - **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` is observed dividend CAGR capped 200bps under default `r` so the Gordon constraint holds out of the box.
 - **Insurer**: justified price-to-book — `P/B = (ROE − g) / (r − g)`, then `fair_value/share = book_value/share × P/B`. Reserves and the general-account investment portfolio dominate the balance sheet, so book value is the economic anchor.
-- **REIT**: FFO-multiple Gordon growth — `fair_value/share = FFO/share × (1 + g) / (r − g)`, where `FFO = net income + D&A`. GAAP depreciation overstates economic depreciation for well-maintained real estate, so FFO is the conventional pre-distribution earnings measure REIT analysts anchor on.
-- **Energy E&P**: 10-year reserve-life-capped FCFF, **no terminal value**. Reserves deplete; Gordon-growth-to-infinity is conceptually wrong for an asset that will run out. `revenue_growth` is reinterpreted as production growth/decline. E&P is the only flavor that doesn't require a separate schema variant — the line items are standard us-gaap, what differs is the valuation math.
+- **REIT**: Gordon growth using approximate FFO — `fair_value/share = FFO/share × (1 + g) / (r − g)`, where approximate `FFO = net income + D&A`. This omits other Nareit adjustments. The supplementary estimated AFFO subtracts positive reported capex, or uses 80% of approximate FFO otherwise. These are simplified calculations, not company-reported FFO/AFFO.
+- **Energy E&P**: fixed ten-year FCFF projection, **no terminal value**. `revenue_growth` changes projected revenue. The model does not estimate company-specific reserve life, production volumes, or commodity prices. The line items use the standard statement schema.
 
-Monte Carlo runs for all five flavors (degenerate axes are simply unsampled); sensitivity is hidden client-side for bank/insurer/REIT paths because the grid axes (revenue growth × operating margin) don't enter their formulas. For energy E&P the heatmap IS shown — the FCFF math still uses both axes, just without a terminal value.
+Monte Carlo runs for all five models; sensitivity is hidden client-side for bank/insurer/REIT paths because the grid axes (revenue growth × operating margin) don't enter their formulas. For energy the grid uses revenue growth and operating margin, without terminal value. DCF-implied multiples appear only for standard and energy models; other comps tables provide market context.
+
+The response retains the full-range `histogram` and adds an optional `central_histogram`: bins recalculated from actual samples between p10 and p90, with `lower_bound`, `upper_bound`, `below_count`, and `above_count`. The workspace defaults to this window and offers a full-range view. Counts disclose the excluded tails; all summary statistics still use every completed sample. This is a display change, not a change to sampling or valuation formulas.
 
 ## HITL overrides
 
@@ -88,12 +90,13 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-56 tests across five files:
+60 collected tests across six files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
 - `test_overrides.py` (10) — HITL override across every industry variant, with multi-period history preserved
 - `test_auth_and_rate_limit.py` (12) — bearer-token auth on `/override` and the IP rate limiter for `/extract` (incl. X-Forwarded-For spoof resistance)
+- `test_histogram_view.py` (4) — central-window binning, ties, sample accounting, and empty simulations
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
@@ -186,7 +189,7 @@ Local dev with both env vars unset behaves identically to the pre-auth era — u
 | Banks | shipped | Gordon DDM | JPM |
 | Insurers | shipped | Justified P/B | PRU |
 | REITs | shipped | FFO-multiple Gordon growth | PLD |
-| Energy E&P | shipped | 10-year reserve-life-capped FCFF (no terminal) | EOG |
+| Energy E&P | shipped | Fixed ten-year FCFF (no terminal) | EOG |
 
 E&P is the only industry that doesn't carry a separate schema variant — the line items E&P companies report (revenue, op income, capex, D&A) are standard us-gaap; the conceptual difference is the *valuation*, not the data shape. The architecture supports both: schema variants when the line-item set fundamentally differs (banks, insurers, REITs), and dispatch-only when only the valuation differs (E&P). Anything classified outside these five falls back to `Industry.STANDARD` and runs the FCFF path with Gordon terminal — which produces nonsense for filers it shouldn't apply to. The home page surfaces the 18 curated tickers as the primary entry point and a free-text search box as an escape hatch; the search copy makes the fallback caveat explicit.
 

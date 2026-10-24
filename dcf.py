@@ -21,6 +21,7 @@ from industry import Industry
 from schemas import (
     Assumptions,
     Company,
+    HistogramView,
     MonteCarloResult,
     Projection,
     SensitivityGrid,
@@ -943,6 +944,18 @@ def _histogram(values: list[float], bins: int = 50) -> list[tuple[float, int]]:
     return [(lo + i * width, c) for i, c in enumerate(counts)]
 
 
+def _central_histogram(values: list[float], lower: float, upper: float) -> HistogramView:
+    """Re-bin actual central samples; never infer them from coarse full bins."""
+    central = [v for v in values if lower <= v <= upper]
+    return HistogramView(
+        lower_bound=lower,
+        upper_bound=upper,
+        histogram=_histogram(central, bins=40),
+        below_count=sum(v < lower for v in values),
+        above_count=sum(v > upper for v in values),
+    )
+
+
 def _historical_volatility(company: Company) -> tuple[Optional[float], Optional[float]]:
     """Per-industry sample standard deviations for the two MC drivers that
     `Assumptions.revenue_growth` and `Assumptions.operating_margin` map to
@@ -1107,6 +1120,7 @@ def monte_carlo(
         p75=pct(0.75),
         p90=pct(0.90),
         histogram=_histogram(results, bins=50),
+        central_histogram=_central_histogram(results, pct(0.10), pct(0.90)),
     )
 
 

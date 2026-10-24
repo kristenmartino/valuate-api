@@ -484,6 +484,16 @@ class Projection(BaseModel):
     smog_per_share: Optional[float] = None
 
 
+class HistogramView(BaseModel):
+    """A display window over the same completed simulation samples."""
+
+    lower_bound: float
+    upper_bound: float
+    histogram: list[tuple[float, int]]
+    below_count: int
+    above_count: int
+
+
 class MonteCarloResult(BaseModel):
     """Summary of a Monte Carlo run over per-share fair value."""
 
@@ -498,6 +508,7 @@ class MonteCarloResult(BaseModel):
     histogram: list[tuple[float, int]] = Field(
         ..., description="(bin_left_edge, count) pairs over per-share fair value"
     )
+    central_histogram: Optional[HistogramView] = None
 
 
 class SensitivityGrid(BaseModel):
