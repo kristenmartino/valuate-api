@@ -419,6 +419,8 @@ class Company(BaseModel):
     fiscal_year_end_month: int = Field(..., ge=1, le=12)
     periods: list[FinancialPeriod]
     extraction_flags: list[ExtractionFlag] = Field(default_factory=list)
+    share_count_label: Optional[str] = None
+    valuation_note: Optional[str] = None
 
 
 # --- DCF / valuation models ---------------------------------------------------

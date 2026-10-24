@@ -55,6 +55,20 @@ Monte Carlo runs for all five models; sensitivity is hidden client-side for bank
 
 The response retains the full-range `histogram` and adds an optional `central_histogram`: bins recalculated from actual samples between p10 and p90, with `lower_bound`, `upper_bound`, `below_count`, and `above_count`. The workspace defaults to this window and offers a full-range view. Counts disclose the excluded tails; all summary statistics still use every completed sample. This is a display change, not a change to sampling or valuation formulas.
 
+## Berkshire filing support
+
+`BRK.B` / `BRK-B` now produces a simplified justified-P/B valuation; `BRK.A` / `BRK-A` uses its own equivalent share basis. Berkshire is a diversified conglomerate: this reuses the insurer formula with consolidated GAAP earnings and Berkshire shareholders' equity, not a sum-of-the-parts model. Investment gains can distort historical ROE. Per-share amounts use annual average equivalent shares rather than year-end shares.
+
+The SEC company-facts feed omits the required dimensioned facts. `berkshire.py` reads the annual filing's inline XBRL before Claude backfill:
+
+- `WeightedAverageNumberOfSharesOutstandingBasic` with the requested `EquivalentClassA/BMember`. These are reported equivalent shares, not generic diluted shares. The existing wire field `diluted_shares_outstanding` carries them with an explicit source note and `Company.share_count_label` for display.
+- `PremiumsEarnedNet` for `InsuranceAndOtherMember`.
+- Cash from `InsuranceAndOtherMember` plus `RailroadUtilitiesAndEnergyMember`, labeled as a calculation. Restricted cash, parent-only cash, and Treasury bills are not substituted.
+
+Facts must match Berkshire's CIK, annual dates (or year-end cash instant), exact dimension set, and units. Scales/signs are applied; matching repeats are deduplicated and conflicts remain missing. Claude cannot fill these three fields if the tagged contexts are unavailable. Missing required data still fails explicitly.
+
+Regression fixtures pin selected public facts from the [FY2025 SEC 10-K](https://www.sec.gov/Archives/edgar/data/1067983/000119312526083899/brka-20251231.htm): Class B average equivalent shares 2,157,335,139; premiums $88.902 billion; cash $51.877 billion ($47.719 billion + $4.158 billion). This targeted regression coverage is separate from the historical extraction baseline below; the May baseline has not been rerun.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -92,7 +106,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-67 collected tests across seven files (the network integration test is skipped by default):
+77 collected tests across eight files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -100,6 +114,7 @@ pytest tests/
 - `test_auth_and_rate_limit.py` (12) — bearer-token auth on `/override` and the IP rate limiter for `/extract` (incl. X-Forwarded-For spoof resistance)
 - `test_histogram_view.py` (4) — central-window binning, ties, sample accounting, and empty simulations
 - `test_ticker_aliases.py` (7) — SEC lookup aliases, shared repository/value/correction state, and canonical Postgres keys
+- `test_berkshire.py` (10) — filing-backed Class A/B shares, premiums, cash aggregation, unsafe-context rejection, composition, and P/B simulation
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

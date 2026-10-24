@@ -74,17 +74,10 @@ def classify_sic(sic: Optional[str | int]) -> Industry:
 #   to succeed (similar XBRL coverage to standard industrials).
 # - L (Loews Corp): override flips to STANDARD; similar expectation.
 #
-# Notable case we tried and removed:
-#
-# - BRK-B (Berkshire Hathaway): the override flips classification, but
-#   Berkshire's own XBRL tagging is genuinely unusual — they stopped
-#   tagging `OperatingIncomeLoss` after 2012 and never tag
-#   `WeightedAverageNumberOfDilutedSharesOutstanding` (A/B share
-#   structure makes the standard concept inapplicable). Even with the
-#   override, composition fails on those two required fields. A real
-#   Berkshire valuation is sum-of-the-parts, which is out of scope for
-#   the demo. Leaving BRK-B to fail loudly with the friendly error UI
-#   is more honest than overriding it into a different kind of failure.
+# Berkshire retains its SEC insurance classification and the simplified P/B
+# model. berkshire.py reads annual, class-specific equivalent shares and
+# segment cash/premiums from inline XBRL before Claude backfill. The UI
+# explicitly distinguishes this approximation from sum-of-the-parts.
 #
 # The override is checked AFTER classify_sic in the graph's ingest step.
 TICKER_INDUSTRY_OVERRIDES: dict[str, Industry] = {

@@ -25,6 +25,7 @@ from typing import Any, Awaitable, Callable, Optional, TypedDict
 from anthropic import AsyncAnthropic
 from langgraph.graph import END, StateGraph
 
+from berkshire import BERKSHIRE_FIELDS, berkshire_model_context, extract_berkshire_filing
 from edgar import EdgarClient, concepts_for, latest_value_per_period
 from extract_track_a import extract_track_a
 from extract_track_b import (
@@ -655,12 +656,17 @@ def _compose_company(
             )
         )
 
+    share_count_label, valuation_note = (None, None)
+    if cik.lstrip("0") == "1067983" and normalize_ticker(ticker) in {"BRK-A", "BRK-B"}:
+        share_count_label, valuation_note = berkshire_model_context(ticker)
     return Company(
         ticker=ticker.upper(),
         cik=cik,
         name=company_name,
         fiscal_year_end_month=latest.month,
         periods=fp_list,
+        share_count_label=share_count_label,
+        valuation_note=valuation_note,
     )
 
 
@@ -674,6 +680,14 @@ def _make_track_b(
         industry = state.get("industry", Industry.STANDARD)
         latest = period_ends[0]
         latest_items = periods_items[latest]
+        is_berkshire = (state["cik"].lstrip("0") == "1067983"
+                        and normalize_ticker(state["ticker"]) in {"BRK-A", "BRK-B"})
+        if is_berkshire:
+            # These facts require exact share-class/segment contexts. Do not
+            # accept undimensioned facts or let an LLM guess the share basis.
+            for items in periods_items.values():
+                for field in BERKSHIRE_FIELDS:
+                    items[field] = None
 
         # Two distinct things we want from the latest 10-K's text section:
         #  (a) backfill any required/optional line items XBRL didn't tag
@@ -681,12 +695,17 @@ def _make_track_b(
         #      don't report revenue segments in a comparable way)
         # Both share the same HTML fetch + section slice, and the same cached
         # system prompt on the Anthropic side.
-        missing = _missing_fields(latest_items, industry)
         revenue_segments: list[RevenueSegment] = []
         standardized_measure: Optional[LineItem] = None
 
         try:
             html = await edgar_client.get_filing_html(state["filing_url"])
+            if is_berkshire:
+                for pe, items in extract_berkshire_filing(html, state["ticker"], period_ends).items():
+                    periods_items[pe].update(items)
+            missing = _missing_fields(latest_items, industry)
+            if is_berkshire:
+                missing = [field for field in missing if field not in BERKSHIRE_FIELDS]
             section_text = extract_financial_statements_section(html)
 
             if missing:
@@ -700,6 +719,8 @@ def _make_track_b(
                     fields_to_extract=missing,
                 )
                 for field, line_item in claude_items.items():
+                    if is_berkshire and field in BERKSHIRE_FIELDS:
+                        continue
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
 
