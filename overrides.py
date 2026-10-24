@@ -97,6 +97,11 @@ def apply_override(
         source=ExtractionSource.USER_OVERRIDE,
         confidence=1.0,
         source_quote=source_quote,
+        # The amount is a correction, not an XBRL fact. Retain only this
+        # field's equity coverage so reconciliation does not double-count NCI.
+        xbrl_tag=(getattr(statement, field_name).xbrl_tag
+                  if statement_name == "balance_sheet" and field_name == "shareholders_equity"
+                  else None),
     )
 
     new_statement = statement.model_copy(update={field_name: new_item})

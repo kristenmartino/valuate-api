@@ -274,6 +274,7 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     ],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
+    "noncontrolling_interests": ["MinorityInterest"],
     "shareholders_equity": [
         "StockholdersEquity",
         "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
@@ -343,6 +344,7 @@ BANK_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
+    "noncontrolling_interests": ["MinorityInterest"],
     "shareholders_equity": [
         "StockholdersEquity",
         "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
@@ -409,6 +411,7 @@ INSURANCE_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     ],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
+    "noncontrolling_interests": ["MinorityInterest"],
     "shareholders_equity": [
         "StockholdersEquity",
         "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
@@ -480,6 +483,7 @@ REIT_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
+    "noncontrolling_interests": ["MinorityInterest"],
     "shareholders_equity": [
         "StockholdersEquity",
         "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",

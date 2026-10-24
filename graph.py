@@ -27,6 +27,7 @@ from langgraph.graph import END, StateGraph
 
 from berkshire import BERKSHIRE_FIELDS, berkshire_model_context, extract_berkshire_filing
 from edgar import EdgarClient, concepts_for, latest_value_per_period
+from equity import filing_noncontrolling_interests, reconciliation_equity
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -36,6 +37,7 @@ from extract_track_b import (
 from industry import Industry, classify_with_overrides
 from tickers import normalize_ticker
 from schemas import (
+    AnyBalanceSheet,
     BalanceSheet,
     BankBalanceSheet,
     BankCashFlowStatement,
@@ -114,6 +116,7 @@ BALANCE_SHEET_FIELDS = [
     "operating_lease_liabilities",
     "total_liabilities",
     "shareholders_equity",
+    "noncontrolling_interests",
 ]
 CASH_FLOW_FIELDS = [
     "depreciation_amortization",
@@ -152,6 +155,7 @@ BANK_BALANCE_FIELDS = [
     "total_assets",
     "total_liabilities",
     "shareholders_equity",
+    "noncontrolling_interests",
 ]
 BANK_CASH_FLOW_FIELDS = [
     "cash_from_operations",
@@ -198,6 +202,7 @@ INSURANCE_BALANCE_FIELDS = [
     "total_assets",
     "total_liabilities",
     "shareholders_equity",
+    "noncontrolling_interests",
 ]
 INSURANCE_CASH_FLOW_FIELDS = [
     "cash_from_operations",
@@ -246,6 +251,7 @@ REIT_BALANCE_FIELDS = [
     "long_term_debt",
     "total_liabilities",
     "shareholders_equity",
+    "noncontrolling_interests",
 ]
 REIT_CASH_FLOW_FIELDS = [
     "cash_from_operations",
@@ -428,6 +434,9 @@ async def track_a(state: GraphState) -> GraphState:
     periods_items: dict[date, dict[str, Optional[LineItem]]] = {}
     for pe in period_ends:
         items = extract_track_a(pe, facts, concepts=concepts)
+        items["noncontrolling_interests"] = filing_noncontrolling_interests(
+            facts, state["cik"], pe, state["filing_accession"],
+        )
         for field in expected_fields:
             items.setdefault(field, None)
         periods_items[pe] = items
@@ -440,7 +449,8 @@ def _missing_fields(
     industry: Industry = Industry.STANDARD,
 ) -> list[str]:
     """Return all industry-relevant fields that are None in items."""
-    return [f for f in _all_fields_for(industry) if items.get(f) is None]
+    return [f for f in _all_fields_for(industry)
+            if f != "noncontrolling_interests" and items.get(f) is None]
 
 
 def _derive_missing_required(
@@ -514,13 +524,15 @@ def _derive_missing_required(
         ta = items.get("total_assets")
         eq = items.get("shareholders_equity")
         if ta is not None and eq is not None:
+            nci = items.get("noncontrolling_interests")
+            nci_value = (nci.value if nci is not None and eq.xbrl_tag == "us-gaap:StockholdersEquity" else Decimal(0))
             items["total_liabilities"] = LineItem(
-                value=ta.value - eq.value,
+                value=ta.value - eq.value - nci_value,
                 source=ExtractionSource.DERIVED,
                 confidence=0.99,
                 source_quote=(
                     f"Derived: total_assets − shareholders_equity "
-                    f"({ta.value} − {eq.value})"
+                    f"({ta.value} − {eq.value}) − noncontrolling_interests ({nci_value})"
                 ),
                 xbrl_tag=None,
             )
@@ -719,6 +731,8 @@ def _make_track_b(
                     fields_to_extract=missing,
                 )
                 for field, line_item in claude_items.items():
+                    if field == "noncontrolling_interests":
+                        continue  # This component requires matching tagged instant facts.
                     if is_berkshire and field in BERKSHIRE_FIELDS:
                         continue
                     if latest_items.get(field) is None and line_item is not None:
@@ -795,8 +809,8 @@ def _walk_line_items(period: FinancialPeriod):
                 yield f"{stmt_name}.{field_name}", value
 
 
-def _balance_sheet_check(bs: BalanceSheet) -> Optional[ExtractionFlag]:
-    expected = bs.total_liabilities.value + bs.shareholders_equity.value
+def _balance_sheet_check(bs: AnyBalanceSheet) -> Optional[ExtractionFlag]:
+    expected = bs.total_liabilities.value + reconciliation_equity(bs)
     diff = abs(bs.total_assets.value - expected)
     tolerance = abs(bs.total_assets.value) * BALANCE_SHEET_TOLERANCE
     if diff <= tolerance:
@@ -805,7 +819,7 @@ def _balance_sheet_check(bs: BalanceSheet) -> Optional[ExtractionFlag]:
         field_path="balance_sheet",
         reason=(
             f"Balance sheet identity off by {diff}: "
-            f"assets {bs.total_assets.value} vs liabilities+equity {expected}"
+            f"assets {bs.total_assets.value} vs liabilities+reconciled equity {expected}"
         ),
         current_value=bs.total_assets.value,
     )

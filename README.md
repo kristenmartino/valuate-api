@@ -34,7 +34,7 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
 3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. AI values carry a model-reported score and a supporting excerpt where available. The score is not a calibrated probability of correctness; the excerpt must be checked against the filing.
 4. **Derivation backstop** (in `graph.py`). For fields neither track filled, applies accounting-identity fallbacks:
    - `operating_income ≈ income_before_tax + interest_expense` (handles JNJ, NKE)
-   - `total_liabilities = total_assets − shareholders_equity` (handles NKE, KO)
+   - `total_liabilities = total_assets − shareholders_equity − noncontrolling_interests` (the last component is subtracted only for parent-equity coverage) (handles NKE, KO)
    - `real_estate_net = real_estate_at_cost − accumulated_depreciation` (REIT-only, for filers that tag the components but not the net)
 
    All write `source=DERIVED` with a synthetic source quote.
@@ -68,6 +68,16 @@ The SEC company-facts feed omits the required dimensioned facts. `berkshire.py` 
 Facts must match Berkshire's CIK, annual dates (or year-end cash instant), exact dimension set, and units. Scales/signs are applied; matching repeats are deduplicated and conflicts remain missing. Claude cannot fill these three fields if the tagged contexts are unavailable. Missing required data still fails explicitly.
 
 Regression fixtures pin selected public facts from the [FY2025 SEC 10-K](https://www.sec.gov/Archives/edgar/data/1067983/000119312526083899/brka-20251231.htm): Class B average equivalent shares 2,157,335,139; premiums $88.902 billion; cash $51.877 billion ($47.719 billion + $4.158 billion). This targeted regression coverage is separate from the historical extraction baseline below; the May baseline has not been rerun.
+
+## Balance-sheet reconciliation
+
+Parent stockholders' equity and `noncontrolling_interests` are separate fields. The check adds reported noncontrolling interests when equity uses `us-gaap:StockholdersEquity`; it does not add them again when equity uses the consolidated-equity tag. Unknown equity coverage is not assumed to be parent-only. Equity corrections keep the original concept as their coverage basis while retaining `source=user_override`.
+
+The optional noncontrolling-interest component comes only from `us-gaap:MinorityInterest` USD instant facts matching the company's CIK, annual filing accession, and period end. Duplicate equal facts are accepted; conflicts, wrong periods/units/entities, and duration facts are rejected. Claude does not fill this component.
+
+For an older saved record with a material parent-equity gap and no component, a read attempts the same-filing backfill, adds only the missing component, and reruns validation. Existing financial amounts and correction notes are preserved. SEC failures leave the saved data and warning intact; unsuccessful attempts are retried no more than once per five minutes per process. This is a targeted compatibility upgrade, not a filing-freshness refresh.
+
+Prologis's FY2025 filing reports assets $98.724256B, liabilities $40.970248B, parent equity $53.193178B, and noncontrolling interests $4.560830B. The last component resolves its false warning without replacing any of the first three amounts or changing valuation inputs. See the [SEC filing](https://www.sec.gov/Archives/edgar/data/1045609/000119312526051453/pld-20251231.htm). The regression fixtures pin these selected facts; they do not expand the historical May extraction baseline.
 
 ## HITL overrides
 
@@ -106,13 +116,14 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-77 collected tests across eight files (the network integration test is skipped by default):
+99 collected tests across nine files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
 - `test_overrides.py` (10) — HITL override across every industry variant, with multi-period history preserved
 - `test_auth_and_rate_limit.py` (12) — bearer-token auth on `/override` and the IP rate limiter for `/extract` (incl. X-Forwarded-For spoof resistance)
 - `test_histogram_view.py` (4) — central-window binning, ties, sample accounting, and empty simulations
+- `test_equity_reconciliation.py` (22) — Prologis filing regression, parent versus consolidated equity, preserved values/results, same-filing backfill, unsafe-context rejection, and cached-record upgrade/failure behavior
 - `test_ticker_aliases.py` (7) — SEC lookup aliases, shared repository/value/correction state, and canonical Postgres keys
 - `test_berkshire.py` (10) — filing-backed Class A/B shares, premiums, cash aggregation, unsafe-context rejection, composition, and P/B simulation
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K

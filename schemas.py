@@ -215,6 +215,7 @@ class BalanceSheet(BaseModel):
     operating_lease_liabilities: Optional[LineItem] = None
     total_liabilities: LineItem
     shareholders_equity: LineItem
+    noncontrolling_interests: Optional[LineItem] = None
 
 
 class BankBalanceSheet(BaseModel):
@@ -236,6 +237,7 @@ class BankBalanceSheet(BaseModel):
     total_assets: LineItem
     total_liabilities: LineItem
     shareholders_equity: LineItem
+    noncontrolling_interests: Optional[LineItem] = None
 
 
 class InsuranceBalanceSheet(BaseModel):
@@ -255,6 +257,7 @@ class InsuranceBalanceSheet(BaseModel):
     total_assets: LineItem
     total_liabilities: LineItem
     shareholders_equity: LineItem
+    noncontrolling_interests: Optional[LineItem] = None
 
 
 class REITBalanceSheet(BaseModel):
@@ -280,6 +283,7 @@ class REITBalanceSheet(BaseModel):
     long_term_debt: Optional[LineItem] = None
     total_liabilities: LineItem
     shareholders_equity: LineItem
+    noncontrolling_interests: Optional[LineItem] = None
 
 
 AnyBalanceSheet = Annotated[

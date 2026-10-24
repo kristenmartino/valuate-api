@@ -13,8 +13,11 @@ Run locally:
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from decimal import Decimal
+from time import monotonic
 from typing import Any, Optional
 
 from anthropic import AsyncAnthropic
@@ -34,6 +37,7 @@ from dcf import (
     sensitivity_grid,
 )
 from edgar import EdgarClient
+from equity import backfill_noncontrolling_interests, needs_equity_backfill
 from graph import CompositionError, build_graph, validate_company
 from overrides import apply_override
 from repository import CompanyRepo, make_repo
@@ -100,6 +104,13 @@ class ValuationResponse(BaseModel):
 
 _graph: Any = None
 _repo: Optional[CompanyRepo] = None
+_company_locks: dict[str, asyncio.Lock] = {}
+_equity_backfill_attempts: dict[tuple[str, str], float] = {}
+_logger = logging.getLogger(__name__)
+
+
+def _company_lock(ticker: str) -> asyncio.Lock:
+    return _company_locks.setdefault(normalize_ticker(ticker), asyncio.Lock())
 
 
 @asynccontextmanager
@@ -149,12 +160,33 @@ def _require_repo() -> CompanyRepo:
 
 
 async def _require_company(ticker: str) -> Company:
-    company = await _require_repo().get(ticker)
+    repo = _require_repo()
+    company = await repo.get(ticker)
     if company is None:
         raise HTTPException(
             404, f"No extraction found for {ticker}. POST /extract first."
         )
-    return company
+    if needs_equity_backfill(company):
+        # Upgrade an old saved record without extracting again or replacing
+        # existing amounts/corrections. Serialize this with reviewer writes.
+        async with _company_lock(ticker):
+            company = await repo.get(ticker)
+            if company is None:
+                raise HTTPException(404, f"No extraction found for {ticker}.")
+            key = (normalize_ticker(ticker), company.periods[0].filing_accession)
+            if needs_equity_backfill(company) and monotonic() - _equity_backfill_attempts.get(key, float("-inf")) >= 300:
+                _equity_backfill_attempts[key] = monotonic()
+                try:
+                    facts = await EdgarClient().get_company_facts(company.cik)
+                    updated = backfill_noncontrolling_interests(company, facts)
+                    if updated != company:
+                        updated = validate_company(updated)
+                        await repo.set(ticker, updated)
+                        company = updated
+                except Exception as exc:
+                    # Keep the warning and saved figures if SEC is unavailable.
+                    _logger.warning("Equity component backfill unavailable for %s (%s)", normalize_ticker(ticker), type(exc).__name__)
+    return validate_company(company)
 
 
 @app.post("/extract", response_model=Company)
@@ -188,19 +220,23 @@ async def override(
     req: OverrideRequest,
     _auth: None = Depends(require_override_auth),
 ) -> Company:
-    company = await _require_company(ticker)
-    try:
-        updated = apply_override(
-            company,
-            field_path=req.field_path,
-            value=req.value,
-            source_quote=req.source_quote,
-        )
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-    # Re-run validation so flags reflect the post-override state.
-    updated = validate_company(updated)
-    await _require_repo().set(ticker, updated)
+    await _require_company(ticker)
+    async with _company_lock(ticker):
+        company = await _require_repo().get(ticker)
+        if company is None:
+            raise HTTPException(404, f"No extraction found for {ticker}.")
+        try:
+            updated = apply_override(
+                company,
+                field_path=req.field_path,
+                value=req.value,
+                source_quote=req.source_quote,
+            )
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        # Re-run validation so flags reflect the post-override state.
+        updated = validate_company(updated)
+        await _require_repo().set(ticker, updated)
     return updated
 
 

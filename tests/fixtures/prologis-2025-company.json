@@ -1,0 +1,382 @@
+{
+  "ticker": "PLD",
+  "cik": "0001045609",
+  "name": "Prologis, Inc.",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0001193125-26-051453",
+      "filing_type": "10-K",
+      "industry": "reit",
+      "income_statement": {
+        "kind": "reit",
+        "revenue": {
+          "value": "8790127000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "property_operating_expense": {
+          "value": "1964000000",
+          "source": "llm_html",
+          "confidence": 0.82,
+          "source_quote": "Rental expenses (1,964 ) (1,765 ) Other expenses (46 ) (47 ) Real Estate Segment \u2013 NOI",
+          "xbrl_tag": null
+        },
+        "depreciation_amortization": {
+          "value": "2626028000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationAndAmortization"
+        },
+        "general_and_administrative": {
+          "value": "469114000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:GeneralAndAdministrativeExpense"
+        },
+        "operating_income": {
+          "value": "4357864000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "1002344000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "3769316000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "204017000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "3328231000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "956832000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "reit",
+        "cash_and_equivalents": {
+          "value": "1145647000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "real_estate_at_cost": {
+          "value": "95129356000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyAtCost"
+        },
+        "accumulated_depreciation": {
+          "value": "14729149000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyAccumulatedDepreciation"
+        },
+        "real_estate_net": {
+          "value": "80400207000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyNet"
+        },
+        "total_assets": {
+          "value": "98724256000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "long_term_debt": {
+          "value": "35037073000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "total_liabilities": {
+          "value": "40970248000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "53193178000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "reit",
+        "cash_from_operations": {
+          "value": "5008434000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-3630447000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-1563619000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "3764745000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": {
+          "value": "2626028000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationAndAmortization"
+        },
+        "capital_expenditures": {
+          "value": "1800527000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquireRealEstate"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0001193125-26-051453",
+      "filing_type": "10-K",
+      "industry": "reit",
+      "income_statement": {
+        "kind": "reit",
+        "revenue": {
+          "value": "8201610000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "property_operating_expense": null,
+        "depreciation_amortization": {
+          "value": "2580519000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationAndAmortization"
+        },
+        "general_and_administrative": {
+          "value": "418765000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:GeneralAndAdministrativeExpense"
+        },
+        "operating_income": {
+          "value": "4415920000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "863932000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "4114878000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "166943000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "3731635000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "953590000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "reit",
+        "cash_and_equivalents": {
+          "value": "1318591000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "real_estate_at_cost": {
+          "value": "91246176000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyAtCost"
+        },
+        "accumulated_depreciation": {
+          "value": "12758159000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyAccumulatedDepreciation"
+        },
+        "real_estate_net": {
+          "value": "78488017000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RealEstateInvestmentPropertyNet"
+        },
+        "total_assets": {
+          "value": "95328909000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "long_term_debt": {
+          "value": "30879263000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "total_liabilities": {
+          "value": "36712139000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "53951138000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "reit",
+        "cash_from_operations": {
+          "value": "4912209000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-3099057000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-999957000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "3570480000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": {
+          "value": "2580519000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationAndAmortization"
+        },
+        "capital_expenditures": {
+          "value": "2327605000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquireRealEstate"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [
+    {
+      "field_path": "balance_sheet",
+      "reason": "Balance sheet identity off by 4560830000: assets 98724256000 vs liabilities+equity 94163426000",
+      "current_value": "98724256000",
+      "suggested_value": null
+    }
+  ],
+  "share_count_label": null,
+  "valuation_note": null
+}
