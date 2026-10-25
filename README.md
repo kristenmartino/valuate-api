@@ -31,7 +31,7 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
 
 1. **Ingest** — `EdgarClient` fetches the latest 10-K's metadata, the XBRL company-facts JSON, and the filing's primary HTML URL. The SIC code from the SEC submissions response routes the rest of the pipeline through the right industry path (`industry.py` → `Industry.STANDARD` for industrials/tech, `Industry.BANK` for depositories, `Industry.INSURER` for insurance carriers, `Industry.REIT` for real estate trusts, `Industry.ENERGY` for oil & gas E&P / refining). Rate-limited to SEC's 10 req/s limit.
 2. **Track A — XBRL** (`extract_track_a.py`). Walks the industry-specific concept map (`STANDARD_CANONICAL_CONCEPTS` for industrials, `BANK_CANONICAL_CONCEPTS` for banks — banks tag net interest income, loans, deposits, etc. that don't exist in the standard schema; `REIT_CANONICAL_CONCEPTS` adds the real-estate-at-cost / accumulated-depreciation contra-asset / real-estate-net trio that REITs report on the balance sheet). Returns a flat dict of LineItems for the **5 most-recent fiscal years** (XBRL company-facts already carries every year the filer has tagged, so multi-period costs zero extra HTTP). Missing concepts come back as `None`; never raises.
-3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue by segment** if the filer reports it. AI values carry a model-reported score and a supporting excerpt where available. The score is not a calibrated probability of correctness; the excerpt must be checked against the filing.
+3. **Track B — Claude** (`extract_track_b.py`). For the *latest* period only, asks Claude (`claude-sonnet-4-6`, prompt-cached system prompt) to fill any fields Track A left blank, plus extract **revenue categories** if the filer reports them. CRM instead reads its complete revenue breakdown from tagged filing contexts. AI values carry a model-reported score and a supporting excerpt where available. The score is not a calibrated probability of correctness; the excerpt must be checked against the filing.
 4. **Derivation backstop** (in `graph.py`). For fields neither track filled, applies accounting-identity fallbacks:
    - `operating_income ≈ income_before_tax + interest_expense` (handles JNJ, NKE)
    - `total_liabilities = total_assets − shareholders_equity − noncontrolling_interests` (the last component is subtracted only for parent-equity coverage) (handles NKE, KO)
@@ -87,6 +87,14 @@ CRM uses filing-tagged noncurrent debt (`LongTermDebtNoncurrent`) rather than de
 
 The [FY2026 filing](https://www.sec.gov/Archives/edgar/data/1108524/000110852426000060/crm-20260131.htm) reports noncurrent debt $10.439B and current debt $4.000B, cash-flow D&A $3.631B, and combined payables/accruals $8.253B. Fixtures also cover the historical D&A series used by the model. These targeted tests do not rerun or expand the historical May extraction baseline. Correcting debt affects both the net-debt bridge and default WACC; correcting historical D&A changes the default D&A/revenue ratio.
 
+### Salesforce revenue breakdown
+
+`crm_revenue.py` reads five subscription and support service offerings plus professional services and other from the saved annual filing's inline XBRL. It selects Salesforce's entity, annual duration, USD units, revenue concept, and exact product/service dimension members. Equal repeated facts are deduplicated; conflicting, missing, wrong-period, wrong-unit, and differently dimensioned facts are rejected.
+
+The five offerings must equal the reported subscription/support subtotal, and that subtotal plus professional services must equal both the filing's consolidated total and the saved revenue amount. The subtotal is not added as another category, and no residual is invented. For FY2026, $39.388B + $2.137B = $41.525B. These are revenue categories, not separate operating segments; Salesforce reports one operating segment.
+
+New CRM extractions bypass the AI revenue-breakdown call. Older partial records are repaired on read using the saved accession, without changing financial fields, corrections, assumptions, or valuation. Failed repairs leave the prior display and its reconciliation warning intact and retry no more than once per five minutes per process. If a new filing lacks the complete tagged breakdown, the optional breakdown remains unavailable rather than being filled with guessed categories. These targeted checks are separate from the historical May extraction baseline.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -124,7 +132,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-112 collected tests across ten files (the network integration test is skipped by default):
+131 collected tests across eleven files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -135,6 +143,7 @@ pytest tests/
 - `test_ticker_aliases.py` (7) — SEC lookup aliases, shared repository/value/correction state, and canonical Postgres keys
 - `test_berkshire.py` (10) — filing-backed Class A/B shares, premiums, cash aggregation, unsafe-context rejection, composition, and P/B simulation
 - `test_salesforce.py` (13) — filing-backed debt/D&A/payables coverage, five-period repair, valuation effects, review preservation, unsafe-fact rejection, and cached repair/failure behavior
+- `test_crm_revenue.py` (19) — complete six-category reconciliation, subtotal exclusion, unsafe-context rejection, saved-record repair, unchanged valuation/reviews, and deterministic fresh extraction
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

@@ -29,6 +29,7 @@ from berkshire import BERKSHIRE_FIELDS, berkshire_model_context, extract_berkshi
 from edgar import EdgarClient, concepts_for, latest_value_per_period
 from equity import filing_noncontrolling_interests, reconciliation_equity
 from salesforce import filing_items as salesforce_filing_items, mapping_flags
+from crm_revenue import extract_crm_revenue
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -714,6 +715,8 @@ def _make_track_b(
 
         try:
             html = await edgar_client.get_filing_html(state["filing_url"])
+            if state["cik"].lstrip("0") == "1108524" and latest_items.get("revenue") is not None:
+                revenue_segments = extract_crm_revenue(html, latest, state["filing_accession"], latest_items["revenue"].value)
             if is_berkshire:
                 for pe, items in extract_berkshire_filing(html, state["ticker"], period_ends).items():
                     periods_items[pe].update(items)
@@ -740,7 +743,10 @@ def _make_track_b(
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
 
-            if industry in (Industry.STANDARD, Industry.ENERGY):
+            if state["cik"].lstrip("0") == "1108524" and not revenue_segments and latest_items.get("revenue") is not None:
+                revenue_segments = extract_crm_revenue(html, latest, state["filing_accession"], latest_items["revenue"].value)
+
+            if industry in (Industry.STANDARD, Industry.ENERGY) and state["cik"].lstrip("0") != "1108524":
                 # Energy filers share the standard schema, and E&P companies
                 # often report meaningful basin / geography segments worth
                 # surfacing. Banks / insurers / REITs report segments
