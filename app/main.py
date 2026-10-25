@@ -39,6 +39,7 @@ from dcf import (
 from edgar import EdgarClient
 from equity import backfill_noncontrolling_interests, needs_equity_backfill
 from salesforce import needs_mapping_repair, repair_company
+from cisco import needs_debt_repair, repair_debt
 from crm_revenue import fetch_saved_filing, needs_revenue_repair, repair_revenue
 from graph import CompositionError, build_graph, validate_company
 from overrides import apply_override
@@ -190,17 +191,17 @@ async def _require_company(ticker: str) -> Company:
                 except Exception as exc:
                     # Keep the warning and saved figures if SEC is unavailable.
                     _logger.warning("Equity component backfill unavailable for %s (%s)", normalize_ticker(ticker), type(exc).__name__)
-    if needs_mapping_repair(company):
+    if needs_mapping_repair(company) or needs_debt_repair(company):
         async with _company_lock(ticker):
             company = await repo.get(ticker)
             if company is None:
                 raise HTTPException(404, f"No extraction found for {ticker}.")
             key = (normalize_ticker(ticker), company.periods[0].filing_accession)
-            if needs_mapping_repair(company) and monotonic() - _mapping_repair_attempts.get(key, float("-inf")) >= 300:
+            if (needs_mapping_repair(company) or needs_debt_repair(company)) and monotonic() - _mapping_repair_attempts.get(key, float("-inf")) >= 300:
                 _mapping_repair_attempts[key] = monotonic()
                 try:
                     facts = await EdgarClient().get_company_facts(company.cik)
-                    updated = validate_company(repair_company(company, facts))
+                    updated = validate_company(repair_debt(repair_company(company, facts), facts))
                     if updated != company:
                         await repo.set(ticker, updated)
                         company = updated

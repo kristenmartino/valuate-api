@@ -95,6 +95,14 @@ The five offerings must equal the reported subscription/support subtotal, and th
 
 New CRM extractions bypass the AI revenue-breakdown call. Older partial records are repaired on read using the saved accession, without changing financial fields, corrections, assumptions, or valuation. Failed repairs leave the prior display and its reconciliation warning intact and retry no more than once per five minutes per process. If a new filing lacks the complete tagged breakdown, the optional breakdown remains unavailable rather than being filled with guessed categories. These targeted checks are separate from the historical May extraction baseline.
 
+## Cisco debt coverage
+
+`cisco.py` selects `LongTermDebtNoncurrent` for CSCO before AI fallback and repairs older machine-extracted inclusive-debt fields on read. Its facts must match Cisco's CIK, USD units, year-end instant, annual form and filing accession. Latest-period values require the saved accession; older periods prefer its comparatives and can use earlier annual filings identified in the source note. Equal repeated facts are deduplicated; conflicting or invalid values remain unavailable. Existing reviewer corrections and all other financial fields are preserved.
+
+The [FY2026 filing, Note 11](https://www.sec.gov/Archives/edgar/data/858877/000085887726000132/csco-20260725.htm) separates $19.372B noncurrent debt from $3.500B current maturities. The latter is already included in $10.161B short-term debt. Replacing the inclusive $22.872B mapping avoids double-counting and changes both the net-debt bridge and default WACC. The reviewed $14.320B SG&A amount and its complete source note are preserved. Failed SEC repairs retain saved values, surface the known latest-period coverage warning and retry at most once per five minutes per process.
+
+These targeted regressions do not rerun or expand the historical extraction baseline.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -132,7 +140,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-131 collected tests across eleven files (the network integration test is skipped by default):
+147 collected tests across twelve files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -144,6 +152,7 @@ pytest tests/
 - `test_berkshire.py` (10) — filing-backed Class A/B shares, premiums, cash aggregation, unsafe-context rejection, composition, and P/B simulation
 - `test_salesforce.py` (13) — filing-backed debt/D&A/payables coverage, five-period repair, valuation effects, review preservation, unsafe-fact rejection, and cached repair/failure behavior
 - `test_crm_revenue.py` (19) — complete six-category reconciliation, subtotal exclusion, unsafe-context rejection, saved-record repair, unchanged valuation/reviews, and deterministic fresh extraction
+- `test_cisco.py` (16) — noncurrent-debt mapping across history, unchanged reviewed SG&A and other fields, WACC/net-debt effects, unsafe-fact rejection, fresh extraction and saved-record repair/failure behavior
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
