@@ -79,6 +79,14 @@ For an older saved record with a material parent-equity gap and no component, a 
 
 Prologis's FY2025 filing reports assets $98.724256B, liabilities $40.970248B, parent equity $53.193178B, and noncontrolling interests $4.560830B. The last component resolves its false warning without replacing any of the first three amounts or changing valuation inputs. See the [SEC filing](https://www.sec.gov/Archives/edgar/data/1045609/000119312526051453/pld-20251231.htm). The regression fixtures pin these selected facts; they do not expand the historical May extraction baseline.
 
+## Salesforce statement coverage
+
+CRM uses filing-tagged noncurrent debt (`LongTermDebtNoncurrent`) rather than debt including current maturities, the cash-flow D&A total (`DepreciationAndAmortization`) rather than fixed-asset D&A alone, and the reported combined payables/accruals concept. The frontend labels the combined liability coverage explicitly instead of calling it standalone accounts payable. Unknown payables coverage stays unspecified.
+
+`salesforce.py` applies these selections before AI fallback and repairs older machine-extracted CRM records on read, preserving user-corrected amounts and notes, including the reviewed SG&A field. It checks Salesforce's CIK, USD units, annual dates, annual filing form, and accession. Latest-period facts must match the saved filing; older periods prefer its comparatives and may use earlier annual filings, whose accessions are recorded in each source note. Conflicting facts remain unavailable. Failed repairs retain saved amounts, expose known latest-period debt/D&A coverage flags, and retry no more than once per five minutes per process.
+
+The [FY2026 filing](https://www.sec.gov/Archives/edgar/data/1108524/000110852426000060/crm-20260131.htm) reports noncurrent debt $10.439B and current debt $4.000B, cash-flow D&A $3.631B, and combined payables/accruals $8.253B. Fixtures also cover the historical D&A series used by the model. These targeted tests do not rerun or expand the historical May extraction baseline. Correcting debt affects both the net-debt bridge and default WACC; correcting historical D&A changes the default D&A/revenue ratio.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -116,7 +124,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-99 collected tests across nine files (the network integration test is skipped by default):
+112 collected tests across ten files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -126,6 +134,7 @@ pytest tests/
 - `test_equity_reconciliation.py` (22) — Prologis filing regression, parent versus consolidated equity, preserved values/results, same-filing backfill, unsafe-context rejection, and cached-record upgrade/failure behavior
 - `test_ticker_aliases.py` (7) — SEC lookup aliases, shared repository/value/correction state, and canonical Postgres keys
 - `test_berkshire.py` (10) — filing-backed Class A/B shares, premiums, cash aggregation, unsafe-context rejection, composition, and P/B simulation
+- `test_salesforce.py` (13) — filing-backed debt/D&A/payables coverage, five-period repair, valuation effects, review preservation, unsafe-fact rejection, and cached repair/failure behavior
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

@@ -28,6 +28,7 @@ from langgraph.graph import END, StateGraph
 from berkshire import BERKSHIRE_FIELDS, berkshire_model_context, extract_berkshire_filing
 from edgar import EdgarClient, concepts_for, latest_value_per_period
 from equity import filing_noncontrolling_interests, reconciliation_equity
+from salesforce import filing_items as salesforce_filing_items, mapping_flags
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -434,6 +435,7 @@ async def track_a(state: GraphState) -> GraphState:
     periods_items: dict[date, dict[str, Optional[LineItem]]] = {}
     for pe in period_ends:
         items = extract_track_a(pe, facts, concepts=concepts)
+        items.update(salesforce_filing_items(facts, state["cik"], pe, state["filing_accession"], latest))
         items["noncontrolling_interests"] = filing_noncontrolling_interests(
             facts, state["cik"], pe, state["filing_accession"],
         )
@@ -829,6 +831,7 @@ def validate_company(company: Company) -> Company:
     """Compute ExtractionFlags for a Company and return a new copy with them attached."""
     period = company.periods[0]
     flags: list[ExtractionFlag] = []
+    flags.extend(mapping_flags(company))
 
     for field_path, item in _walk_line_items(period):
         if item.confidence < CONFIDENCE_FLAG_THRESHOLD:
