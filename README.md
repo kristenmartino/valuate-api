@@ -135,6 +135,16 @@ The INTU-only selection requires matching annual USD facts from one filing, with
 
 With the captured FY2026 inputs, net debt is $3.716B, default WACC is about 7.86%, and the D&A/revenue ratio is about 4.91%. Other assumptions and the existing corrections for other companies are unchanged. The company note discloses the remaining PP&E-only capex input, which excludes separately reported capitalized internal-use software. This targeted repair does not manually approve INTU's unrelated gross-profit field or expand the historical extraction evaluation.
 
+## Microsoft D&A and debt split
+
+MSFT uses pure D&A expense from two non-overlapping filed disclosures: depreciation plus intangible-asset amortization. FY2026 is $34.3B + $4.7B = $39.0B; the five-year series is $39.0B, $28.0B, $20.0B, $13.5B and $14.6B. The $38.534B cash-flow row includes other adjustments and is not substituted for pure D&A. Both statement slots label the sum as calculated and expose the operands, annual dates and source accession; the company note explains the scope.
+
+Current maturities of $9.227B and noncurrent debt of $31.067B must reconcile to the filed $40.294B total. The saved MSFT record previously held that total in the long-term slot with current debt blank. Repairing both slots together preserves aggregate debt, net debt and default WACC; adding current debt beside the inclusive total would double-count it. The corrected five-year D&A/revenue average changes that assumption and the valuation, while other starting assumptions stay unchanged.
+
+The MSFT-only selector requires annual USD expense facts and year-end debt instants from one common annual filing for each period, with the latest tied to the selected 10-K and older periods bounded by its filing date. Missing, conflicting, nonfinite, negative, differently scoped or incoherent debt facts cannot be replaced by AI guesses. Saved repair requires every affected historical period before changing any, preserves user corrections and other fields, and does not split a reviewer-held debt pair automatically. Unresolved coverage keeps the saved record and an explicit flag while valuation/default requests fail. These targeted checks do not approve other MSFT fields or expand the historical extraction baseline.
+
+Source: [Microsoft FY2026 annual report](https://www.microsoft.com/investor/reports/ar26/), Notes 6, 9 and 10.
+
 ## Starting-assumption provenance
 
 Starting assumptions combine historical calculations and model defaults. For standard DCF, eligible periods have positive revenue; tax expense / positive pre-tax income is limited to 0–50% per period, averaged, then limited to 15–30%. The tax fallback is 21%. IBM therefore starts at 15% despite its FY2025 filed effective rate of −2.3%; this is a normalized projection assumption, not a replacement for the filed tax benefit. Energy averages the same per-period bounded rates without the additional 15–30% normalization. Standard and energy working capital starts at a fixed 5% of the change in revenue, not a ratio calculated from historical working-capital balances.
@@ -178,7 +188,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-238 collected tests across sixteen files (the network integration test is skipped by default):
+268 collected tests across seventeen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -195,6 +205,7 @@ pytest tests/
 - `test_apple_debt.py` (16) — filed noncurrent debt, preserved current debt and review notes, unsafe-fact rejection, unchanged assumptions, corrected bridge/value, and fresh/saved repair and failure behavior
 - `test_ibm.py` (26) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
 - `test_intuit.py` (24) — full cash-flow amortization versus expense-component coverage, five-year D&A and noncurrent debt, unsafe-context rejection, atomic repair, preserved reviewer values, fresh/saved failure behavior and valuation effects
+- `test_microsoft.py` (30) — pure D&A expense scope, five-year consistent repair, reconciled current/noncurrent debt, unsafe-fact rejection, preserved reviews and aggregate debt, fresh/saved failure behavior and valuation effects
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
