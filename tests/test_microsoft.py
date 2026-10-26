@@ -194,8 +194,9 @@ def test_reviewed_debt_pair_is_never_partially_changed_or_double_counted(field):
     updated = repair_company(c, FACTS)
     assert updated.periods[0].balance_sheet == c.periods[0].balance_sheet
     assert incomplete_inputs(updated)  # Requires an explicit review; never fill the paired slot automatically.
-    expected = "balance_sheet.long_term_debt" if field == "short_term_debt" else "balance_sheet.short_term_debt"
-    assert any(flag.field_path == expected for flag in validate_company(updated).extraction_flags)
+    flags = validate_company(updated).extraction_flags
+    assert any("coverage is incomplete" in flag.reason for flag in flags)
+    assert all(flag.current_value is not None for flag in flags)
 
 
 def test_already_correct_noncurrent_field_keeps_its_source_object():

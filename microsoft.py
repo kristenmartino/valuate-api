@@ -168,16 +168,12 @@ def repair_company(company: Company, facts: dict[str, Any]) -> Company:
 def coverage_flags(company: Company) -> list[ExtractionFlag]:
     if not incomplete_inputs(company):
         return []
-    latest = company.periods[0]
-    field_path = "cash_flow_statement.depreciation_amortization"
-    item = latest.cash_flow_statement.depreciation_amortization
-    if not _incomplete_da(item):
-        if _inclusive_debt(latest.balance_sheet.long_term_debt):
-            field_path, item = "balance_sheet.long_term_debt", latest.balance_sheet.long_term_debt
-        elif latest.balance_sheet.short_term_debt is None:
-            field_path, item = "balance_sheet.short_term_debt", None
+    # This flag describes incomplete input coverage across the annual series.
+    # Attach it to the required model add-back; optional missing debt is not
+    # represented as a fabricated zero/current amount in the review payload.
+    item = company.periods[0].cash_flow_statement.depreciation_amortization
     return [ExtractionFlag(
-        field_path=field_path,
-        current_value=item.value if item is not None else None,
+        field_path="cash_flow_statement.depreciation_amortization",
+        current_value=item.value,
         reason="MSFT annual D&A/current/noncurrent debt coverage is incomplete; valuation is unavailable until matching filing inputs are recovered.",
     )]
