@@ -28,7 +28,7 @@ def test_repairs_noncurrent_debt_across_history_and_preserves_all_other_fields()
     c = company()
     updated = validate_company(repair_debt(c, FACTS))
     assert needs_debt_repair(c) and not needs_debt_repair(updated)
-    assert len(debt_flags(c)) == 1 and updated.extraction_flags == []
+    assert len(debt_flags(c)) == 1 and debt_flags(updated) == []
     assert [p.balance_sheet.long_term_debt.value for p in updated.periods] == [
         19_372_000_000, 22_861_000_000, 19_621_000_000, 6_658_000_000, 8_416_000_000,
     ]
@@ -115,7 +115,8 @@ def test_saved_read_repairs_once_and_preserves_reviewed_sga(monkeypatch):
     monkeypatch.setattr(api, "_mapping_repair_attempts", {})
     client = TestClient(api.app)
     r = client.get("/company/CSCO")
-    assert r.status_code == 200 and r.json()["extraction_flags"] == []
+    assert r.status_code == 200
+    assert [f["field_path"] for f in r.json()["extraction_flags"]] == ["cash_flow_statement.depreciation_amortization"]
     assert client.get("/company/CSCO").json() == r.json() and len(calls) == 1
     assert r.json()["periods"][0]["income_statement"]["selling_general_administrative"] == company().model_dump(mode="json")["periods"][0]["income_statement"]["selling_general_administrative"]
 

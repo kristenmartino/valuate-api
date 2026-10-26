@@ -95,11 +95,17 @@ The five offerings must equal the reported subscription/support subtotal, and th
 
 New CRM extractions bypass the AI revenue-breakdown call. Older partial records are repaired on read using the saved accession, without changing financial fields, corrections, assumptions, or valuation. Failed repairs leave the prior display and its reconciliation warning intact and retry no more than once per five minutes per process. If a new filing lacks the complete tagged breakdown, the optional breakdown remains unavailable rather than being filled with guessed categories. These targeted checks are separate from the historical May extraction baseline.
 
-## Cisco debt coverage
+## Cisco debt and cash-flow adjustment coverage
 
 `cisco.py` selects `LongTermDebtNoncurrent` for CSCO before AI fallback and repairs older machine-extracted inclusive-debt fields on read. Its facts must match Cisco's CIK, USD units, year-end instant, annual form and filing accession. Latest-period values require the saved accession; older periods prefer its comparatives and can use earlier annual filings identified in the source note. Equal repeated facts are deduplicated; conflicting or invalid values remain unavailable. Existing reviewer corrections and all other financial fields are preserved.
 
 The [FY2026 filing, Note 11](https://www.sec.gov/Archives/edgar/data/858877/000085887726000132/csco-20260725.htm) separates $19.372B noncurrent debt from $3.500B current maturities. The latter is already included in $10.161B short-term debt. Replacing the inclusive $22.872B mapping avoids double-counting and changes both the net-debt bridge and default WACC. The reviewed $14.320B SG&A amount and its complete source note are preserved. Failed SEC repairs retain saved values, surface the known latest-period coverage warning and retry at most once per five minutes per process.
+
+`cisco_da.py` reads `csco:DepreciationAmortizationAndOther` from consolidated annual inline-XBRL contexts. Cisco's generic `DepreciationDepletionAndAmortization` fact is PPE-only ($0.700B for FY2026), so it is not the full model add-back. The filed cash-flow adjustment is $2.540B and includes other items; it is used as a combined proxy, not labeled as pure D&A. No guessed residual or sum of differently scoped amortization components is substituted.
+
+The reader resolves the saved accession in SEC submissions, checks annual document metadata, entity, USD unit, undimensioned context, and Cisco's exact 52/53-week annual dates. Matching repeated facts are deduplicated; conflicts, invalid values and quarterly contexts are rejected. The saved filing's comparatives take precedence; earlier annual filings supply missing older years and are identified in each source note. The FY2026–FY2022 series is $2.540B, $2.811B, $2.507B, $1.726B and $1.957B, from the [FY2026](https://www.sec.gov/Archives/edgar/data/858877/000085887726000132/csco-20260725.htm) and [FY2024](https://www.sec.gov/Archives/edgar/data/858877/000085887724000017/csco-20240727.htm) filings.
+
+Fresh Cisco extraction requires this tagged latest-period input; Claude cannot replace it with the PPE component or a guess. Saved-record repair changes only incomplete machine-extracted D&A fields in both statement slots and preserves debt and reviewer corrections, including SG&A. It requires all affected historical periods before replacing any, avoiding a default average that mixes repaired totals with old components. Failed repairs keep the saved record and latest-period coverage warning, with a five-minute retry throttle. The five-year combined adjustment/revenue average drives the default `da_ratio`; other assumptions and the net-debt bridge are unchanged. The workspace labels its ratio, statement rows and projection column with the combined scope.
 
 These targeted regressions do not rerun or expand the historical extraction baseline.
 
@@ -140,7 +146,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-147 collected tests across twelve files (the network integration test is skipped by default):
+172 collected tests across thirteen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -153,6 +159,7 @@ pytest tests/
 - `test_salesforce.py` (13) — filing-backed debt/D&A/payables coverage, five-period repair, valuation effects, review preservation, unsafe-fact rejection, and cached repair/failure behavior
 - `test_crm_revenue.py` (19) — complete six-category reconciliation, subtotal exclusion, unsafe-context rejection, saved-record repair, unchanged valuation/reviews, and deterministic fresh extraction
 - `test_cisco.py` (16) — noncurrent-debt mapping across history, unchanged reviewed SG&A and other fields, WACC/net-debt effects, unsafe-fact rejection, fresh extraction and saved-record repair/failure behavior
+- `test_cisco_da.py` (25) — filed combined cash-flow adjustment across five annual periods, exact contexts and source accessions, unsafe-fact rejection, preserved debt/reviews, atomic history repair, valuation math, and fresh/saved extraction failure behavior
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

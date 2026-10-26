@@ -30,6 +30,7 @@ from edgar import EdgarClient, concepts_for, latest_value_per_period
 from equity import filing_noncontrolling_interests, reconciliation_equity
 from salesforce import filing_items as salesforce_filing_items, mapping_flags
 from cisco import filing_debt as cisco_filing_debt, debt_flags
+from cisco_da import CIK as CISCO_CIK, filing_da_history, da_flags
 from crm_revenue import extract_crm_revenue
 from extract_track_a import extract_track_a
 from extract_track_b import (
@@ -701,6 +702,12 @@ def _make_track_b(
         latest_items = periods_items[latest]
         is_berkshire = (state["cik"].lstrip("0") == "1067983"
                         and normalize_ticker(state["ticker"]) in {"BRK-A", "BRK-B"})
+        is_cisco = state["cik"].lstrip("0") == CISCO_CIK
+        if is_cisco:
+            # The generic concept is PPE-only for Cisco. This input must
+            # come from the filing's consolidated cash-flow adjustment.
+            for items in periods_items.values():
+                items["depreciation_amortization"] = None
         if is_berkshire:
             # These facts require exact share-class/segment contexts. Do not
             # accept undimensioned facts or let an LLM guess the share basis.
@@ -719,6 +726,11 @@ def _make_track_b(
 
         try:
             html = await edgar_client.get_filing_html(state["filing_url"])
+            if is_cisco:
+                for pe, item in (await filing_da_history(
+                    edgar_client, state["cik"], latest, state["filing_accession"], period_ends, anchor_html=html,
+                )).items():
+                    periods_items[pe]["depreciation_amortization"] = item
             if state["cik"].lstrip("0") == "1108524" and latest_items.get("revenue") is not None:
                 revenue_segments = extract_crm_revenue(html, latest, state["filing_accession"], latest_items["revenue"].value)
             if is_berkshire:
@@ -727,6 +739,8 @@ def _make_track_b(
             missing = _missing_fields(latest_items, industry)
             if is_berkshire:
                 missing = [field for field in missing if field not in BERKSHIRE_FIELDS]
+            if is_cisco:
+                missing = [field for field in missing if field != "depreciation_amortization"]
             section_text = extract_financial_statements_section(html)
 
             if missing:
@@ -743,6 +757,8 @@ def _make_track_b(
                     if field == "noncontrolling_interests":
                         continue  # This component requires matching tagged instant facts.
                     if is_berkshire and field in BERKSHIRE_FIELDS:
+                        continue
+                    if is_cisco and field == "depreciation_amortization":
                         continue
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
@@ -843,6 +859,7 @@ def validate_company(company: Company) -> Company:
     flags: list[ExtractionFlag] = []
     flags.extend(mapping_flags(company))
     flags.extend(debt_flags(company))
+    flags.extend(da_flags(company))
 
     for field_path, item in _walk_line_items(period):
         if item.confidence < CONFIDENCE_FLAG_THRESHOLD:
