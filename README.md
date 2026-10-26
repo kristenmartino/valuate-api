@@ -127,6 +127,12 @@ Operands must match IBM's CIK, USD units, full January–December duration, annu
 
 IBM also selects matching annual noncurrent debt and current borrowings ($54.836B + $6.424B for FY2025) and calculates the cash-flow D&A total from the separately filed depreciation and amortization adjustments ($2.284B + $2.737B = $5.021B). Both D&A statement slots use that total across the supported annual history. Missing latest D&A components or either debt component prevent valuation; they are not replaced by a partial amount or zero. Existing corrections for other companies are unaffected. The generic capex input still covers PP&E only, excluding separately reported investment in software; IBM's model note discloses this remaining simplification.
 
+## Starting-assumption provenance
+
+Starting assumptions combine historical calculations and model defaults. For standard DCF, eligible periods have positive revenue; tax expense / positive pre-tax income is limited to 0–50% per period, averaged, then limited to 15–30%. The tax fallback is 21%. IBM therefore starts at 15% despite its FY2025 filed effective rate of −2.3%; this is a normalized projection assumption, not a replacement for the filed tax benefit. Energy averages the same per-period bounded rates without the additional 15–30% normalization. Standard and energy working capital starts at a fixed 5% of the change in revenue, not a ratio calculated from historical working-capital balances.
+
+Capex/revenue and cash-flow add-back/revenue start at equal-weight averages of available annual ratios with positive revenue. Missing-ratio fallbacks are 4% for standard DCF and 20% for energy, and coverage follows the extracted cash-flow fields. Bank, insurer and REIT tax figures are read-only model context: an average of available tax/pre-tax ratios limited to 0–50% per period, or 21% if unavailable; these tax figures do not drive those models. The workspace labels the cash-flow assumptions and explains these starting rules beside the controls. Editing a scenario or restoring its starting assumptions does not change saved financial figures or review notes.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
