@@ -127,6 +127,14 @@ Operands must match IBM's CIK, USD units, full January–December duration, annu
 
 IBM also selects matching annual noncurrent debt and current borrowings ($54.836B + $6.424B for FY2025) and calculates the cash-flow D&A total from the separately filed depreciation and amortization adjustments ($2.284B + $2.737B = $5.021B). Both D&A statement slots use that total across the supported annual history. Missing latest D&A components or either debt component prevent valuation; they are not replaced by a partial amount or zero. Existing corrections for other companies are unaffected. The generic capex input still covers PP&E only, excluding separately reported investment in software; IBM's model note discloses this remaining simplification.
 
+## Intuit D&A and debt coverage
+
+INTU's D&A input sums filed depreciation and the full cash-flow amortization adjustment, rather than depreciation alone or the narrower other-intangibles expense. FY2026: $187M + $659M = $846M. The five-year total series is $846M, $809M, $789M, $806M and $746M. Both statement slots identify the calculated total through source details. Noncurrent debt is $6.420B, separate from the $1.249B current maturities; the inclusive $7.669B amount is not added to current debt again.
+
+The INTU-only selection requires matching annual USD facts from one filing, with the latest period tied to its selected 10-K and older periods bounded by that filing's date. It uses `AdjustmentForAmortization`, which includes acquired technology and other acquired intangibles; `AmortizationOfIntangibleAssets` alone covers only the other-intangibles expense component. Missing, conflicting or unsafe components cannot be replaced with AI guesses. Saved repair is atomic across affected history and preserves reviewer overrides and other correct fields. If repair cannot establish complete coverage, the record retains its amounts and a warning, and valuation/default requests remain unavailable until the inputs are recovered.
+
+With the captured FY2026 inputs, net debt is $3.716B, default WACC is about 7.86%, and the D&A/revenue ratio is about 4.91%. Other assumptions and the existing corrections for other companies are unchanged. The company note discloses the remaining PP&E-only capex input, which excludes separately reported capitalized internal-use software. This targeted repair does not manually approve INTU's unrelated gross-profit field or expand the historical extraction evaluation.
+
 ## Starting-assumption provenance
 
 Starting assumptions combine historical calculations and model defaults. For standard DCF, eligible periods have positive revenue; tax expense / positive pre-tax income is limited to 0–50% per period, averaged, then limited to 15–30%. The tax fallback is 21%. IBM therefore starts at 15% despite its FY2025 filed effective rate of −2.3%; this is a normalized projection assumption, not a replacement for the filed tax benefit. Energy averages the same per-period bounded rates without the additional 15–30% normalization. Standard and energy working capital starts at a fixed 5% of the change in revenue, not a ratio calculated from historical working-capital balances.
@@ -170,7 +178,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-214 collected tests across fifteen files (the network integration test is skipped by default):
+238 collected tests across sixteen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -186,6 +194,7 @@ pytest tests/
 - `test_cisco_da.py` (25) — filed combined cash-flow adjustment across five annual periods, exact contexts and source accessions, unsafe-fact rejection, preserved debt/reviews, atomic history repair, valuation math, and fresh/saved extraction failure behavior
 - `test_apple_debt.py` (16) — filed noncurrent debt, preserved current debt and review notes, unsafe-fact rejection, unchanged assumptions, corrected bridge/value, and fresh/saved repair and failure behavior
 - `test_ibm.py` (26) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
+- `test_intuit.py` (24) — full cash-flow amortization versus expense-component coverage, five-year D&A and noncurrent debt, unsafe-context rejection, atomic repair, preserved reviewer values, fresh/saved failure behavior and valuation effects
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

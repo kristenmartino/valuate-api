@@ -1,0 +1,924 @@
+{
+  "ticker": "INTU",
+  "cik": "0000896878",
+  "name": "INTUIT INC.",
+  "fiscal_year_end_month": 7,
+  "periods": [
+    {
+      "fiscal_year": 2026,
+      "fiscal_period_end": "2026-07-31",
+      "filing_accession": "0000896878-26-000037",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "21448000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "4253000000",
+          "source": "llm_html",
+          "confidence": 0.85,
+          "source_quote": "Cost of service revenue 4,016 3,624 3,250 Cost of product and other revenue 63 68 69 Amortization of acquired technology 174 156 146",
+          "xbrl_tag": null
+        },
+        "gross_profit": {
+          "value": "17195000000",
+          "source": "llm_html",
+          "confidence": 0.75,
+          "source_quote": "Total net revenue 21,448 18,831 16,285",
+          "xbrl_tag": null
+        },
+        "research_and_development": {
+          "value": "3376000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Research and development 3,376 2,928 2,754",
+          "xbrl_tag": null
+        },
+        "selling_general_administrative": {
+          "value": "7157000000",
+          "source": "llm_html",
+          "confidence": 0.82,
+          "source_quote": "Selling and marketing 5,534 5,035 4,312 ... General and administrative 1,623 1,601 1,418",
+          "xbrl_tag": null
+        },
+        "depreciation_amortization": {
+          "value": "187000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "2056000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "5884000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "256000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Interest expense ( 256 ) ( 247 ) ( 242 )",
+          "xbrl_tag": null
+        },
+        "income_before_tax": {
+          "value": "6017000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Income before income taxes 6,017 4,834 3,550",
+          "xbrl_tag": null
+        },
+        "income_tax_expense": {
+          "value": "1451000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Income tax provision 1,451 965 587",
+          "xbrl_tag": null
+        },
+        "net_income": {
+          "value": "4566000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "277000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": [
+          {
+            "name": "Global Business Solutions",
+            "revenue": {
+              "value": "12864000000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Global Business Solutions $ 12,864 $ 11,077 $ 9,533",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Consumer",
+            "revenue": {
+              "value": "8584000000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Consumer 8,584 7,754 6,752",
+              "xbrl_tag": null
+            }
+          }
+        ]
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "4705000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": {
+          "value": "2495000000",
+          "source": "llm_html",
+          "confidence": 0.92,
+          "source_quote": "In investments $ \u2014 $ 2,495 $ 2,495 $ \u2014 $ 1,668 $ 1,668",
+          "xbrl_tag": null
+        },
+        "accounts_receivable": {
+          "value": "625000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts receivable, net of allowance for doubtful accounts of $ 5 and $ 5 625 530",
+          "xbrl_tag": null
+        },
+        "inventory": null,
+        "total_current_assets": {
+          "value": "15311000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Total current assets 15,311 14,107",
+          "xbrl_tag": null
+        },
+        "property_plant_equipment_net": {
+          "value": "1023000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Total property and equipment, net $ 1,023 $ 961",
+          "xbrl_tag": null
+        },
+        "total_assets": {
+          "value": "36786000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": {
+          "value": "873000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts payable 873 792",
+          "xbrl_tag": null
+        },
+        "short_term_debt": {
+          "value": "1249000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Short-term debt $ 1,249 $ \u2014",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": {
+          "value": "10163000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Total current liabilities 10,163 10,370",
+          "xbrl_tag": null
+        },
+        "long_term_debt": {
+          "value": "7669000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "operating_lease_liabilities": {
+          "value": "752000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "17794000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "18992000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "187000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "8838000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "175000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-1412000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-7689000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "1347000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-07-31",
+      "filing_accession": "0000896878-26-000037",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "18831000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": null,
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "172000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "1968000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "4923000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "3869000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "283000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "2884000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "36958000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "5973000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "operating_lease_liabilities": {
+          "value": "666000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "17248000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "19710000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "172000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "6207000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "84000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-2318000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-1510000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "1189000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-07-31",
+      "filing_accession": "0000896878-26-000037",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "16285000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": null,
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "159000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "1940000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "3630000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "2963000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "284000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "3609000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "32132000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "6038000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "operating_lease_liabilities": {
+          "value": "529000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "13696000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "18436000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "159000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "4884000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "191000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-227000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-397000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "1034000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-07-31",
+      "filing_accession": "0000896878-26-000037",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "14368000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": null,
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "160000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "1712000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "3141000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "2384000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "283000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "2848000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "27780000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "6120000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "operating_lease_liabilities": {
+          "value": "569000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "10511000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "17269000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "160000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "5046000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "210000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-922000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-4269000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "889000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2022,
+      "fiscal_period_end": "2022-07-31",
+      "filing_accession": "0000896878-26-000037",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "12726000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": null,
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "187000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "1308000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "2571000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "2066000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "284000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "2796000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "27734000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "6914000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LongTermDebt"
+        },
+        "operating_lease_liabilities": {
+          "value": "626000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "11293000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "16441000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "187000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "3889000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "157000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-5421000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "1732000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "774000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [
+    {
+      "field_path": "income_statement.gross_profit",
+      "reason": "Low confidence: 0.75",
+      "current_value": "17195000000",
+      "suggested_value": null
+    }
+  ],
+  "share_count_label": null,
+  "operating_income_label": null,
+  "valuation_note": null
+}

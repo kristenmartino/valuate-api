@@ -43,6 +43,7 @@ from debt import needs_debt_repair, repair_debt
 from cisco_da import needs_da_repair, repair_da, filing_da_history
 from crm_revenue import fetch_saved_filing, needs_revenue_repair, repair_revenue
 from graph import CompositionError, build_graph, validate_company
+from intuit import needs_repair as needs_intu_repair, repair_company as repair_intu, incomplete_inputs as incomplete_intu
 from overrides import apply_override
 from repository import CompanyRepo, make_repo
 from tickers import normalize_ticker
@@ -112,6 +113,7 @@ _company_locks: dict[str, asyncio.Lock] = {}
 _equity_backfill_attempts: dict[tuple[str, str], float] = {}
 _mapping_repair_attempts: dict[tuple[str, str], float] = {}
 _cisco_da_repair_attempts: dict[tuple[str, str], float] = {}
+_intu_repair_attempts: dict[tuple[str, str], float] = {}
 _revenue_repair_attempts: dict[tuple[str, str], float] = {}
 _logger = logging.getLogger(__name__)
 
@@ -243,7 +245,28 @@ async def _require_company(ticker: str) -> Company:
                         company = updated
                 except Exception as exc:
                     _logger.warning("Revenue breakdown repair unavailable for %s (%s)", normalize_ticker(ticker), type(exc).__name__)
+    if needs_intu_repair(company):
+        async with _company_lock(ticker):
+            company = await repo.get(ticker)
+            if company is None:
+                raise HTTPException(404, f"No extraction found for {ticker}.")
+            key = (normalize_ticker(ticker), company.periods[0].filing_accession)
+            if needs_intu_repair(company) and monotonic() - _intu_repair_attempts.get(key, float("-inf")) >= 300:
+                _intu_repair_attempts[key] = monotonic()
+                try:
+                    facts = await EdgarClient().get_company_facts(company.cik)
+                    updated = validate_company(repair_intu(company, facts))
+                    if updated != company:
+                        await repo.set(ticker, updated)
+                        company = updated
+                except Exception as exc:
+                    _logger.warning("INTU input repair unavailable for %s (%s)", normalize_ticker(ticker), type(exc).__name__)
     return validate_company(company)
+
+
+def _check_intu_coverage(company: Company) -> None:
+    if incomplete_intu(company):
+        raise HTTPException(422, "INTU annual D&A/current/noncurrent debt coverage is incomplete; matching filing inputs are required before valuation.")
 
 
 @app.post("/extract", response_model=Company)
@@ -300,12 +323,14 @@ async def override(
 @app.get("/value/{ticker}/defaults", response_model=Assumptions)
 async def value_defaults(ticker: str) -> Assumptions:
     company = await _require_company(ticker)
+    _check_intu_coverage(company)
     return default_assumptions(company)
 
 
 @app.post("/value/{ticker}", response_model=ValuationResponse)
 async def value(ticker: str, req: ValuationRequest) -> ValuationResponse:
     company = await _require_company(ticker)
+    _check_intu_coverage(company)
     try:
         projection = compute_projection(company, req.assumptions)
     except ValueError as e:
