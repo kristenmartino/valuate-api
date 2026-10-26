@@ -32,7 +32,7 @@ from salesforce import filing_items as salesforce_filing_items, mapping_flags
 from debt import filing_debt, debt_flags
 from cisco_da import CIK as CISCO_CIK, filing_da_history, da_flags
 from crm_revenue import extract_crm_revenue
-from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VALUATION_NOTE as IBM_NOTE, filing_items as ibm_filing_items
+from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VALUATION_NOTE as IBM_NOTE, filing_items as ibm_filing_items, model_items as ibm_model_items
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -444,6 +444,9 @@ async def track_a(state: GraphState) -> GraphState:
             for field, item in ibm_filing_items(facts, state["cik"], pe, state["filing_accession"], latest).items():
                 if field != "operating_income" or items.get(field) is None:
                     items[field] = item
+            model_items = ibm_model_items(facts, state["cik"], pe, state["filing_accession"], latest)
+            for field in ("depreciation_amortization", "short_term_debt", "long_term_debt"):
+                items[field] = model_items.get(field)
         debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
@@ -822,6 +825,9 @@ def _make_track_b(
         # on the filer.
         for pe in period_ends:
             periods_items[pe] = _derive_missing_required(periods_items[pe], industry)
+
+        if is_ibm and any(latest_items.get(field) is None for field in ("short_term_debt", "long_term_debt")):
+            raise CompositionError("Required IBM annual current/noncurrent debt coverage is unavailable; refusing to assume zero debt.")
 
         company = _compose_company(
             ticker=state["ticker"],

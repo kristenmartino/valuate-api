@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from dcf import compute_projection, default_assumptions
 from graph import _compose_company, _make_track_b, track_a, validate_company, CompositionError
-from ibm import CONCEPTS, filing_items
+from ibm import CONCEPTS, filing_items, model_items
 from industry import Industry
 from overrides import apply_override
 from repository import InMemoryRepo
@@ -48,7 +48,7 @@ def test_ibm_proxy_uses_same_filing_gaap_values_and_keeps_a_review_flag():
     assert '0000051143-25-000015' in c.periods[3].income_statement.operating_income.source_quote
     assert any(f.field_path == 'income_statement.operating_income' for f in c.extraction_flags)
     a = default_assumptions(c);p = compute_projection(c, a)
-    assert p.fair_value_per_share == pytest.approx(165.5909789309756) and len(p.years) == 5
+    assert p.fair_value_per_share == pytest.approx(229.04073361049188) and len(p.years) == 5
     assert a.operating_margin == pytest.approx(sum(float(p.income_statement.operating_income.value / p.income_statement.revenue.value) for p in c.periods) / len(c.periods))
 
 
@@ -125,3 +125,42 @@ def test_ibm_saved_review_survives_reads_and_valuation(monkeypatch):
     result = client.post('/value/IBM', json={'assumptions':client.get('/value/IBM/defaults').json()})
     assert result.status_code == 200
     assert Company.model_validate(client.get('/company/IBM').json()) == c
+
+
+def test_ibm_cashflow_addback_includes_amortization_and_debt_includes_current_borrowings():
+    c = company()
+    assert [p.cash_flow_statement.depreciation_amortization.value for p in c.periods] == [5_021_000_000, 4_667_000_000, 4_396_000_000, 4_802_000_000, 6_417_000_000]
+    p = c.periods[0]
+    assert p.balance_sheet.short_term_debt.value == 6_424_000_000
+    assert p.balance_sheet.long_term_debt.value == 54_836_000_000
+    assert p.cash_flow_statement.depreciation_amortization == p.income_statement.depreciation_amortization
+    assert '2284000000 + 2737000000' in p.cash_flow_statement.depreciation_amortization.source_quote
+    assert compute_projection(c, default_assumptions(c)).net_debt == 51_020_000_000
+
+
+@pytest.mark.parametrize('mutation', ['amortization_missing', 'amortization_quarter', 'amortization_conflict', 'current_debt_unit', 'current_debt_duration', 'noncurrent_conflict'])
+def test_ibm_rejects_incomplete_or_mismatched_cashflow_and_debt_inputs(mutation):
+    facts = copy.deepcopy(FACTS)
+    tag = 'AmortizationOfIntangibleAssets' if mutation.startswith('amortization') else 'ShortTermBorrowings' if mutation.startswith('current') else 'LongTermDebtNoncurrent'
+    data = facts['facts']['us-gaap'][tag]
+    if mutation == 'amortization_missing':data['units']['USD'] = []
+    if mutation == 'current_debt_unit':data['units']['EUR'] = data['units'].pop('USD')
+    for row in data['units'].get('USD', []):
+        if mutation == 'amortization_quarter':row['start'] = '2025-10-01'
+        if mutation == 'current_debt_duration':row['start'] = '2025-01-01'
+    if mutation.endswith('conflict'):
+        row = next(r for r in data['units']['USD'] if r['end'] == '2025-12-31');data['units']['USD'].append({**row, 'val':1})
+    values = model_items(facts, '51143', LATEST, ACCESSION, LATEST)
+    assert ('depreciation_amortization' not in values) if mutation.startswith('amortization') else ('short_term_debt' not in values and 'long_term_debt' not in values)
+
+
+def test_ibm_missing_current_debt_cannot_silently_be_assumed_zero(monkeypatch):
+    import graph
+    class Edgar:
+        async def get_filing_html(self, url):return '<html>incorporated</html>'
+    async def backfill(**kwargs):return {}
+    async def segments(**kwargs):return []
+    monkeypatch.setattr(graph, 'extract_track_b', backfill);monkeypatch.setattr(graph, 'extract_revenue_segments', segments)
+    facts = copy.deepcopy(FACTS);facts['facts']['us-gaap'].pop('ShortTermBorrowings')
+    s = state(facts);s.update(asyncio.run(track_a(s)))
+    with pytest.raises(CompositionError, match='debt coverage'):asyncio.run(_make_track_b(Edgar(), None)(s))

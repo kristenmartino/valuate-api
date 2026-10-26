@@ -12,7 +12,8 @@ from typing import Any
 from schemas import ExtractionSource, LineItem
 
 CIK = "51143"
-PROTECTED_FIELDS = {"operating_income", "income_before_tax", "interest_expense", "income_tax_expense"}
+PROTECTED_FIELDS = {"operating_income", "income_before_tax", "interest_expense", "income_tax_expense",
+                    "depreciation_amortization", "short_term_debt", "long_term_debt"}
 CONCEPTS = {
     "income_before_tax": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
     "interest_expense": "InterestExpense",
@@ -23,11 +24,13 @@ VALUATION_NOTE = (
     "IBM uses an EBIT proxy: GAAP pre-tax income from continuing operations plus separately reported interest expense. "
     "This is a calculated model input, not reported operating income or IBM's operating (non-GAAP) earnings. "
     "Other income/expense remains included, and financing interest in cost of revenue remains deducted. "
-    "The historical proxy margin drives the cash-flow projection; review its suitability before relying on the estimate."
+    "Capex covers PP&E only, excluding separately reported investment in software. "
+    "The historical proxy margin drives the cash-flow projection; review these simplifications before relying on the estimate."
 )
 
 
-def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, latest: date) -> dict[str, LineItem]:
+def _filing_values(facts: dict[str, Any], cik: str, pe: date, accession: str, latest: date,
+                   concepts: dict[str, str], required: tuple[str, str], instant: bool = False) -> dict[str, LineItem]:
     if (cik.lstrip("0") != CIK or str(facts.get("cik", "")).lstrip("0") != CIK
             or (pe.month, pe.day) != (12, 31) or (latest.month, latest.day) != (12, 31)
             or pe > latest or not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession)):
@@ -51,7 +54,7 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
         return {}
     start = date(pe.year, 1, 1)
     by_field = {}
-    for field, concept in CONCEPTS.items():
+    for field, concept in concepts.items():
         by_accession = {}
         for e in facts.get("facts", {}).get("us-gaap", {}).get(concept, {}).get("units", {}).get("USD", []):
             accn = e.get("accn", "")
@@ -59,7 +62,7 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
                 filed = date.fromisoformat(e["filed"])
             except (KeyError, ValueError, TypeError):
                 continue
-            if (e.get("start") != start.isoformat() or e.get("end") != pe.isoformat()
+            if ((bool(e.get("start")) if instant else e.get("start") != start.isoformat()) or e.get("end") != pe.isoformat()
                     or e.get("form") not in {"10-K", "10-K/A"} or e.get("fp") != "FY"
                     or not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accn)
                     or filed > anchor_filed or filed < pe or (pe == latest and accn != accession)):
@@ -68,7 +71,6 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
         by_field[field] = by_accession
     # Both operands must be in one filing. A newer conflicting observation
     # is not hidden by falling back to an older, convenient value.
-    required = ("income_before_tax", "interest_expense")
     common = set(by_field[required[0]]) & set(by_field[required[1]])
     if not common:
         return {}
@@ -78,7 +80,7 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
     if len({e["filed"] for field in required for e in by_field[field][selected]}) != 1:
         return {}
     output = {}
-    for field, concept in CONCEPTS.items():
+    for field, concept in concepts.items():
         rows = by_field[field].get(selected, [])
         try:
             values = {Decimal(str(e["val"])) for e in rows}
@@ -89,14 +91,24 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
                 return {}
             continue
         value = values.pop()
-        if not value.is_finite() or (field == "interest_expense" and value < 0):
+        if not value.is_finite() or (field not in {"income_before_tax", "income_tax_expense"} and value < 0):
             if field in required:
                 return {}
             continue
         output[field] = LineItem(
             value=value, source=ExtractionSource.XBRL, confidence=1.0, xbrl_tag=f"us-gaap:{concept}",
-            source_quote=f"Filed {field}: {value} USD; annual period {start} to {pe}; SEC accession {selected}.",
+            source_quote=f"Filed {field}: {value} USD; " + (f"year-end {pe}" if instant else f"annual period {start} to {pe}") + f"; SEC accession {selected}.",
         )
+    return output
+
+
+def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, latest: date) -> dict[str, LineItem]:
+    output = _filing_values(facts, cik, pe, accession, latest, CONCEPTS, ("income_before_tax", "interest_expense"))
+    if not output:
+        return {}
+    start = date(pe.year, 1, 1)
+    selected = output["income_before_tax"].source_quote.split("SEC accession ")[1].rstrip(".")
+    required = ("income_before_tax", "interest_expense")
     ibt, interest = (output[field].value for field in required)
     output["operating_income"] = LineItem(
         value=ibt + interest, source=ExtractionSource.DERIVED, confidence=0.65,
@@ -107,4 +119,24 @@ def filing_items(facts: dict[str, Any], cik: str, pe: date, accession: str, late
             "Retains other income/expense; financing interest in cost of revenue is not added back. Review required."
         ),
     )
+    return output
+
+
+def model_items(facts: dict[str, Any], cik: str, pe: date, accession: str, latest: date) -> dict[str, LineItem]:
+    output = _filing_values(facts, cik, pe, accession, latest, {
+        "short_term_debt": "ShortTermBorrowings", "long_term_debt": "LongTermDebtNoncurrent",
+    }, ("short_term_debt", "long_term_debt"), instant=True)
+    components = _filing_values(facts, cik, pe, accession, latest, {
+        "depreciation": "Depreciation", "amortization": "AmortizationOfIntangibleAssets",
+    }, ("depreciation", "amortization"))
+    if components:
+        depreciation, amortization = (components[k].value for k in ("depreciation", "amortization"))
+        selected = components["depreciation"].source_quote.split("SEC accession ")[1].rstrip(".")
+        output["depreciation_amortization"] = LineItem(
+            value=depreciation + amortization, source=ExtractionSource.DERIVED, confidence=0.99,
+            source_quote=(f"IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets "
+                          f"({depreciation} + {amortization} = {depreciation + amortization} USD); "
+                          f"annual period {pe.year}-01-01 to {pe}; SEC accession {selected}. "
+                          "Sum of the separate filed cash-flow adjustments; not depreciation alone."),
+        )
     return output

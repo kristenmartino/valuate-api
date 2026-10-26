@@ -125,6 +125,8 @@ This is not reported operating income or IBM's operating (non-GAAP) earnings. Ot
 
 Operands must match IBM's CIK, USD units, full January–December duration, annual form and one common filing accession. The latest period requires the selected filing; older periods prefer its comparatives, then earlier annual filings identified in the source note. Conflicts, nonfinite values and negative interest are rejected; tax benefits keep their sign. Missing operands fail explicitly rather than accepting an AI guess or substituting non-GAAP earnings. The helper also supplies the matching pre-tax, interest and optional tax-benefit/expense fields. It does not change other companies or overwrite saved reviewer corrections. These targeted regressions do not rerun or expand the historical May extraction baseline.
 
+IBM also selects matching annual noncurrent debt and current borrowings ($54.836B + $6.424B for FY2025) and calculates the cash-flow D&A total from the separately filed depreciation and amortization adjustments ($2.284B + $2.737B = $5.021B). Both D&A statement slots use that total across the supported annual history. Missing latest D&A components or either debt component prevent valuation; they are not replaced by a partial amount or zero. Existing corrections for other companies are unaffected. The generic capex input still covers PP&E only, excluding separately reported investment in software; IBM's model note discloses this remaining simplification.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -162,7 +164,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-206 collected tests across fifteen files (the network integration test is skipped by default):
+214 collected tests across fifteen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -177,7 +179,7 @@ pytest tests/
 - `test_cisco.py` (16) — noncurrent-debt mapping across history, unchanged reviewed SG&A and other fields, WACC/net-debt effects, unsafe-fact rejection, fresh extraction and saved-record repair/failure behavior
 - `test_cisco_da.py` (25) — filed combined cash-flow adjustment across five annual periods, exact contexts and source accessions, unsafe-fact rejection, preserved debt/reviews, atomic history repair, valuation math, and fresh/saved extraction failure behavior
 - `test_apple_debt.py` (16) — filed noncurrent debt, preserved current debt and review notes, unsafe-fact rejection, unchanged assumptions, corrected bridge/value, and fresh/saved repair and failure behavior
-- `test_ibm.py` (18) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
+- `test_ibm.py` (26) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
