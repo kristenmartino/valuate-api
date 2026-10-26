@@ -32,6 +32,7 @@ from salesforce import filing_items as salesforce_filing_items, mapping_flags
 from debt import filing_debt, debt_flags
 from cisco_da import CIK as CISCO_CIK, filing_da_history, da_flags
 from crm_revenue import extract_crm_revenue
+from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VALUATION_NOTE as IBM_NOTE, filing_items as ibm_filing_items
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -439,6 +440,10 @@ async def track_a(state: GraphState) -> GraphState:
     for pe in period_ends:
         items = extract_track_a(pe, facts, concepts=concepts)
         items.update(salesforce_filing_items(facts, state["cik"], pe, state["filing_accession"], latest))
+        if state["cik"].lstrip("0") == IBM_CIK:
+            for field, item in ibm_filing_items(facts, state["cik"], pe, state["filing_accession"], latest).items():
+                if field != "operating_income" or items.get(field) is None:
+                    items[field] = item
         debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
@@ -679,6 +684,9 @@ def _compose_company(
     share_count_label, valuation_note = (None, None)
     if cik.lstrip("0") == "1067983" and normalize_ticker(ticker) in {"BRK-A", "BRK-B"}:
         share_count_label, valuation_note = berkshire_model_context(ticker)
+    operating_income_label = None
+    if cik.lstrip("0") == IBM_CIK and fp_list[0].income_statement.operating_income.source == ExtractionSource.DERIVED:
+        operating_income_label, valuation_note = PROXY_LABEL, IBM_NOTE
     return Company(
         ticker=ticker.upper(),
         cik=cik,
@@ -686,6 +694,7 @@ def _compose_company(
         fiscal_year_end_month=latest.month,
         periods=fp_list,
         share_count_label=share_count_label,
+        operating_income_label=operating_income_label,
         valuation_note=valuation_note,
     )
 
@@ -703,6 +712,7 @@ def _make_track_b(
         is_berkshire = (state["cik"].lstrip("0") == "1067983"
                         and normalize_ticker(state["ticker"]) in {"BRK-A", "BRK-B"})
         is_cisco = state["cik"].lstrip("0") == CISCO_CIK
+        is_ibm = state["cik"].lstrip("0") == IBM_CIK
         if is_cisco:
             # The generic concept is PPE-only for Cisco. This input must
             # come from the filing's consolidated cash-flow adjustment.
@@ -741,6 +751,8 @@ def _make_track_b(
                 missing = [field for field in missing if field not in BERKSHIRE_FIELDS]
             if is_cisco:
                 missing = [field for field in missing if field != "depreciation_amortization"]
+            if is_ibm:
+                missing = [field for field in missing if field not in IBM_FIELDS]
             section_text = extract_financial_statements_section(html)
 
             if missing:
@@ -759,6 +771,8 @@ def _make_track_b(
                     if is_berkshire and field in BERKSHIRE_FIELDS:
                         continue
                     if is_cisco and field == "depreciation_amortization":
+                        continue
+                    if is_ibm and field in IBM_FIELDS:
                         continue
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item

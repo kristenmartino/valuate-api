@@ -117,6 +117,14 @@ AAPL's [FY2025 filing](https://www.sec.gov/Archives/edgar/data/320193/0000320193
 
 With the saved FY2025 inputs, the corrected debt bridge is $75.213B rather than $87.563B. The default WACC calculation runs again but remains at its existing 7% floor; the other assumptions are unchanged. Fixtures pin the filed noncurrent debt series and the pre-repair saved record. The new targeted tests cover the valuation effect and preservation rules without expanding or rerunning the historical May extraction baseline.
 
+## IBM operating-input coverage
+
+IBM's [FY2025 10-K](https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231.htm) incorporates its income statement in [Exhibit 13, p. 42](https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/ibm-20251231_d2.htm). The primary document does not contain that statement, and the company-facts feed has no consolidated `OperatingIncomeLoss` subtotal. The targeted `ibm.py` fallback reads annual GAAP pre-tax income from continuing operations and separately reported interest from company facts, then calculates an **EBIT proxy** in the existing `operating_income` wire field. FY2025: $10.328B + $1.935B = $12.263B.
+
+This is not reported operating income or IBM's operating (non-GAAP) earnings. Other income/expense remains included; financing interest in cost of revenue remains deducted. `Company.operating_income_label` and `valuation_note` carry this scope to the workspace. The derived proxy retains a 0.65 heuristic score and an automated review flag; successful valuation does not mark it manually reviewed. The historical proxy/revenue average drives the normal FCFF model. Historical years with other missing required fields remain excluded.
+
+Operands must match IBM's CIK, USD units, full January–December duration, annual form and one common filing accession. The latest period requires the selected filing; older periods prefer its comparatives, then earlier annual filings identified in the source note. Conflicts, nonfinite values and negative interest are rejected; tax benefits keep their sign. Missing operands fail explicitly rather than accepting an AI guess or substituting non-GAAP earnings. The helper also supplies the matching pre-tax, interest and optional tax-benefit/expense fields. It does not change other companies or overwrite saved reviewer corrections. These targeted regressions do not rerun or expand the historical May extraction baseline.
+
 ## HITL overrides
 
 `PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
@@ -154,7 +162,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-188 collected tests across fourteen files (the network integration test is skipped by default):
+206 collected tests across fifteen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -169,6 +177,7 @@ pytest tests/
 - `test_cisco.py` (16) — noncurrent-debt mapping across history, unchanged reviewed SG&A and other fields, WACC/net-debt effects, unsafe-fact rejection, fresh extraction and saved-record repair/failure behavior
 - `test_cisco_da.py` (25) — filed combined cash-flow adjustment across five annual periods, exact contexts and source accessions, unsafe-fact rejection, preserved debt/reviews, atomic history repair, valuation math, and fresh/saved extraction failure behavior
 - `test_apple_debt.py` (16) — filed noncurrent debt, preserved current debt and review notes, unsafe-fact rejection, unchanged assumptions, corrected bridge/value, and fresh/saved repair and failure behavior
+- `test_ibm.py` (18) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.

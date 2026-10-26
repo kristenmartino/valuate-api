@@ -424,6 +424,7 @@ class Company(BaseModel):
     periods: list[FinancialPeriod]
     extraction_flags: list[ExtractionFlag] = Field(default_factory=list)
     share_count_label: Optional[str] = None
+    operating_income_label: Optional[str] = None
     valuation_note: Optional[str] = None
 
 
