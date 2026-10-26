@@ -29,7 +29,7 @@ from berkshire import BERKSHIRE_FIELDS, berkshire_model_context, extract_berkshi
 from edgar import EdgarClient, concepts_for, latest_value_per_period
 from equity import filing_noncontrolling_interests, reconciliation_equity
 from salesforce import filing_items as salesforce_filing_items, mapping_flags
-from cisco import filing_debt as cisco_filing_debt, debt_flags
+from debt import filing_debt, debt_flags
 from cisco_da import CIK as CISCO_CIK, filing_da_history, da_flags
 from crm_revenue import extract_crm_revenue
 from extract_track_a import extract_track_a
@@ -439,7 +439,7 @@ async def track_a(state: GraphState) -> GraphState:
     for pe in period_ends:
         items = extract_track_a(pe, facts, concepts=concepts)
         items.update(salesforce_filing_items(facts, state["cik"], pe, state["filing_accession"], latest))
-        debt = cisco_filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
+        debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
         items["noncontrolling_interests"] = filing_noncontrolling_interests(

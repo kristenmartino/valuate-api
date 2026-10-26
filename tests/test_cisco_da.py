@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
 import pytest
 
-from cisco import repair_debt
+from debt import repair_debt
 from cisco_da import CONCEPT, extract_filing_da, filing_da_history, needs_da_repair, repair_da
 from dcf import compute_projection, default_assumptions
 from graph import validate_company

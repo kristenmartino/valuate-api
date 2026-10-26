@@ -39,7 +39,7 @@ from dcf import (
 from edgar import EdgarClient
 from equity import backfill_noncontrolling_interests, needs_equity_backfill
 from salesforce import needs_mapping_repair, repair_company
-from cisco import needs_debt_repair, repair_debt
+from debt import needs_debt_repair, repair_debt
 from cisco_da import needs_da_repair, repair_da, filing_da_history
 from crm_revenue import fetch_saved_filing, needs_revenue_repair, repair_revenue
 from graph import CompositionError, build_graph, validate_company

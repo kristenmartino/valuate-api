@@ -1,17 +1,18 @@
-"""Select Cisco's noncurrent debt without counting current maturities twice."""
+"""Filing-checked noncurrent debt for Apple and Cisco's separate current debt."""
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from schemas import Company, ExtractionFlag, ExtractionSource, LineItem
 
-CIK = "858877"
+SUPPORTED_CIKS = {"858877", "320193"}
 INCLUSIVE_TAG = "us-gaap:LongTermDebt"
 NONCURRENT_TAG = "us-gaap:LongTermDebtNoncurrent"
 
 
 def filing_debt(facts: dict[str, Any], cik: str, pe: date, accession: str, latest: date) -> LineItem | None:
-    if cik.lstrip("0") != CIK or str(facts.get("cik", "")).lstrip("0") != CIK:
+    normalized_cik = cik.lstrip("0")
+    if normalized_cik not in SUPPORTED_CIKS or str(facts.get("cik", "")).lstrip("0") != normalized_cik:
         return None
     entries = []
     for e in facts.get("facts", {}).get("us-gaap", {}).get("LongTermDebtNoncurrent", {}).get("units", {}).get("USD", []):
@@ -41,7 +42,7 @@ def filing_debt(facts: dict[str, Any], cik: str, pe: date, accession: str, lates
 
 
 def needs_debt_repair(company: Company) -> bool:
-    return company.cik.lstrip("0") == CIK and any(
+    return company.cik.lstrip("0") in SUPPORTED_CIKS and any(
         p.balance_sheet.long_term_debt is not None
         and p.balance_sheet.long_term_debt.source != ExtractionSource.USER_OVERRIDE
         and p.balance_sheet.long_term_debt.xbrl_tag == INCLUSIVE_TAG
@@ -63,7 +64,7 @@ def repair_debt(company: Company, facts: dict[str, Any]) -> Company:
 
 
 def debt_flags(company: Company) -> list[ExtractionFlag]:
-    if company.cik.lstrip("0") != CIK:
+    if company.cik.lstrip("0") not in SUPPORTED_CIKS:
         return []
     item = company.periods[0].balance_sheet.long_term_debt
     if item is not None and item.source != ExtractionSource.USER_OVERRIDE and item.xbrl_tag == INCLUSIVE_TAG:

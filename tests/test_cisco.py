@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from cisco import debt_flags, filing_debt, needs_debt_repair, repair_debt
+from debt import debt_flags, filing_debt, needs_debt_repair, repair_debt
 from dcf import compute_projection, default_assumptions
 from graph import track_a, validate_company
 from industry import Industry
@@ -90,7 +90,7 @@ def test_reviewer_debt_and_other_filers_are_never_replaced():
     c = apply_override(company(), "balance_sheet.long_term_debt", Decimal(123), "Reviewed debt")
     assert repair_debt(c, FACTS).periods[0].balance_sheet.long_term_debt == c.periods[0].balance_sheet.long_term_debt
     assert debt_flags(c) == []
-    other = c.model_copy(update={"cik": "0000320193"})
+    other = c.model_copy(update={"cik": "0001326801"})
     assert repair_debt(other, FACTS) == other and not needs_debt_repair(other)
 
 

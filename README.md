@@ -97,7 +97,7 @@ New CRM extractions bypass the AI revenue-breakdown call. Older partial records 
 
 ## Cisco debt and cash-flow adjustment coverage
 
-`cisco.py` selects `LongTermDebtNoncurrent` for CSCO before AI fallback and repairs older machine-extracted inclusive-debt fields on read. Its facts must match Cisco's CIK, USD units, year-end instant, annual form and filing accession. Latest-period values require the saved accession; older periods prefer its comparatives and can use earlier annual filings identified in the source note. Equal repeated facts are deduplicated; conflicting or invalid values remain unavailable. Existing reviewer corrections and all other financial fields are preserved.
+The shared `debt.py` selector uses `LongTermDebtNoncurrent` for CSCO and AAPL before AI fallback and repairs older machine-extracted inclusive-debt fields on read. Its facts must match the requested company's CIK, USD units, year-end instant, annual form and filing accession. Latest-period values require the saved accession; older periods prefer its comparatives and can use earlier annual filings identified in the source note. Equal repeated facts are deduplicated; conflicting or invalid values remain unavailable. Existing reviewer corrections and all other financial fields are preserved. This selector is limited to the two identified filers; it does not establish coverage for every company's debt disclosures.
 
 The [FY2026 filing, Note 11](https://www.sec.gov/Archives/edgar/data/858877/000085887726000132/csco-20260725.htm) separates $19.372B noncurrent debt from $3.500B current maturities. The latter is already included in $10.161B short-term debt. Replacing the inclusive $22.872B mapping avoids double-counting and changes both the net-debt bridge and default WACC. The reviewed $14.320B SG&A amount and its complete source note are preserved. Failed SEC repairs retain saved values, surface the known latest-period coverage warning and retry at most once per five minutes per process.
 
@@ -108,6 +108,14 @@ The reader resolves the saved accession in SEC submissions, checks annual docume
 Fresh Cisco extraction requires this tagged latest-period input; Claude cannot replace it with the PPE component or a guess. Saved-record repair changes only incomplete machine-extracted D&A fields in both statement slots and preserves debt and reviewer corrections, including SG&A. It requires all affected historical periods before replacing any, avoiding a default average that mixes repaired totals with old components. Failed repairs keep the saved record and latest-period coverage warning, with a five-minute retry throttle. The five-year combined adjustment/revenue average drives the default `da_ratio`; other assumptions and the net-debt bridge are unchanged. The workspace labels its ratio, statement rows and projection column with the combined scope.
 
 These targeted regressions do not rerun or expand the historical extraction baseline.
+
+## Apple debt coverage
+
+AAPL's [FY2025 filing](https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm) separates $78.328B noncurrent term debt from $12.350B current term debt. Short-term debt already contains that current component plus $7.979B commercial paper, totaling $20.329B. The inclusive $90.678B `LongTermDebt` fact must not be added again as though it were noncurrent debt.
+
+`debt.py` applies the same guarded noncurrent selector to fresh Apple extraction and to known inclusive machine fields in saved history. Already-correct fields and reviewer overrides remain unchanged. A failed saved repair keeps the previous amounts and exposes the known debt-coverage warning; retries are throttled to once per five minutes per process. Current debt, cash, leases, other financial fields, and correction notes are not replaced.
+
+With the saved FY2025 inputs, the corrected debt bridge is $75.213B rather than $87.563B. The default WACC calculation runs again but remains at its existing 7% floor; the other assumptions are unchanged. Fixtures pin the filed noncurrent debt series and the pre-repair saved record. The new targeted tests cover the valuation effect and preservation rules without expanding or rerunning the historical May extraction baseline.
 
 ## HITL overrides
 
@@ -146,7 +154,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-172 collected tests across thirteen files (the network integration test is skipped by default):
+188 collected tests across fourteen files (the network integration test is skipped by default):
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -160,6 +168,7 @@ pytest tests/
 - `test_crm_revenue.py` (19) — complete six-category reconciliation, subtotal exclusion, unsafe-context rejection, saved-record repair, unchanged valuation/reviews, and deterministic fresh extraction
 - `test_cisco.py` (16) — noncurrent-debt mapping across history, unchanged reviewed SG&A and other fields, WACC/net-debt effects, unsafe-fact rejection, fresh extraction and saved-record repair/failure behavior
 - `test_cisco_da.py` (25) — filed combined cash-flow adjustment across five annual periods, exact contexts and source accessions, unsafe-fact rejection, preserved debt/reviews, atomic history repair, valuation math, and fresh/saved extraction failure behavior
+- `test_apple_debt.py` (16) — filed noncurrent debt, preserved current debt and review notes, unsafe-fact rejection, unchanged assumptions, corrected bridge/value, and fresh/saved repair and failure behavior
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
