@@ -307,3 +307,11 @@ Other items deliberately parked in the [`later` label](https://github.com/kriste
 ## License
 
 MIT
+
+## Alphabet debt basis and depreciation scope
+
+GOOGL's FY2025 debt uses carrying amounts: $49.085B face value less $0.542B discounts/issuance costs equals $48.543B, split into $1.996B current maturities and $46.547B noncurrent debt. Current debt also includes filed commercial paper ($0 in FY2025; $2.300B in FY2024). Matching annual USD facts from one filing must reconcile before use. FY2022's legacy debt table includes finance leases, unlike the later notes-only figures; statement cells and source details disclose the different historical coverage. The existing net-debt bridge separately adds reported operating-lease liabilities.
+
+The $21.136B FY2025 add-back is **property-and-equipment depreciation**, used as a proxy, not verified full D&A. Its historical values and revenue ratio remain unchanged; no unverified amortization is added. Statement rows, the assumption control, projection and model note disclose that scope. DCF-implied EV/EBITDA is unavailable on this basis; provider market multiples retain their own definitions.
+
+Scoped extraction protects these inputs from AI backfill. Saved repair requires matching facts for every saved period before changing any, preserves reviewer overrides and other fields, and never automatically splits a reviewed debt pair. Unresolved debt coverage retains the record and warning while valuation/default requests fail. These targeted checks do not approve other fields or expand the historical extraction baseline. See the [FY2025 filing](https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm) and [FY2023 filing with the legacy comparison](https://www.sec.gov/Archives/edgar/data/1652044/000165204424000022/goog-20231231.htm).

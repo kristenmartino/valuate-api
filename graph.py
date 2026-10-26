@@ -35,6 +35,7 @@ from crm_revenue import extract_crm_revenue
 from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VALUATION_NOTE as IBM_NOTE, filing_items as ibm_filing_items, model_items as ibm_model_items
 from intuit import CIK as INTU_CIK, PROTECTED_FIELDS as INTU_FIELDS, VALUATION_NOTE as INTU_NOTE, filing_items as intu_items, coverage_flags as intu_flags
 from microsoft import CIK as MSFT_CIK, PROTECTED_FIELDS as MSFT_FIELDS, VALUATION_NOTE as MSFT_NOTE, filing_items as msft_items, coverage_flags as msft_flags
+from alphabet import CIK as GOOGL_CIK, PROTECTED_FIELDS as GOOGL_FIELDS, VALUATION_NOTE as GOOGL_NOTE, filing_items as googl_items, coverage_flags as googl_flags
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -457,6 +458,10 @@ async def track_a(state: GraphState) -> GraphState:
             selected = msft_items(facts, state["cik"], pe, state["filing_accession"], latest)
             for field in MSFT_FIELDS:
                 items[field] = selected.get(field)
+        if state["cik"].lstrip("0") == GOOGL_CIK:
+            selected = googl_items(facts, state["cik"], pe, state["filing_accession"], latest)
+            for field in GOOGL_FIELDS:
+                items[field] = selected.get(field)
         debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
@@ -728,6 +733,7 @@ def _make_track_b(
         is_ibm = state["cik"].lstrip("0") == IBM_CIK
         is_intu = state["cik"].lstrip("0") == INTU_CIK
         is_msft = state["cik"].lstrip("0") == MSFT_CIK
+        is_googl = state["cik"].lstrip("0") == GOOGL_CIK
         if is_cisco:
             # The generic concept is PPE-only for Cisco. This input must
             # come from the filing's consolidated cash-flow adjustment.
@@ -772,6 +778,8 @@ def _make_track_b(
                 missing = [field for field in missing if field not in INTU_FIELDS]
             if is_msft:
                 missing = [field for field in missing if field not in MSFT_FIELDS]
+            if is_googl:
+                missing = [field for field in missing if field not in GOOGL_FIELDS]
             section_text = extract_financial_statements_section(html)
 
             if missing:
@@ -796,6 +804,8 @@ def _make_track_b(
                     if is_intu and field in INTU_FIELDS:
                         continue
                     if is_msft and field in MSFT_FIELDS:
+                        continue
+                    if is_googl and field in GOOGL_FIELDS:
                         continue
                     if latest_items.get(field) is None and line_item is not None:
                         latest_items[field] = line_item
@@ -854,6 +864,9 @@ def _make_track_b(
         if is_msft and any(latest_items.get(field) is None for field in MSFT_FIELDS):
             raise CompositionError("Required MSFT annual D&A/current/noncurrent debt coverage is unavailable; refusing partial inputs.")
 
+        if is_googl and any(latest_items.get(field) is None for field in GOOGL_FIELDS):
+            raise CompositionError("Required GOOGL annual PPE proxy/carrying-value debt coverage is unavailable; refusing partial inputs.")
+
         company = _compose_company(
             ticker=state["ticker"],
             cik=state["cik"],
@@ -869,6 +882,8 @@ def _make_track_b(
             company = company.model_copy(update={"valuation_note": INTU_NOTE})
         if is_msft:
             company = company.model_copy(update={"valuation_note": MSFT_NOTE})
+        if is_googl:
+            company = company.model_copy(update={"valuation_note": GOOGL_NOTE})
         return {"company": company}
 
     return track_b
@@ -911,6 +926,7 @@ def validate_company(company: Company) -> Company:
     flags.extend(da_flags(company))
     flags.extend(intu_flags(company))
     flags.extend(msft_flags(company))
+    flags.extend(googl_flags(company))
 
     for field_path, item in _walk_line_items(period):
         if item.confidence < CONFIDENCE_FLAG_THRESHOLD:
