@@ -42,12 +42,12 @@ class LineItem(BaseModel):
     `field_serializer`; we use the latter on the `value` field below.
     """
 
-    value: Decimal = Field(..., description="Value in USD (not millions/thousands)")
+    value: Decimal = Field(..., description="Unscaled base units: USD for money, shares for share counts; not millions or thousands")
     source: ExtractionSource
     confidence: float = Field(..., ge=0.0, le=1.0)
     source_quote: Optional[str] = Field(
         None,
-        description="Verbatim 5-30 word quote from filing supporting this value (Track B)",
+        description="Stored AI excerpt, reviewer note or calculation/source description; origin alone does not establish verification",
     )
     xbrl_tag: Optional[str] = Field(
         None,
@@ -414,6 +414,9 @@ class ExtractionFlag(BaseModel):
     suggested_value: Optional[Decimal] = None
 
 
+from qualification_schema import Qualification
+
+
 class Company(BaseModel):
     """Top-level company financial data."""
 
@@ -426,6 +429,7 @@ class Company(BaseModel):
     share_count_label: Optional[str] = None
     operating_income_label: Optional[str] = None
     valuation_note: Optional[str] = None
+    qualification: Optional[Qualification] = None
 
 
 # --- DCF / valuation models ---------------------------------------------------

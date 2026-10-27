@@ -1,0 +1,426 @@
+{
+  "ticker": "BRK-A",
+  "cik": "0001067983",
+  "name": "BERKSHIRE HATHAWAY INC",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0001193125-26-083899",
+      "filing_type": "10-K",
+      "industry": "insurer",
+      "income_statement": {
+        "kind": "insurer",
+        "premiums_earned": {
+          "value": "88902000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2025 insurance premiums earned: 88902000000 USD. Inline XBRL member brka:InsuranceAndOtherMember.",
+          "xbrl_tag": "us-gaap:PremiumsEarnedNet"
+        },
+        "net_investment_income": null,
+        "benefits_and_claims": null,
+        "operating_expenses": null,
+        "income_before_tax": {
+          "value": "82459000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "15199000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "66968000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "1438223",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2025 annual average equivalent Class A shares: 1438223. Inline XBRL member brka:EquivalentClassAMember; reported equivalent basic shares, not generic diluted shares.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfSharesOutstandingBasic"
+        }
+      },
+      "balance_sheet": {
+        "kind": "insurer",
+        "cash_and_equivalents": {
+          "value": "51877000000",
+          "source": "derived",
+          "confidence": 0.95,
+          "source_quote": "Derived consolidated cash at 2025-12-31: insurance and other (47719000000) + railroad, utilities and energy (4158000000) USD. Both are us-gaap:CashAndCashEquivalentsAtCarryingValue with members brka:InsuranceAndOtherMember and brka:RailroadUtilitiesAndEnergyMember. Retains Treasury bills classified as cash equivalents. Excludes separately reported restricted cash and short-term investments in Treasury bills.",
+          "xbrl_tag": null
+        },
+        "investments": {
+          "value": "17816000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:AvailableForSaleSecuritiesDebtSecurities"
+        },
+        "insurance_reserves": {
+          "value": "17890000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LiabilityForFuturePolicyBenefits"
+        },
+        "total_assets": {
+          "value": "1222176000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "502473000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "717419000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": {
+          "value": "2284000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "SEC XBRL noncontrolling interests, instant 2025-12-31, accession 0001193125-26-083899; separate from parent stockholders' equity.",
+          "xbrl_tag": "us-gaap:MinorityInterest"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "insurer",
+        "cash_from_operations": {
+          "value": "45969000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-44487000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "2233000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null,
+        "depreciation_amortization": {
+          "value": "13476000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "capital_expenditures": {
+          "value": "20927000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0001193125-26-083899",
+      "filing_type": "10-K",
+      "industry": "insurer",
+      "income_statement": {
+        "kind": "insurer",
+        "premiums_earned": {
+          "value": "88257000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2024 insurance premiums earned: 88257000000 USD. Inline XBRL member brka:InsuranceAndOtherMember.",
+          "xbrl_tag": "us-gaap:PremiumsEarnedNet"
+        },
+        "net_investment_income": null,
+        "benefits_and_claims": null,
+        "operating_expenses": null,
+        "income_before_tax": {
+          "value": "110376000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "20815000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "88995000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "1437720",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2024 annual average equivalent Class A shares: 1437720. Inline XBRL member brka:EquivalentClassAMember; reported equivalent basic shares, not generic diluted shares.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfSharesOutstandingBasic"
+        }
+      },
+      "balance_sheet": {
+        "kind": "insurer",
+        "cash_and_equivalents": {
+          "value": "47729000000",
+          "source": "derived",
+          "confidence": 0.95,
+          "source_quote": "Derived consolidated cash at 2024-12-31: insurance and other (44333000000) + railroad, utilities and energy (3396000000) USD. Both are us-gaap:CashAndCashEquivalentsAtCarryingValue with members brka:InsuranceAndOtherMember and brka:RailroadUtilitiesAndEnergyMember. Retains Treasury bills classified as cash equivalents. Excludes separately reported restricted cash and short-term investments in Treasury bills.",
+          "xbrl_tag": null
+        },
+        "investments": {
+          "value": "15364000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:AvailableForSaleSecuritiesDebtSecurities"
+        },
+        "insurance_reserves": {
+          "value": "17616000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LiabilityForFuturePolicyBenefits"
+        },
+        "total_assets": {
+          "value": "1153881000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "502226000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "649368000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": {
+          "value": "2287000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "SEC XBRL noncontrolling interests, instant 2024-12-31, accession 0001193125-26-083899; separate from parent stockholders' equity.",
+          "xbrl_tag": "us-gaap:MinorityInterest"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "insurer",
+        "cash_from_operations": {
+          "value": "30592000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-10287000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-10360000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null,
+        "depreciation_amortization": {
+          "value": "12855000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "capital_expenditures": {
+          "value": "18976000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-12-31",
+      "filing_accession": "0001193125-26-083899",
+      "filing_type": "10-K",
+      "industry": "insurer",
+      "income_statement": {
+        "kind": "insurer",
+        "premiums_earned": {
+          "value": "83403000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2023 insurance premiums earned: 83403000000 USD. Inline XBRL member brka:InsuranceAndOtherMember.",
+          "xbrl_tag": "us-gaap:PremiumsEarnedNet"
+        },
+        "net_investment_income": null,
+        "benefits_and_claims": null,
+        "operating_expenses": null,
+        "income_before_tax": {
+          "value": "120166000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "23019000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "96223000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "1448880",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "2023 annual average equivalent Class A shares: 1448880. Inline XBRL member brka:EquivalentClassAMember; reported equivalent basic shares, not generic diluted shares.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfSharesOutstandingBasic"
+        }
+      },
+      "balance_sheet": {
+        "kind": "insurer",
+        "cash_and_equivalents": {
+          "value": "38022000000",
+          "source": "derived",
+          "confidence": 0.95,
+          "source_quote": "Derived consolidated cash at 2023-12-31: insurance and other (34268000000) + railroad, utilities and energy (3754000000) USD. Both are us-gaap:CashAndCashEquivalentsAtCarryingValue with members brka:InsuranceAndOtherMember and brka:RailroadUtilitiesAndEnergyMember. Retains Treasury bills classified as cash equivalents. Excludes separately reported restricted cash and short-term investments in Treasury bills.",
+          "xbrl_tag": null
+        },
+        "investments": {
+          "value": "23758000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:AvailableForSaleSecuritiesDebtSecurities"
+        },
+        "insurance_reserves": {
+          "value": "20213000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:LiabilityForFuturePolicyBenefits"
+        },
+        "total_assets": {
+          "value": "1069978000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "499208000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "561273000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "insurer",
+        "cash_from_operations": {
+          "value": "49196000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-32663000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-14405000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null,
+        "depreciation_amortization": {
+          "value": "12486000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "capital_expenditures": {
+          "value": "19409000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [],
+  "share_count_label": "Average equivalent Class A shares",
+  "operating_income_label": null,
+  "valuation_note": "Simplified Berkshire P/B estimate using consolidated GAAP earnings and Berkshire shareholders' equity, not a sum-of-the-parts valuation. Investment gains can distort ROE. Per-share amounts use reported annual average equivalent Class A shares rather than year-end shares."
+}

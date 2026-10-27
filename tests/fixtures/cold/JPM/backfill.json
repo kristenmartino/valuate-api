@@ -1,0 +1,875 @@
+{
+  "ticker": "JPM",
+  "cik": "0000019617",
+  "name": "JPMORGAN CHASE & CO",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0001628280-26-008131",
+      "filing_type": "10-K",
+      "industry": "bank",
+      "income_statement": {
+        "kind": "bank",
+        "interest_income": {
+          "value": "193341000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeOperating"
+        },
+        "interest_expense": null,
+        "net_interest_income": {
+          "value": "95443000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeExpenseNet"
+        },
+        "provision_for_credit_losses": {
+          "value": "14212000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ProvisionForLoanLeaseAndOtherLosses"
+        },
+        "non_interest_income": {
+          "value": "87004000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestIncome"
+        },
+        "non_interest_expense": {
+          "value": "95640000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestExpense"
+        },
+        "income_before_tax": {
+          "value": "72595000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "15547000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "57048000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "2781500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "bank",
+        "cash_and_equivalents": {
+          "value": "21742000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndDueFromBanks"
+        },
+        "securities": {
+          "value": "507198000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DebtSecuritiesAvailableForSaleExcludingAccruedInterest"
+        },
+        "total_loans": {
+          "value": "1467664000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss"
+        },
+        "allowance_for_loan_losses": {
+          "value": "25765000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest"
+        },
+        "total_deposits": {
+          "value": "2559320000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Deposits"
+        },
+        "long_term_debt": null,
+        "total_assets": {
+          "value": "4424900000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "4062462000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "362438000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "bank",
+        "cash_from_operations": {
+          "value": "-147782000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-265565000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "269533000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "16625000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": null,
+        "capital_expenditures": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0001628280-26-008131",
+      "filing_type": "10-K",
+      "industry": "bank",
+      "income_statement": {
+        "kind": "bank",
+        "interest_income": {
+          "value": "193933000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeOperating"
+        },
+        "interest_expense": null,
+        "net_interest_income": {
+          "value": "92583000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeExpenseNet"
+        },
+        "provision_for_credit_losses": {
+          "value": "10678000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ProvisionForLoanLeaseAndOtherLosses"
+        },
+        "non_interest_income": {
+          "value": "84973000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestIncome"
+        },
+        "non_interest_expense": {
+          "value": "91797000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestExpense"
+        },
+        "income_before_tax": {
+          "value": "75081000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "16610000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "58471000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "2879000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "bank",
+        "cash_and_equivalents": {
+          "value": "23372000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndDueFromBanks"
+        },
+        "securities": {
+          "value": "406852000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DebtSecuritiesAvailableForSaleExcludingAccruedInterest"
+        },
+        "total_loans": {
+          "value": "1323643000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss"
+        },
+        "allowance_for_loan_losses": {
+          "value": "24345000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest"
+        },
+        "total_deposits": {
+          "value": "2406032000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Deposits"
+        },
+        "long_term_debt": null,
+        "total_assets": {
+          "value": "4002814000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "3658056000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "344758000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "bank",
+        "cash_from_operations": {
+          "value": "-42012000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-163403000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "63447000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "14783000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": null,
+        "capital_expenditures": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-12-31",
+      "filing_accession": "0001628280-26-008131",
+      "filing_type": "10-K",
+      "industry": "bank",
+      "income_statement": {
+        "kind": "bank",
+        "interest_income": {
+          "value": "170588000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeOperating"
+        },
+        "interest_expense": {
+          "value": "81321000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "net_interest_income": {
+          "value": "89267000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeExpenseNet"
+        },
+        "provision_for_credit_losses": {
+          "value": "9320000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ProvisionForLoanLeaseAndOtherLosses"
+        },
+        "non_interest_income": {
+          "value": "68837000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestIncome"
+        },
+        "non_interest_expense": {
+          "value": "87172000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestExpense"
+        },
+        "income_before_tax": {
+          "value": "61612000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "12060000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "49552000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "2943100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "bank",
+        "cash_and_equivalents": {
+          "value": "29066000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndDueFromBanks"
+        },
+        "securities": {
+          "value": "201704000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DebtSecuritiesAvailableForSaleExcludingAccruedInterest"
+        },
+        "total_loans": {
+          "value": "1301286000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss"
+        },
+        "allowance_for_loan_losses": {
+          "value": "22420000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest"
+        },
+        "total_deposits": {
+          "value": "2400688000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Deposits"
+        },
+        "long_term_debt": null,
+        "total_assets": {
+          "value": "3875393000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "3547515000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "327878000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "bank",
+        "cash_from_operations": {
+          "value": "12974000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "67643000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-25571000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "13463000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": null,
+        "capital_expenditures": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2022,
+      "fiscal_period_end": "2022-12-31",
+      "filing_accession": "0001628280-26-008131",
+      "filing_type": "10-K",
+      "industry": "bank",
+      "income_statement": {
+        "kind": "bank",
+        "interest_income": {
+          "value": "92807000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeOperating"
+        },
+        "interest_expense": {
+          "value": "26097000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "net_interest_income": {
+          "value": "66710000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeExpenseNet"
+        },
+        "provision_for_credit_losses": {
+          "value": "6389000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ProvisionForLoanLeaseAndOtherLosses"
+        },
+        "non_interest_income": {
+          "value": "61985000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestIncome"
+        },
+        "non_interest_expense": {
+          "value": "76140000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestExpense"
+        },
+        "income_before_tax": {
+          "value": "46166000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "8490000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "37676000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "2970000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "bank",
+        "cash_and_equivalents": {
+          "value": "27697000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndDueFromBanks"
+        },
+        "securities": {
+          "value": "205857000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DebtSecuritiesAvailableForSaleExcludingAccruedInterest"
+        },
+        "total_loans": {
+          "value": "1115921000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss"
+        },
+        "allowance_for_loan_losses": {
+          "value": "19726000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest"
+        },
+        "total_deposits": {
+          "value": "2340179000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Deposits"
+        },
+        "long_term_debt": null,
+        "total_assets": {
+          "value": "3665743000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "3373411000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "292332000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "bank",
+        "cash_from_operations": {
+          "value": "107119000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-137819000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-126257000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "13562000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": null,
+        "capital_expenditures": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2021,
+      "fiscal_period_end": "2021-12-31",
+      "filing_accession": "0001628280-26-008131",
+      "filing_type": "10-K",
+      "industry": "bank",
+      "income_statement": {
+        "kind": "bank",
+        "interest_income": {
+          "value": "57864000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeOperating"
+        },
+        "interest_expense": {
+          "value": "5553000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "net_interest_income": {
+          "value": "52311000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:InterestIncomeExpenseNet"
+        },
+        "provision_for_credit_losses": {
+          "value": "-9256000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ProvisionForLoanLeaseAndOtherLosses"
+        },
+        "non_interest_income": {
+          "value": "69338000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestIncome"
+        },
+        "non_interest_expense": {
+          "value": "71343000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NoninterestExpense"
+        },
+        "income_before_tax": {
+          "value": "59562000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "11228000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "48334000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "3026600000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        }
+      },
+      "balance_sheet": {
+        "kind": "bank",
+        "cash_and_equivalents": {
+          "value": "26438000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndDueFromBanks"
+        },
+        "securities": {
+          "value": "308525000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:DebtSecuritiesAvailableForSaleExcludingAccruedInterest"
+        },
+        "total_loans": {
+          "value": "1061328000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss"
+        },
+        "allowance_for_loan_losses": {
+          "value": "16386000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest"
+        },
+        "total_deposits": {
+          "value": "2462303000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Deposits"
+        },
+        "long_term_debt": null,
+        "total_assets": {
+          "value": "3743567000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "total_liabilities": {
+          "value": "3449440000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "294127000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "bank",
+        "cash_from_operations": {
+          "value": "78084000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "cash_from_investing": {
+          "value": "-129344000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "275993000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "12858000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        },
+        "depreciation_amortization": null,
+        "capital_expenditures": null
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [],
+  "share_count_label": null,
+  "operating_income_label": null,
+  "valuation_note": null
+}

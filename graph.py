@@ -36,6 +36,7 @@ from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VAL
 from intuit import CIK as INTU_CIK, PROTECTED_FIELDS as INTU_FIELDS, VALUATION_NOTE as INTU_NOTE, filing_items as intu_items, coverage_flags as intu_flags
 from microsoft import CIK as MSFT_CIK, PROTECTED_FIELDS as MSFT_FIELDS, VALUATION_NOTE as MSFT_NOTE, filing_items as msft_items, coverage_flags as msft_flags
 from alphabet import CIK as GOOGL_CIK, PROTECTED_FIELDS as GOOGL_FIELDS, VALUATION_NOTE as GOOGL_NOTE, filing_items as googl_items, coverage_flags as googl_flags
+from input_contracts import carrying_debt_items
 from extract_track_a import extract_track_a
 from extract_track_b import (
     extract_revenue_segments,
@@ -441,7 +442,9 @@ async def track_a(state: GraphState) -> GraphState:
     expected_fields = _all_fields_for(industry)
     periods_items: dict[date, dict[str, Optional[LineItem]]] = {}
     for pe in period_ends:
-        items = extract_track_a(pe, facts, concepts=concepts)
+        items = extract_track_a(pe, facts, concepts=concepts, latest_end=latest, accession=state["filing_accession"])
+        if industry in {Industry.STANDARD, Industry.ENERGY}:
+            items.update(carrying_debt_items(facts, state["cik"], pe, latest, state["filing_accession"]))
         items.update(salesforce_filing_items(facts, state["cik"], pe, state["filing_accession"], latest))
         if state["cik"].lstrip("0") == IBM_CIK:
             for field, item in ibm_filing_items(facts, state["cik"], pe, state["filing_accession"], latest).items():

@@ -35,12 +35,11 @@ def get_version_info() -> dict[str, str | None]:
     # Lazy import so the version module doesn't drag in the prompt at module
     # load — keeps the import graph clean.
     from extraction_prompt import PROMPT_HASH
+    from qualification import POLICY_VERSION
 
     return {
         "commit_sha": os.environ.get("RAILWAY_GIT_COMMIT_SHA"),
-        "commit_sha_short": (
-            os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")[:7] or None
-        ),
+        "commit_sha_short": (os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")[:7] or None),
         "deployment_id": os.environ.get("RAILWAY_DEPLOYMENT_ID"),
         "started_at": SERVICE_STARTED_AT,
         "environment": os.environ.get("RAILWAY_ENVIRONMENT_NAME", "local"),
@@ -49,4 +48,5 @@ def get_version_info() -> dict[str, str | None]:
         # the prompt can change without a code commit (e.g., after a
         # prompt-eval iteration).
         "prompt_hash": PROMPT_HASH,
+        "qualification_policy": POLICY_VERSION,
     }

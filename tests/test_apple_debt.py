@@ -106,8 +106,12 @@ def test_apple_saved_read_repairs_once_and_value_endpoint_uses_the_repair(monkey
     client = TestClient(api.app);first = client.get("/company/AAPL")
     assert first.status_code == 200 and first.json()["extraction_flags"] == []
     assert client.get("/company/AAPL").json() == first.json() and len(calls) == 1
-    defaults = client.get("/value/AAPL/defaults").json();result = client.post("/value/AAPL", json={"assumptions": defaults})
-    assert result.status_code == 200 and result.json()["projection"]["fair_value_per_share"] == pytest.approx(164.00397907554068)
+    assert client.get("/value/AAPL/defaults").status_code == 422
+    repaired = Company.model_validate(first.json())
+    defaults = default_assumptions(repaired)
+    result = client.post("/value/AAPL", json={"assumptions": defaults.model_dump()})
+    assert result.status_code == 422 and result.json()["detail"]["code"] == "valuation_not_qualified"
+    assert compute_projection(repaired, defaults).fair_value_per_share == pytest.approx(164.00397907554068)
 
 
 def test_apple_failed_repair_retains_values_and_warning_and_throttles_retry(monkeypatch):

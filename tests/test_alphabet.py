@@ -176,8 +176,9 @@ def test_cached_api_repair_is_idempotent_and_failed_repair_blocks_valuation(monk
     c = Company.model_validate(client.get("/company/GOOGL").json())
     if available:
         assert not incomplete_inputs(c)
-        a = client.get("/value/GOOGL/defaults");assert a.status_code == 200
-        assert client.post("/value/GOOGL", json={"assumptions": a.json()}).status_code == 200
+        a = client.get("/value/GOOGL/defaults");assert a.status_code == 422
+        assert a.json()["detail"]["code"] == "valuation_not_qualified"
+        assert client.post("/value/GOOGL", json={"assumptions": default_assumptions(c).model_dump()}).status_code == 422
     else:
         assert c.periods == SAVED.periods
         assert any("coverage is incomplete" in f.reason for f in c.extraction_flags)

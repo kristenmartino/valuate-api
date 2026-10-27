@@ -155,7 +155,7 @@ def test_cached_company_upgrades_once_preserving_the_saved_record(monkeypatch):
     assert response.status_code == 200
     assert response.json()["extraction_flags"] == []
     assert client.get("/company/PLD").json() == response.json()
-    assert client.get("/value/PLD/defaults").status_code == 200
+    assert client.get("/value/PLD/defaults").status_code == 422  # Repair alone is not publication qualification.
     assert len(calls) == 1
     assert asyncio.run(repo.get("PLD")).periods[0].balance_sheet.noncontrolling_interests.value == 4_560_830_000
 

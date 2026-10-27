@@ -7,6 +7,19 @@
 
 The case study has the full design narrative; this README is a working reference for the code.
 
+
+## Publication qualification
+
+Extraction and public valuation are separate states. A saved record or an extraction score does not establish coverage. The API returns a structured `Company.qualification` report with `qualified`, `review_required` or `unsupported` status, source evidence and reasons. Both public default-assumption and valuation endpoints require a valid report for the exact saved record, annual filing and current input/model policy. Caller-supplied assumptions, cleared flags and user corrections cannot bypass the gate. Unqualified financials remain available for inspection, but the workspace withholds estimates, assumptions, projections and simulations.
+
+Qualification requires a filing-specific scope policy plus matching annual evidence for every model-driving input. Reports retain period dates, units, source accession, concept, accounting scope, basis and calculation operands. Generic extraction no longer substitutes total debt for noncurrent debt, depreciation alone for full D&A, restricted-plus-unrestricted cash for unrestricted cash, or noncurrent operating leases for total operating leases. Missing debt remains unknown. Debt components must be non-overlapping and use a supported carrying basis. Explicit company-specific proxies retain their labels and limitations; passing checks does not mean every displayed field was manually reviewed or that the valuation predicts a market price.
+
+The report is bound to the complete saved record and a fingerprint of the financial pipeline, model code and filing policies. A changed record or policy invalidates it. Valuation responses identify their source record and filing; the frontend sends its record digest to reject calculations against changed financials. New filings require their own scope review. Saved, qualified older filings keep their displayed dates rather than silently claiming freshness.
+
+Production uses PostgreSQL and refuses to start with process-local reviewer storage. Active records, immutable prior revisions, cold candidates and raw filing-evidence snapshots are stored separately. Versioned writes reject stale updates; same-filing publication preserves saved reviewer corrections. A new filing does not inherit old reviews as if they applied to its new figures. Revisions retain prior values and notes, but the shared demo credential does not identify individual reviewers.
+
+Cold tests start with no saved record. CI replays 16 filing cases through the real extraction graph and qualification logic using selected SEC facts, inline-XBRL fixtures and recorded AI backfill responses. The expected outcomes include 11 qualified cases and five withheld cases; a safe rejection is not scored as extraction accuracy. Separate live cold runs exercise fresh retrieval and AI extraction, stage their candidates without replacing active records, and test rejection of unqualified publication. The historical May extraction baseline remains separate and has not been rerun for these mappings.
+
 ## What this service does
 
 ```
@@ -38,8 +51,10 @@ The graph (`graph.py`) runs `ingest → track_a → track_b → validate → END
    - `real_estate_net = real_estate_at_cost − accumulated_depreciation` (REIT-only, for filers that tag the components but not the net)
 
    All write `source=DERIVED` with a synthetic source quote.
-5. **Composition** — builds a `Company` with up to 5 `FinancialPeriod`s, dispatching to the right schema variants per the industry: `IncomeStatement` / `BalanceSheet` / `CashFlowStatement` for standard *and* energy filers (E&P companies report on the same shape as industrials — what differs is the *valuation*, not the line items), `BankIncomeStatement` / `BankBalanceSheet` / `BankCashFlowStatement` for banks, the equivalent `Insurance*` triples for insurers, and `REIT*` triples for REITs. Pydantic discriminated unions on each statement (`kind` literal) keep the JSON shape unambiguous on the wire. The latest period must be complete or `CompositionError` raises (HTTP 422); older periods with thin coverage are silently dropped.
+5. **Composition** — builds a `Company` with up to 5 `FinancialPeriod`s, dispatching to the right schema variants per the industry: `IncomeStatement` / `BalanceSheet` / `CashFlowStatement` for standard *and* energy filers (E&P companies report on the same shape as industrials — what differs is the *valuation*, not the line items), `BankIncomeStatement` / `BankBalanceSheet` / `BankCashFlowStatement` for banks, the equivalent `Insurance*` triples for insurers, and `REIT*` triples for REITs. Pydantic discriminated unions on each statement (`kind` literal) keep the JSON shape unambiguous on the wire. The latest period must be complete or `CompositionError` raises (HTTP 422); candidate composition may drop older periods with thin coverage. Publication qualification then checks the exact historical-period set in the filing policy and rejects shortened model history.
 6. **Validate** — flags low-confidence items (<0.80) and balance-sheet identity violations (>50bps tolerance) as `ExtractionFlag`s on the response.
+
+After the graph completes, the API independently collects qualification evidence and stages the candidate. Successful graph completion does not authorize public default assumptions or valuation.
 
 ## Valuation flavors
 
@@ -153,12 +168,12 @@ Capex/revenue and cash-flow add-back/revenue start at equal-weight averages of a
 
 ## HITL overrides
 
-`PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state.
+`PUT /company/{ticker}/override` accepts `{ field_path, value, source_quote? }` and replaces the LineItem at the given path with `source=USER_OVERRIDE`. Validation re-runs after every override so flags reflect the new state. The changed record needs fresh qualification before it can produce another public valuation.
 
 Two repos back this:
 
 - **InMemoryRepo** (default in local dev) — process-local dict, wiped on restart.
-- **PostgresRepo** — turns on automatically when `DATABASE_URL` is set. One JSONB-backed `companies` table; an override is recorded inline on the Company JSON — the corrected LineItem is replaced by one tagged `source=user_override` (confidence 1.0) carrying the reviewer's `source_quote`. It's a current-state snapshot, not a change-history log.
+- **PostgresRepo** — turns on automatically when `DATABASE_URL` is set. Active JSONB records plus immutable versions, staged cold candidates and raw evidence snapshots. Writes are transactional and reject stale revisions; data-store failures propagate rather than becoming cache misses or dropped corrections.
 
 ## Tech stack
 
@@ -167,7 +182,7 @@ Two repos back this:
 - **Anthropic SDK** (`claude-sonnet-4-6`) with prompt caching on the static system prompt
 - **BeautifulSoup + lxml** for slicing the 10-K's Item 8 financial-statements section before sending to Claude
 - **yfinance** for peer market multiples (no API key, runs in a thread pool)
-- **asyncpg** for Postgres persistence (optional)
+- **asyncpg** for PostgreSQL persistence (required in deployed environments)
 
 ## Local development
 
@@ -237,7 +252,7 @@ Required env vars (set in the Railway project UI):
 |---|---|---|
 | `SEC_USER_AGENT` | yes | SEC blocks requests without one. Format: `"Your Name your.email@domain.com"` |
 | `ANTHROPIC_API_KEY` | yes | Track B and segment extraction need it; `sk-ant-...` from `console.anthropic.com/settings/keys` |
-| `DATABASE_URL` | optional | Auto-injected by Railway's Postgres plugin. Without it, persistence falls back to in-memory. |
+| `DATABASE_URL` | optional | Required in deployed environments; use a service reference such as `${{Postgres.DATABASE_URL}}`. In-memory storage is available only for local development. |
 | `VALUATE_OVERRIDE_TOKEN` | optional | When set, `PUT /company/{ticker}/override` requires `Authorization: Bearer <token>`. The Vercel frontend injects the same token via its `proxy.ts` from a same-named env var. When unset, `/override` runs unauthenticated (fine for local dev). |
 | `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited (it's the Anthropic-burning endpoint); read endpoints aren't. |
 | `VALUATE_DISABLE_STRUCTURED_LOGGING` | optional | Set to `1` to skip the JSON-per-request middleware (`app/logging_middleware.py`). Useful for local dev when reading plain Python tracebacks in stderr is preferable. |
@@ -276,31 +291,31 @@ Last refreshed: 2026-05-30
 | Claude Track B | 3 | 4 | 75.0% |
 | Overall | 11 | 43 | 97.7% |
 
-Measured across 11 filers in five industries. Track A (XBRL) reproduces every filer's officially-tagged value for all 39 canonical-concept fields within ±0.5%. Track B (Claude) covers the four income-tax fields the XBRL concept map intentionally leaves to the LLM (`income_before_tax` / `income_tax_expense`): 3 of 4 within ±0.5%. The single miss is an *omission*, not a wrong number — Claude returned no value for MSFT's `income_before_tax` (`not_extracted`), a field that isn't required for the DCF. (Refresh these figures with `python -m eval.run_eval --readme`.)
+Measured across 11 filers in five industries. In that historical run, Track A (XBRL) reproduced the pinned values for all 39 fields within ±0.5%. This result does not establish the coverage of the current mappings. Track B (Claude) covers the four income-tax fields the XBRL concept map intentionally leaves to the LLM (`income_before_tax` / `income_tax_expense`): 3 of 4 within ±0.5%. The single miss is an *omission*, not a wrong number — Claude returned no value for MSFT's `income_before_tax` (`not_extracted`), a field that isn't required for the DCF. (Refresh these figures with `python -m eval.run_eval --readme`.)
 
 This is an eval baseline over a curated public-filer set, not a guarantee across all SEC filers.
 
 ### Auth + rate-limit model
 
-The threat model is "random scraping / accidental corruption," not "sophisticated adversary." `/override` is the only destructive endpoint and is gated by a single shared bearer token; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth.
+The threat model is "random scraping / accidental corruption," not "sophisticated adversary." The public correction route and the separate administrative routes are gated by the existing shared service credential; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth.
 
 Local dev with both env vars unset behaves identically to the pre-auth era — useful for poking at the override flow without setting up tokens.
 
 ## Universe
 
-18 hand-picked S&P 500 tickers — 14 industrial / tech filers (AAPL, MSFT, GOOGL, AMZN, META, NVDA, COST, WMT, HD, NKE, JNJ, KO, F, CAT), one bank (JPM), one life insurer (PRU), one industrial REIT (PLD), and one pure-play E&P (EOG). Three of the original ten industrials needed Track B or DERIVED fallback to compose successfully; the four variant-industry filers (JPM, PRU, PLD, EOG) and the four later-added megacaps (AMZN, META, WMT, F) all extracted cleanly. WMT specifically needed Track B to fill `depreciation_amortization` from the filing text — exactly the case Track B was designed for.
+18 sample tickers are entry points, not an approved universe. Their exact filings must pass qualification before producing a public valuation. The sample includes 14 industrial / tech filers (AAPL, MSFT, GOOGL, AMZN, META, NVDA, COST, WMT, HD, NKE, JNJ, KO, F, CAT), one bank (JPM), one life insurer (PRU), one industrial REIT (PLD), and one pure-play E&P (EOG). Historical extraction success established that records composed, not that their inputs were qualified. Current availability is determined by the filing report.
 
 ## Industry coverage
 
 | Industry | Status | Valuation method | Sample ticker |
 |---|---|---|---|
-| Industrial / tech | shipped | 5-year FCFF DCF + Monte Carlo + sensitivity | AAPL, MSFT, ... |
-| Banks | shipped | Gordon DDM | JPM |
-| Insurers | shipped | Justified P/B | PRU |
-| REITs | shipped | FFO-multiple Gordon growth | PLD |
-| Energy E&P | shipped | Fixed ten-year FCFF (no terminal) | EOG |
+| Industrial / tech | implemented; filing qualification required | 5-year FCFF DCF + Monte Carlo + sensitivity | AAPL, MSFT, ... |
+| Banks | implemented; filing qualification required | Gordon DDM | JPM |
+| Insurers | implemented; filing qualification required | Justified P/B | PRU |
+| REITs | implemented; filing qualification required | FFO-multiple Gordon growth | PLD |
+| Energy E&P | implemented; filing qualification required | Fixed ten-year FCFF (no terminal) | EOG |
 
-E&P is the only industry that doesn't carry a separate schema variant — the line items E&P companies report (revenue, op income, capex, D&A) are standard us-gaap; the conceptual difference is the *valuation*, not the data shape. The architecture supports both: schema variants when the line-item set fundamentally differs (banks, insurers, REITs), and dispatch-only when only the valuation differs (E&P). Anything classified outside these five falls back to `Industry.STANDARD` and runs the FCFF path with Gordon terminal — which produces nonsense for filers it shouldn't apply to. The home page surfaces the 18 curated tickers as the primary entry point and a free-text search box as an escape hatch; the search copy makes the fallback caveat explicit.
+E&P is the only industry that doesn't carry a separate schema variant — the line items E&P companies report (revenue, op income, capex, D&A) are standard us-gaap; the conceptual difference is the *valuation*, not the data shape. The architecture supports both: schema variants when the line-item set fundamentally differs (banks, insurers, REITs), and dispatch-only when only the valuation differs (E&P). Anything classified outside these five falls back to `Industry.STANDARD` and runs the FCFF path with Gordon terminal — which can be unsuitable. A reviewed filing/model policy is required before publication; the home page and ticker lookup do not grant approval.
 
 Other items deliberately parked in the [`later` label](https://github.com/kristenmartino/valuate-api/issues?q=label%3Alater): segment-aware DCF (currently consolidated only), multi-period filing-accession attribution, saved scenarios.
 
@@ -315,3 +330,18 @@ GOOGL's FY2025 debt uses carrying amounts: $49.085B face value less $0.542B disc
 The $21.136B FY2025 add-back is **property-and-equipment depreciation**, used as a proxy, not verified full D&A. Its historical values and revenue ratio remain unchanged; no unverified amortization is added. Statement rows, the assumption control, projection and model note disclose that scope. DCF-implied EV/EBITDA is unavailable on this basis; provider market multiples retain their own definitions.
 
 Scoped extraction protects these inputs from AI backfill. Saved repair requires matching facts for every saved period before changing any, preserves reviewer overrides and other fields, and never automatically splits a reviewed debt pair. Unresolved debt coverage retains the record and warning while valuation/default requests fail. These targeted checks do not approve other fields or expand the historical extraction baseline. See the [FY2025 filing](https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm) and [FY2023 filing with the legacy comparison](https://www.sec.gov/Archives/edgar/data/1652044/000165204424000022/goog-20231231.htm).
+
+## Qualification operations and cold coverage
+
+```bash
+# Deterministic, cost-free cold graph replay (recorded AI responses).
+python -m eval.cold
+# Run with the existing authenticated service environment; no credential is printed.
+railway run --no-local -- python -m ops.migrate_records --snapshots /path/to/backup --output /path/to/evidence --commit EXPECTED_RELEASE_SHA
+# At most 29 fresh extractions, once per ticker; no automatic AI retries or publication.
+railway run --no-local -- python -m eval.live_cold --output /path/to/cold-evidence --max-extractions 29
+```
+
+Administrative import, qualification, cold extraction, candidate publication and history endpoints always require the configured service token, including in local mode. The frontend proxy does not inject credentials onto these routes. Import strips supplied qualification metadata and refuses to overwrite a saved record. Candidate publication rechecks qualification and preserves same-filing reviews; an unqualified candidate receives HTTP 422. These are maintainer operations, not public approval controls.
+
+The live cold cohort is the 18 sample tickers, nine additional regression tickers and two held-out tickers (ORCL and SBUX). Coverage results must distinguish qualified, withheld and composition-failed cases. The two held-out filings have no scope policy and must not be published automatically. CI runs the offline cases and real PostgreSQL restart/conflict tests. A weekday GitHub Actions job checks SEC annual-filing metadata without AI calls or publication writes and fails when a policy's filing has been superseded; the new filing needs source review and a new policy.

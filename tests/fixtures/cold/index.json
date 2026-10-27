@@ -1,0 +1,66 @@
+[
+  {
+    "ticker": "AAPL",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "ADBE",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "BRK-A",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "BRK-B",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "CRM",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "CSCO",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "EOG",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "GOOGL",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "IBM",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "INTU",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "JPM",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "MSFT",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "PEP",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "PLD",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "PRU",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "TXN",
+    "expected_status": "review_required"
+  }
+]

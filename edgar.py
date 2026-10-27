@@ -221,7 +221,6 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "depreciation_amortization": [
         "DepreciationDepletionAndAmortization",
         "DepreciationAndAmortization",
-        "Depreciation",  # GOOGL et al. report only depreciation as the CFO add-back
     ],
     # Stock-based compensation — reported on the cash flow statement as an
     # add-back from net income to CFO. It IS deducted from GAAP operating
@@ -243,22 +242,13 @@ STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "dividends_paid": ["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"],
     "cash_and_equivalents": [
         "CashAndCashEquivalentsAtCarryingValue",
-        # Post-ASC-230 (effective FY18+): some filers stopped tagging the
-        # plain cash concept and moved to the combined restricted+
-        # unrestricted tag. Falls through with 0.95 confidence — we don't
-        # subtract the "Restricted" portion since it's usually negligible
-        # for the cash-rich filers this tag covers, and over-stating cash
-        # is a smaller error than missing it entirely.
-        "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+        # Restricted-plus-unrestricted cash is a different scope and is not a fallback.
     ],
-    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "long_term_debt": ["LongTermDebtNoncurrent"],
     # Operating-lease liabilities (ASC 842). Some filers report only the
-    # noncurrent portion; some only the total. We try the total first to
-    # capture both current + noncurrent, then fall back to the noncurrent
-    # tag (which is the larger of the two for most filers).
+    # noncurrent portion; that component is not substituted for a total.
     "operating_lease_liabilities": [
         "OperatingLeaseLiability",
-        "OperatingLeaseLiabilityNoncurrent",
     ],
     "diluted_shares": [
         "WeightedAverageNumberOfDilutedSharesOutstanding",
@@ -341,7 +331,7 @@ BANK_CANONICAL_CONCEPTS: dict[str, list[str]] = {
         "LoansAndLeasesReceivableAllowance",
     ],
     "total_deposits": ["Deposits"],
-    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "long_term_debt": ["LongTermDebtNoncurrent"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
     "noncontrolling_interests": ["MinorityInterest"],
@@ -449,7 +439,6 @@ REIT_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "depreciation_amortization": [
         "DepreciationAndAmortization",
         "DepreciationDepletionAndAmortization",
-        "Depreciation",
     ],
     "general_and_administrative": [
         "GeneralAndAdministrativeExpense",
@@ -480,7 +469,7 @@ REIT_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "real_estate_net": [
         "RealEstateInvestmentPropertyNet",
     ],
-    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "long_term_debt": ["LongTermDebtNoncurrent"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
     "noncontrolling_interests": ["MinorityInterest"],
@@ -525,7 +514,6 @@ ENERGY_CANONICAL_CONCEPTS: dict[str, list[str]] = {
     "depreciation_amortization": [
         "DepreciationDepletionAndAmortization",  # E&P companies use this — depletion is the load-bearing term
         "DepreciationAndAmortization",
-        "Depreciation",
     ],
 }
 
@@ -540,9 +528,9 @@ def concepts_for(industry: "Industry") -> dict[str, list[str]]:  # type: ignore[
 
     All five industries (standard, bank, insurer, REIT, energy) now have an
     explicit map. Anything classified outside these falls back to the
-    standard map and runs the FCFF path — which produces nonsense for
-    filers it shouldn't apply to (the frontend's universe gate keeps users
-    on supported tickers).
+    standard map and runs the FCFF path — which can be unsuitable for some filers. The backend publication gate
+    requires a filing/model scope policy and complete input evidence; a ticker
+    lookup or a composed candidate does not establish suitability.
     """
     # Late import to avoid a circular dep (industry → schemas → edgar would
     # be a cycle; industry is small enough to import here on demand).

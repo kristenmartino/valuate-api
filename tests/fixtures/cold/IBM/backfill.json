@@ -1,0 +1,981 @@
+{
+  "ticker": "IBM",
+  "cik": "0000051143",
+  "name": "INTERNATIONAL BUSINESS MACHINES CORP",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0000051143-26-000010",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "67535000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "28239000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "5021000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2284000000 + 2737000000 = 5021000000 USD); annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "share_based_compensation": {
+          "value": "1715000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "12263000000",
+          "source": "derived",
+          "confidence": 0.65,
+          "source_quote": "IBM EBIT proxy: GAAP pre-tax income from continuing operations + separately reported interest expense (10328000000 + 1935000000 = 12263000000 USD); annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010. Calculated model input, not reported operating income or IBM operating (non-GAAP) earnings. Retains other income/expense; financing interest in cost of revenue is not added back. Review required.",
+          "xbrl_tag": null
+        },
+        "interest_expense": {
+          "value": "1935000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed interest_expense: 1935000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "10328000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 10328000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "-242000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: -242000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "10593000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "948675228",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": []
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "13587000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "151880000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "6424000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed short_term_debt: 6424000000 USD; year-end 2025-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:ShortTermBorrowings"
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "54836000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed long_term_debt: 54836000000 USD; year-end 2025-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "3347000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "119139000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "32648000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": {
+          "value": "93000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "SEC XBRL noncontrolling interests, instant 2025-12-31, accession 0000051143-26-000010; separate from parent stockholders' equity.",
+          "xbrl_tag": "us-gaap:MinorityInterest"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "5021000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2284000000 + 2737000000 = 5021000000 USD); annual period 2025-01-01 to 2025-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "cash_from_operations": {
+          "value": "13193000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "1091000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-10302000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-3829000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "6255000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividendsCommonStock"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0000051143-26-000010",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "62753000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "27201000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "4667000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2168000000 + 2499000000 = 4667000000 USD); annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "share_based_compensation": {
+          "value": "1311000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "7509000000",
+          "source": "derived",
+          "confidence": 0.65,
+          "source_quote": "IBM EBIT proxy: GAAP pre-tax income from continuing operations + separately reported interest expense (5797000000 + 1712000000 = 7509000000 USD); annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010. Calculated model input, not reported operating income or IBM operating (non-GAAP) earnings. Retains other income/expense; financing interest in cost of revenue is not added back. Review required.",
+          "xbrl_tag": null
+        },
+        "interest_expense": {
+          "value": "1712000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed interest_expense: 1712000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "5797000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 5797000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "-218000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: -218000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "6023000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "937161224",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "13947000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "137175000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "5089000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed short_term_debt: 5089000000 USD; year-end 2024-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:ShortTermBorrowings"
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "49884000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed long_term_debt: 49884000000 USD; year-end 2024-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "3422000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "109783000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "27307000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": {
+          "value": "86000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "SEC XBRL noncontrolling interests, instant 2024-12-31, accession 0000051143-26-000010; separate from parent stockholders' equity.",
+          "xbrl_tag": "us-gaap:MinorityInterest"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "4667000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2168000000 + 2499000000 = 4667000000 USD); annual period 2024-01-01 to 2024-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "cash_from_operations": {
+          "value": "13445000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "1048000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-4937000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-7079000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "6147000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividendsCommonStock"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-12-31",
+      "filing_accession": "0000051143-26-000010",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "61860000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "27560000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "4396000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2109000000 + 2287000000 = 4396000000 USD); annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "share_based_compensation": {
+          "value": "1133000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "10297000000",
+          "source": "derived",
+          "confidence": 0.65,
+          "source_quote": "IBM EBIT proxy: GAAP pre-tax income from continuing operations + separately reported interest expense (8690000000 + 1607000000 = 10297000000 USD); annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010. Calculated model input, not reported operating income or IBM operating (non-GAAP) earnings. Retains other income/expense; financing interest in cost of revenue is not added back. Review required.",
+          "xbrl_tag": null
+        },
+        "interest_expense": {
+          "value": "1607000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed interest_expense: 1607000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "8690000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 8690000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "1176000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 1176000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "7502000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "922073828",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "13068000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "135241000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "6426000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed short_term_debt: 6426000000 USD; year-end 2023-12-31; SEC accession 0000051143-25-000015.",
+          "xbrl_tag": "us-gaap:ShortTermBorrowings"
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "50121000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed long_term_debt: 50121000000 USD; year-end 2023-12-31; SEC accession 0000051143-25-000015.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "3389000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "112628000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "22533000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "4396000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2109000000 + 2287000000 = 4396000000 USD); annual period 2023-01-01 to 2023-12-31; SEC accession 0000051143-26-000010. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "cash_from_operations": {
+          "value": "13931000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "1245000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-7070000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-1769000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "6040000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividendsCommonStock"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2022,
+      "fiscal_period_end": "2022-12-31",
+      "filing_accession": "0000051143-26-000010",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "60530000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "27842000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "4802000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2407000000 + 2395000000 = 4802000000 USD); annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "share_based_compensation": {
+          "value": "987000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "2372000000",
+          "source": "derived",
+          "confidence": 0.65,
+          "source_quote": "IBM EBIT proxy: GAAP pre-tax income from continuing operations + separately reported interest expense (1156000000 + 1216000000 = 2372000000 USD); annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015. Calculated model input, not reported operating income or IBM operating (non-GAAP) earnings. Retains other income/expense; financing interest in cost of revenue is not added back. Review required.",
+          "xbrl_tag": null
+        },
+        "interest_expense": {
+          "value": "1216000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed interest_expense: 1216000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015.",
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "1156000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 1156000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "-626000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: -626000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "1639000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "912269062",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "7886000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "127243000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "4760000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed short_term_debt: 4760000000 USD; year-end 2022-12-31; SEC accession 0000051143-24-000012.",
+          "xbrl_tag": "us-gaap:ShortTermBorrowings"
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "46189000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed long_term_debt: 46189000000 USD; year-end 2022-12-31; SEC accession 0000051143-24-000012.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "3064000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "105222000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "21944000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "4802000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (2407000000 + 2395000000 = 4802000000 USD); annual period 2022-01-01 to 2022-12-31; SEC accession 0000051143-25-000015. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "cash_from_operations": {
+          "value": "10435000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "1346000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-4202000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-4958000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "5948000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividendsCommonStock"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2021,
+      "fiscal_period_end": "2021-12-31",
+      "filing_accession": "0000051143-26-000010",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "57350000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "25865000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "6417000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (3888000000 + 2529000000 = 6417000000 USD); annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "share_based_compensation": {
+          "value": "982000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "5992000000",
+          "source": "derived",
+          "confidence": 0.65,
+          "source_quote": "IBM EBIT proxy: GAAP pre-tax income from continuing operations + separately reported interest expense (4837000000 + 1155000000 = 5992000000 USD); annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012. Calculated model input, not reported operating income or IBM operating (non-GAAP) earnings. Retains other income/expense; financing interest in cost of revenue is not added back. Review required.",
+          "xbrl_tag": null
+        },
+        "interest_expense": {
+          "value": "1155000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed interest_expense: 1155000000 USD; annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012.",
+          "xbrl_tag": "us-gaap:InterestExpense"
+        },
+        "income_before_tax": {
+          "value": "4837000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 4837000000 USD; annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        },
+        "income_tax_expense": {
+          "value": "124000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 124000000 USD; annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "5743000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "904641001",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "6650000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "132001000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "6787000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed short_term_debt: 6787000000 USD; year-end 2021-12-31; SEC accession 0001558370-23-002376.",
+          "xbrl_tag": "us-gaap:ShortTermBorrowings"
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "44917000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed long_term_debt: 44917000000 USD; year-end 2021-12-31; SEC accession 0001558370-23-002376.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "3435000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "113005000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "18901000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "6417000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "IBM cash-flow D&A total: depreciation + amortization of capitalized software and acquired intangible assets (3888000000 + 2529000000 = 6417000000 USD); annual period 2021-01-01 to 2021-12-31; SEC accession 0000051143-24-000012. Sum of the separate filed cash-flow adjustments; not depreciation alone.",
+          "xbrl_tag": null
+        },
+        "cash_from_operations": {
+          "value": "12796000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "2062000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-5975000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-13354000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "5869000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividendsCommonStock"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [
+    {
+      "field_path": "income_statement.operating_income",
+      "reason": "Low confidence: 0.65",
+      "current_value": "12263000000",
+      "suggested_value": null
+    }
+  ],
+  "share_count_label": null,
+  "operating_income_label": "EBIT proxy",
+  "valuation_note": "IBM uses an EBIT proxy: GAAP pre-tax income from continuing operations plus separately reported interest expense. This is a calculated model input, not reported operating income or IBM's operating (non-GAAP) earnings. Other income/expense remains included, and financing interest in cost of revenue remains deducted. Capex covers PP&E only, excluding separately reported investment in software. The historical proxy margin drives the cash-flow projection; review these simplifications before relying on the estimate."
+}

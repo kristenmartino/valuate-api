@@ -1,0 +1,189 @@
+{
+  "320193:0000320193-25-000079": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/",
+    "period_ends": [
+      "2025-09-27",
+      "2024-09-28",
+      "2023-09-30",
+      "2022-09-24",
+      "2021-09-25"
+    ]
+  },
+  "796343:0000796343-26-000003": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/",
+    "period_ends": [
+      "2025-11-28",
+      "2024-11-29",
+      "2023-12-01",
+      "2022-12-02",
+      "2021-12-03"
+    ]
+  },
+  "1067983:0001193125-26-083899": {
+    "model": "insurer",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "Simplified Berkshire P/B estimate using consolidated GAAP earnings and Berkshire shareholders' equity. Per-share amounts use the requested class's annual average equivalent shares, not year-end shares. Investment gains can distort ROE.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1067983/000119312526083899/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31"
+    ]
+  },
+  "1108524:0001108524-26-000060": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000060/",
+    "period_ends": [
+      "2026-01-31",
+      "2025-01-31",
+      "2024-01-31",
+      "2023-01-31",
+      "2022-01-31"
+    ]
+  },
+  "858877:0000858877-26-000132": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000132/",
+    "period_ends": [
+      "2026-07-25",
+      "2025-07-26",
+      "2024-07-27",
+      "2023-07-29",
+      "2022-07-30"
+    ]
+  },
+  "821189:0000821189-26-000054": {
+    "model": "energy",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/821189/000082118926000054/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31",
+      "2021-12-31"
+    ]
+  },
+  "1652044:0001652044-26-000018": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "GOOGL uses filed property-and-equipment depreciation as a cash-flow add-back proxy, not verified full D&A. The model projects its historical revenue ratio without adding unverified amortization. DCF-implied EV/EBITDA is unavailable on this basis. Debt uses carrying amounts: noncurrent debt plus current maturities and commercial paper, counted once. FY2022 debt includes finance leases; later debt-note figures exclude them. The net-debt bridge separately adds reported operating-lease liabilities.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31"
+    ]
+  },
+  "51143:0000051143-26-000010": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "IBM uses an EBIT proxy: GAAP pre-tax income from continuing operations plus separately reported interest expense. This is a calculated model input, not reported operating income or IBM's operating (non-GAAP) earnings. Other income/expense remains included, and financing interest in cost of revenue remains deducted. Capex covers PP&E only, excluding separately reported investment in software. The historical proxy margin drives the cash-flow projection; review these simplifications before relying on the estimate.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/51143/000005114326000010/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31",
+      "2021-12-31"
+    ]
+  },
+  "896878:0000896878-26-000037": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "INTU's D&A mapping combines filed depreciation and the full cash-flow amortization adjustment. Debt uses noncurrent amounts separately from current maturities. Capex remains PP&E-only, excluding separately reported capitalized internal-use software; review this simplification before relying on the estimate.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/896878/000089687826000037/",
+    "period_ends": [
+      "2026-07-31",
+      "2025-07-31",
+      "2024-07-31",
+      "2023-07-31",
+      "2022-07-31"
+    ]
+  },
+  "19617:0001628280-26-008131": {
+    "model": "bank",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/19617/000162828026008131/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31",
+      "2021-12-31"
+    ]
+  },
+  "789019:0001193125-26-323660": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "MSFT's filing-backed D&A mapping sums depreciation expense and intangible-asset amortization. It is pure D&A expense, not the cash-flow row that also includes other adjustments. Debt separates noncurrent amounts from current maturities; their total is counted once.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/",
+    "period_ends": [
+      "2026-06-30",
+      "2025-06-30",
+      "2024-06-30",
+      "2023-06-30",
+      "2022-06-30"
+    ]
+  },
+  "77476:0000077476-26-000007": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/77476/000007747626000007/",
+    "period_ends": [
+      "2025-12-27",
+      "2024-12-28",
+      "2023-12-30",
+      "2022-12-31",
+      "2021-12-25"
+    ]
+  },
+  "1045609:0001193125-26-051453": {
+    "model": "reit",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1045609/000119312526051453/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31"
+    ]
+  },
+  "1137774:0001137774-26-000048": {
+    "model": "insurer",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1137774/000113777426000048/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31"
+    ]
+  },
+  "97476:0000097476-26-000059": {
+    "model": "standard",
+    "scope_review": "Targeted filing-scope policies; all model inputs must additionally match annual filing evidence. This entry alone never qualifies a record.",
+    "disclosure": "The simplified model uses the disclosed historical ratios and fixed defaults. Qualification checks input coverage; it does not establish investment accuracy or manual review of every displayed figure.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/97476/000009747626000059/",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31",
+      "2021-12-31"
+    ]
+  }
+}

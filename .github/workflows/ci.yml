@@ -18,6 +18,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: valuate
+          POSTGRES_PASSWORD: valuate-ci-tests
+          POSTGRES_DB: valuate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U valuate"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      VALUATE_TEST_DATABASE_URL: postgresql://valuate:valuate-ci-tests@127.0.0.1:5432/valuate
     steps:
       - uses: actions/checkout@v4
 

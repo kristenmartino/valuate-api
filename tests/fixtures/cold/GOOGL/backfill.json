@@ -1,0 +1,813 @@
+{
+  "ticker": "GOOGL",
+  "cik": "0001652044",
+  "name": "Alphabet Inc.",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0001652044-26-000018",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "402836000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "162535000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": {
+          "value": "240301000000",
+          "source": "llm_html",
+          "confidence": 0.82,
+          "source_quote": "Cost of revenues 133,332 146,306 162,535",
+          "xbrl_tag": null
+        },
+        "research_and_development": {
+          "value": "61087000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Research and development 45,427 49,326 61,087",
+          "xbrl_tag": null
+        },
+        "selling_general_administrative": {
+          "value": "50175000000",
+          "source": "llm_html",
+          "confidence": 0.82,
+          "source_quote": "Sales and marketing 27,917 27,808 28,693",
+          "xbrl_tag": null
+        },
+        "depreciation_amortization": {
+          "value": "21136000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 21136000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0001652044-26-000018. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "24953000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "129039000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "736000000",
+          "source": "llm_html",
+          "confidence": 0.92,
+          "source_quote": "Interest expense (1) ( 308 ) ( 268 ) ( 736 )",
+          "xbrl_tag": null
+        },
+        "income_before_tax": {
+          "value": "158826000000",
+          "source": "llm_html",
+          "confidence": 0.98,
+          "source_quote": "Income before income taxes 85,717 119,815 158,826",
+          "xbrl_tag": null
+        },
+        "income_tax_expense": {
+          "value": "26656000000",
+          "source": "llm_html",
+          "confidence": 0.98,
+          "source_quote": "Provision for income taxes 11,922 19,697 26,656",
+          "xbrl_tag": null
+        },
+        "net_income": {
+          "value": "132170000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "12230000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": [
+          {
+            "name": "Google Services",
+            "revenue": {
+              "value": "342721000000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Google Services $ 272,543 $ 304,930 $ 342,721",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Google Cloud",
+            "revenue": {
+              "value": "58705000000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Google Cloud 33,088 43,229 58,705",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Other Bets",
+            "revenue": {
+              "value": "1537000000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Other Bets 1,527 1,648 1,537",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Hedging gains (losses)",
+            "revenue": {
+              "value": "-127000000",
+              "source": "llm_html",
+              "confidence": 0.95,
+              "source_quote": "Hedging gains (losses) 236 211 ( 127 )",
+              "xbrl_tag": null
+            }
+          }
+        ]
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "30708000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": {
+          "value": "96135000000",
+          "source": "llm_html",
+          "confidence": 0.95,
+          "source_quote": "Marketable securities 72,191 96,135",
+          "xbrl_tag": null
+        },
+        "accounts_receivable": {
+          "value": "62886000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts receivable, net 52,340 62,886",
+          "xbrl_tag": null
+        },
+        "inventory": null,
+        "total_current_assets": {
+          "value": "206038000000",
+          "source": "llm_html",
+          "confidence": 0.98,
+          "source_quote": "Total current assets 163,711 206,038",
+          "xbrl_tag": null
+        },
+        "property_plant_equipment_net": {
+          "value": "246597000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Property and equipment, net 171,036 246,597",
+          "xbrl_tag": null
+        },
+        "total_assets": {
+          "value": "595281000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": {
+          "value": "12200000000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts payable $ 7,987 $ 12,200",
+          "xbrl_tag": null
+        },
+        "short_term_debt": {
+          "value": "1996000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Notes carrying amount: face value 49085000000 + signed discount/issuance costs (-542000000) = 48543000000 USD, split into current maturities 1996000000 and noncurrent debt 46547000000. Finance leases are outside this debt-note scope. Current debt = current component 1996000000 + filed commercial paper 0 = 1996000000 USD. Year-end 2025-12-31; SEC accession 0001652044-26-000018.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": {
+          "value": "102745000000",
+          "source": "llm_html",
+          "confidence": 0.98,
+          "source_quote": "Total current liabilities 89,122 102,745",
+          "xbrl_tag": null
+        },
+        "long_term_debt": {
+          "value": "46547000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Notes carrying amount: face value 49085000000 + signed discount/issuance costs (-542000000) = 48543000000 USD, split into current maturities 1996000000 and noncurrent debt 46547000000. Finance leases are outside this debt-note scope. Year-end 2025-12-31; SEC accession 0001652044-26-000018.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "15954000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "180016000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "415265000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "21136000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 21136000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0001652044-26-000018. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "164713000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "91447000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-120291000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-37388000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "10049000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0001652044-26-000018",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "350018000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "146306000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "15311000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 15311000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0001652044-25-000014. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "22785000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "112390000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "100118000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "12447000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "23466000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "450256000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "3299000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Notes carrying amount: face value 12000000000 + signed discount/issuance costs (-118000000) = 11882000000 USD, split into current maturities 999000000 and noncurrent debt 10883000000. Finance leases are outside this debt-note scope. Current debt = current component 999000000 + filed commercial paper 2300000000 = 3299000000 USD. Year-end 2024-12-31; SEC accession 0001652044-25-000014.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "10883000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Notes carrying amount: face value 12000000000 + signed discount/issuance costs (-118000000) = 11882000000 USD, split into current maturities 999000000 and noncurrent debt 10883000000. Finance leases are outside this debt-note scope. Year-end 2024-12-31; SEC accession 0001652044-25-000014.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "14578000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "125172000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "325084000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "15311000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 15311000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0001652044-25-000014. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "125299000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "52535000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-45536000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-79733000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "7363000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-12-31",
+      "filing_accession": "0001652044-26-000018",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "307394000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "133332000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "11946000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 11946000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0001652044-25-000014. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "22460000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "84293000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "73795000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "12722000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "24048000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "402392000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "1000000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Notes carrying amount: face value 13000000000 + signed discount/issuance costs (-130000000) = 12870000000 USD, split into current maturities 1000000000 and noncurrent debt 11870000000. Finance leases are outside this debt-note scope. Current debt = current component 1000000000 + filed commercial paper 0 = 1000000000 USD. Year-end 2023-12-31; SEC accession 0001652044-25-000014.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "11870000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Notes carrying amount: face value 13000000000 + signed discount/issuance costs (-130000000) = 12870000000 USD, split into current maturities 1000000000 and noncurrent debt 11870000000. Finance leases are outside this debt-note scope. Year-end 2023-12-31; SEC accession 0001652044-25-000014.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "15251000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "119013000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "283379000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "11946000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 11946000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0001652044-25-000014. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "101746000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "32251000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-27063000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-72093000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "0",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2022,
+      "fiscal_period_end": "2022-12-31",
+      "filing_accession": "0001652044-26-000018",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "282836000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "126203000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CostOfRevenue"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "13475000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 13475000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0001652044-24-000022. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "share_based_compensation": {
+          "value": "19362000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "74842000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "59972000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "13159000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "21879000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "365264000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "298000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "FY2022 debt including finance leases: gross table total 15142000000 - discount/issuance-cost magnitude 143000000 - noncurrent 14701000000 = current component 298000000 USD. This legacy scope differs from later notes-only debt. Current debt = current component 298000000 + filed commercial paper 0 = 298000000 USD. Year-end 2022-12-31; SEC accession 0001652044-24-000022.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "14701000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "FY2022 debt including finance leases: gross table total 15142000000 - discount/issuance-cost magnitude 143000000 - noncurrent 14701000000 = current component 298000000 USD. This legacy scope differs from later notes-only debt. Year-end 2022-12-31; SEC accession 0001652044-24-000022.",
+          "xbrl_tag": "us-gaap:LongTermDebtAndCapitalLeaseObligations"
+        },
+        "operating_lease_liabilities": {
+          "value": "14978000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "109120000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "256144000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "13475000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Depreciation of property and equipment: 13475000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0001652044-24-000022. Used as a PPE-depreciation proxy in the model add-back; full amortization coverage is unverified. No unverified amortization is added.",
+          "xbrl_tag": "us-gaap:Depreciation"
+        },
+        "cash_from_operations": {
+          "value": "91495000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "31485000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-20298000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-69757000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "0",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": null,
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [],
+  "share_count_label": null,
+  "operating_income_label": null,
+  "valuation_note": "GOOGL uses filed property-and-equipment depreciation as a cash-flow add-back proxy, not verified full D&A. The model projects its historical revenue ratio without adding unverified amortization. DCF-implied EV/EBITDA is unavailable on this basis. Debt uses carrying amounts: noncurrent debt plus current maturities and commercial paper, counted once. FY2022 debt includes finance leases; later debt-note figures exclude them. The net-debt bridge separately adds reported operating-lease liabilities."
+}

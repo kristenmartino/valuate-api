@@ -121,10 +121,11 @@ def test_ibm_saved_review_survives_reads_and_valuation(monkeypatch):
     c = validate_company(apply_override(company(), 'income_statement.operating_income', Decimal(12_263_000_000), 'Reviewed proxy calculation test note; not a live human review'))
     repo = InMemoryRepo();asyncio.run(repo.set('IBM', c));monkeypatch.setattr(api, '_repo', repo)
     client = TestClient(api.app)
-    assert Company.model_validate(client.get('/company/IBM').json()) == c
-    result = client.post('/value/IBM', json={'assumptions':client.get('/value/IBM/defaults').json()})
-    assert result.status_code == 200
-    assert Company.model_validate(client.get('/company/IBM').json()) == c
+    assert Company.model_validate(client.get('/company/IBM').json()).model_dump(exclude={'qualification'}) == c.model_dump(exclude={'qualification'})
+    assert client.get('/value/IBM/defaults').status_code == 422
+    result = client.post('/value/IBM', json={'assumptions':default_assumptions(c).model_dump()})
+    assert result.status_code == 422 and result.json()['detail']['code'] == 'valuation_not_qualified'
+    assert Company.model_validate(client.get('/company/IBM').json()).model_dump(exclude={'qualification'}) == c.model_dump(exclude={'qualification'})
 
 
 def test_ibm_cashflow_addback_includes_amortization_and_debt_includes_current_borrowings():

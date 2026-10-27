@@ -72,8 +72,9 @@ def test_postgres_uses_the_same_key_for_dot_and_hyphen_aliases():
         async def fetchrow(self, sql, ticker):
             keys.append(ticker)
             return {'payload': company.model_dump(mode='json')}
-        async def execute(self, sql, ticker, payload):
-            keys.append(ticker)
+        def transaction(self): return Acquire()
+        async def execute(self, sql, *args):
+            if sql.startswith("INSERT INTO companies"): keys.append(args[0])
     class Acquire:
         async def __aenter__(self): return Connection()
         async def __aexit__(self, *args): pass
@@ -83,4 +84,4 @@ def test_postgres_uses_the_same_key_for_dot_and_hyphen_aliases():
     repo._pool = Pool()
     asyncio.run(repo.get(' brk.b '))
     asyncio.run(repo.set('BRK-B', company))
-    assert keys == ['BRK-B', 'BRK-B']
+    assert keys == ['BRK-B', 'BRK-B', 'BRK-B']

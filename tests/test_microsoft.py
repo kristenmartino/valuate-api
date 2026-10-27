@@ -168,8 +168,9 @@ def test_cached_api_repair_is_idempotent_and_fails_closed_without_facts(monkeypa
     if available:
         assert not incomplete_inputs(c)
         assert c.periods[0].income_statement.gross_profit == SAVED.periods[0].income_statement.gross_profit
-        a = client.get("/value/MSFT/defaults");assert a.status_code == 200
-        assert client.post("/value/MSFT", json={"assumptions": a.json()}).status_code == 200
+        a = client.get("/value/MSFT/defaults");assert a.status_code == 422
+        assert a.json()["detail"]["code"] == "valuation_not_qualified"
+        assert client.post("/value/MSFT", json={"assumptions": default_assumptions(c).model_dump()}).status_code == 422
     else:
         assert c.periods == SAVED.periods
         assert any("coverage is incomplete" in f.reason for f in c.extraction_flags)

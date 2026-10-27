@@ -33,3 +33,21 @@ def require_override_auth(authorization: Optional[str] = Header(None)) -> None:
 
     if authorization is None or authorization != f"Bearer {expected}":
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+def require_admin_auth(authorization: Optional[str] = Header(None)) -> None:
+    """Administrative publication/import routes always require a configured token.
+
+    The public frontend never injects this credential onto admin routes.
+    """
+    import hmac
+
+    expected = os.environ.get("VALUATE_OVERRIDE_TOKEN")
+    if (
+        not expected
+        or not authorization
+        or not hmac.compare_digest(authorization, "Bearer " + expected)
+    ):
+        raise HTTPException(
+            status_code=401, detail="Administrator authorization required"
+        )
