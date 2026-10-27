@@ -30,6 +30,8 @@ async def inspect_source(ticker, client):
         "ticker": state["ticker"], "filing": state["filing_accession"],
         "status": q.status, "issues": [i.model_dump() for i in q.issues],
         "period_count": len(checked.periods), "checked_inputs": len(q.inputs),
+        "value_scope": q.value_scope.model_dump() if q.value_scope else None,
+        "historical_statement_warnings": [w.model_dump() for w in q.statement_warnings],
         "history_revisions": loaded["history_check"]["revisions"],
         "ai_calls": 0, "publication_writes": 0,
     }

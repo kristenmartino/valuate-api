@@ -19,12 +19,13 @@ from contextlib import asynccontextmanager
 from decimal import Decimal
 from datetime import date
 from time import monotonic
-from typing import Any, Optional
+from typing import Any, Optional, Literal
 
 from anthropic import AsyncAnthropic
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from qualification_schema import ValueScope
 
 from app.auth import require_override_auth, require_admin_auth
 from app.logging_middleware import install_structured_logging
@@ -124,6 +125,8 @@ class ValuationResponse(BaseModel):
     source_record_digest: str
     source_filing_accession: str
     qualification_policy: str
+    value_kind: Literal["model_estimate", "parent_equity_proxy"] = "model_estimate"
+    value_scope: ValueScope | None = None
     projection: Projection
     monte_carlo: Optional[MonteCarloResult] = None
     sensitivity: Optional[SensitivityGrid] = None
@@ -722,6 +725,8 @@ async def value(ticker: str, req: ValuationRequest) -> ValuationResponse:
         source_record_digest=report.record_digest,
         source_filing_accession=report.filing_accession,
         qualification_policy=report.policy_version,
+        value_kind=report.value_scope.kind if report.value_scope else "model_estimate",
+        value_scope=report.value_scope,
         projection=projection,
         monte_carlo=mc_result,
         sensitivity=sens_result,

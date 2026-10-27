@@ -28,6 +28,11 @@ The reusable-rule cold set starts without saved Company records, per-issuer poli
 Publication checks the meaning and basis of model inputs, not just whether a number occurs in a filing. Carrying debt must have complete nonoverlapping components; cash and cash-flow add-backs retain their source scope. Historical shares and direct paid-common dividends per share require consistent split bases and independent same-period bridges before conversion. Model-driving history cannot silently change units, annual dates, parent/consolidated coverage or pure/combined add-back scope. For bank and insurer ROE models, parent equity may also come from an explicit parent column in a primary equity statement, only when the same-period parent and noncontrolling columns reconcile to the filed consolidated total and the ownership relationship is established. This recovers MET's historical parent scope without substituting inclusive equity or unrevised balances; other models retain their existing optional equity history. Same-scope comparative revisions retain the newer inspected figures and are disclosed; they never authorize rescaling a different year. Older periods may not all be restated on a uniform accounting basis. Missing or ambiguous coverage requires review, and saved corrections do not bypass qualification.
 
 A weekday SEC-only cold canary checks current filings without saved records, AI calls or publication writes. Its report distinguishes qualified, review-required and source-failed results; a failure requires maintainer review. Browser regressions exercise qualification withholding, exact assumption restoration, source-note readability, per-share units and proxy/residual labels against recorded responses with all external APIs blocked. These checks catch defined failure classes; they do not establish model suitability, investment accuracy or universal ticker coverage.
+
+
+P/B results are parent-equity model proxies, not verified common-stock prices. Qualification checks parent equity and parent earnings; it does not establish a preferred/common ownership allocation. The calculation retains preferred claims where present and divides by the annual diluted or equivalent shares shown in the statements. The API marks `value_kind=parent_equity_proxy`, `common_share_valuation_verified=false` and `preferred_claims_deducted=false`; the workspace labels the result, ROE and simulation accordingly. A zero preferred-stock par value cannot establish zero preferred capital. A common-share model needs separately supported, consistent common-equity/common-earnings inputs across its history.
+
+Historical display rows are checked separately from model inputs. Period-specific warnings identify unreconciled balance-sheet amounts or unavailable ownership components, show the residual and source accessions, and mark the affected cells. MET FY2021 retains the correct restated parent equity of $49.746B while its original-filing assets/liabilities remain visible with a $17.736B reconciliation warning. Those rows must not be read as a same-basis balance sheet. The parent-equity proxy remains $69.94 under the preserved starting assumptions; this does not resolve its common-share valuation. No balancing plug, inferred zero or edit to the latest year clears an unresolved historical basis.
 <!-- valuate:source-coverage:end -->
 
 Enter a US ticker with a SEC 10-K. An uncached filing no longer needs to be added to an issuer allowlist before it can produce a valuation. The source-only path reads the filing-local schema, primary-statement presentation and calculation relationships, annual entity contexts and units. Standard undimensioned values also require matching SEC company-facts amounts. Optional fields with unestablished scope remain unavailable; this path makes no AI backfill or revenue-segmentation calls.
@@ -132,11 +137,13 @@ After the graph completes, the API independently collects qualification evidence
 
 - **Standard** (industrials / tech): 5-year FCFF DCF with Gordon-growth terminal, plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid over (revenue growth × operating margin).
 - **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` uses sustainable growth: average historical parent ROE multiplied by one minus the latest common-dividend payout ratio, then bounded to −2% through 8% under the 10% default cost of equity. Nonpositive sustainable growth uses the 4% fallback. It is not a dividend-CAGR forecast.
-- **Insurer**: justified price-to-book — `P/B = (ROE − g) / (r − g)`, then `fair_value/share = book_value/share × P/B`. Reserves and the general-account investment portfolio dominate the balance sheet, so book value is the economic anchor.
+- **Insurer**: parent-equity justified-P/B proxy — `P/B = (ROE − g) / (r − g)`, then `proxy/share = parent_equity/share × P/B`. Parent earnings and equity include preferred claims where present; the annual diluted/equivalent denominator does not turn this into a verified common-stock price. Reserves and the general-account investment portfolio dominate the balance sheet, so book value is the economic anchor.
 - **REIT**: Gordon growth using approximate FFO — `fair_value/share = FFO/share × (1 + g) / (r − g)`, where approximate `FFO = net income + D&A`. This omits other Nareit adjustments. The supplementary estimated AFFO subtracts positive reported capex, or uses 80% of approximate FFO otherwise. These are simplified calculations, not company-reported FFO/AFFO.
 - **Energy E&P**: fixed ten-year FCFF projection, **no terminal value**. `revenue_growth` changes projected revenue. The model does not estimate company-specific reserve life, production volumes, or commodity prices. The line items use the standard statement schema.
 
 Monte Carlo runs for all five models; sensitivity is hidden client-side for bank/insurer/REIT paths because the grid axes (revenue growth × operating margin) don't enter their formulas. For energy the grid uses revenue growth and operating margin, without terminal value. DCF-implied multiples appear only for standard and energy models; other comps tables provide market context.
+
+`POST /value` also reports `value_kind` and `value_scope`. For P/B, the legacy `projection.fair_value_per_share` and `equity_value` keys contain a parent-equity proxy, not verified common-stock value. Current P/B qualification requires the explicit proxy scope; missing ownership metadata withholds calculation. Historical `Company.qualification.statement_warnings` are display diagnostics, separate from editable current-period extraction flags.
 
 The response retains the full-range `histogram` and adds an optional `central_histogram`: bins recalculated from actual samples between p10 and p90, with `lower_bound`, `upper_bound`, `below_count`, and `above_count`. The workspace defaults to this window and offers a full-range view. Counts disclose the excluded tails; all summary statistics still use every completed sample. This is a display change, not a change to sampling or valuation formulas.
 
@@ -273,7 +280,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-627 collected tests across 31 files: 626 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
+649 collected tests across 32 files: 648 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -299,6 +306,7 @@ pytest tests/
 - `test_scoped_inputs.py` (49) — Oracle/Amazon source-only cold onboarding, exact lease/financing operands, five-year history, unsafe-source rejection, preserved optional reviews and rejected conflicting model reviews
 - `test_share_basis.py` (20) — cross-filing share-basis bridges, explicit split evidence, forward/reverse conversions, unsafe-evidence rejection, unchanged latest valuation and independent qualification
 - `test_history_consistency.py` (16) — history scope/revision distinctions, parent-equity model basis, inverse DPS split checks, public withholding and bank-default provenance
+- `test_model_scope.py` (22) — parent versus common ownership semantics, forged-scope rejection, exact historical reconciliation warnings, unsafe parent basis, unchanged values and legacy storage identity
 - `test_parent_equity.py` (20) — reusable parent-column recovery, same-period ownership reconciliation, unsafe-context refusal, MET restated history and saved-scope validation
 - `test_latest_annual.py` (8) — archive-aware latest annual discovery, source/entity/date safety and bounded retrieval
 - `test_source_canary.py` (3) — SEC-only cold qualification statuses, no AI/repository writes and bounded failures
@@ -395,7 +403,7 @@ In local development, leaving `VALUATE_OVERRIDE_TOKEN` unset disables authentica
 |---|---|---|---|
 | Industrial / tech | implemented; filing qualification required | 5-year FCFF DCF + Monte Carlo + sensitivity | AAPL, MSFT, ... |
 | Banks | implemented; filing qualification required | Gordon DDM | JPM |
-| Insurers | implemented; filing qualification required | Justified P/B | PRU |
+| Insurers | parent-input qualification required; common-share valuation unverified | Parent-equity P/B proxy | PRU |
 | REITs | implemented; filing qualification required | FFO-multiple Gordon growth | PLD |
 | Energy E&P | implemented; filing qualification required | Fixed ten-year FCFF (no terminal) | EOG |
 

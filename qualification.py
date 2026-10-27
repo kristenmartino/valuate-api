@@ -17,7 +17,7 @@ from input_contracts import (
     contract_fact,
 )
 from qualification_schema import InputEvidence, InputIssue, Qualification
-from schemas import Company, ExtractionSource
+from schemas import Company, ExtractionSource, Industry
 from filing_coverage import configured_fields, selections as reviewed_selections
 from scoped_inputs import contract as scoped_contract, paths as scoped_paths
 
@@ -26,6 +26,7 @@ POLICY_FILES = [
     "reusable_inputs.py",
     "share_basis.py",
     "history_consistency.py",
+    "model_scope.py",
     "reusable_qualification.py",
     "filing_document.py",
     "filing_sources.py",
@@ -83,6 +84,16 @@ def current_qualification(company: Company) -> Qualification:
         and q.record_digest == record_digest(company)
         and q.filing_accession
         == (company.periods[0].filing_accession if company.periods else "")
+        and (
+            not company.periods
+            or company.periods[0].industry != Industry.INSURER
+            or (
+                q.value_scope is not None
+                and q.value_scope.kind == "parent_equity_proxy"
+                and q.value_scope.common_share_valuation_verified is False
+                and q.value_scope.preferred_claims_deducted is False
+            )
+        )
         and (
             q.status != "qualified" or (not q.issues and q.inputs and q.evidence_digest)
         )
@@ -776,6 +787,12 @@ def _verify_debt(company, facts, bound, inputs, issues):
 
 
 def _report(company, issues, inputs, disclosures, latest_filing, evidence_digest=None):
+    from model_scope import value_scope, parent_model_issues, historical_statement_warnings
+
+    scope = value_scope(company)
+    warnings = historical_statement_warnings(company, inputs)
+    issues = [*issues, *parent_model_issues(company)]
+    disclosures = [*disclosures, *([scope.description] if scope else []), *[w.message for w in warnings]]
     return Qualification(
         status="review_required" if issues else "qualified",
         policy_version=POLICY_VERSION,
@@ -787,4 +804,6 @@ def _report(company, issues, inputs, disclosures, latest_filing, evidence_digest
         disclosures=list(dict.fromkeys(x for x in disclosures if x)),
         evidence_digest=evidence_digest,
         latest_filing_checked=latest_filing,
+        value_scope=scope,
+        statement_warnings=warnings,
     )

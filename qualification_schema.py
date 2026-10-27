@@ -1,7 +1,25 @@
 """Machine-readable publication evidence; extraction confidence is separate."""
 
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_serializer
+
+
+class ValueScope(BaseModel):
+    kind: Literal["parent_equity_proxy"] = "parent_equity_proxy"
+    common_share_valuation_verified: Literal[False] = False
+    preferred_claims_deducted: Literal[False] = False
+    share_basis: str
+    description: str
+
+
+class StatementWarning(BaseModel):
+    code: Literal["historical_balance_unreconciled", "historical_ownership_incomplete"]
+    fiscal_year: int
+    period_end: str
+    message: str
+    difference: str
+    field_paths: list[str]
+    source_accessions: dict[str, str] = Field(default_factory=dict)
 
 
 class InputIssue(BaseModel):
@@ -40,3 +58,16 @@ class Qualification(BaseModel):
     inputs: list[InputEvidence] = Field(default_factory=list)
     evidence_digest: str | None = None
     latest_filing_checked: str | None = None
+    value_scope: ValueScope | None = None
+    statement_warnings: list[StatementWarning] = Field(default_factory=list)
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler):
+        data = handler(self)
+        # Preserve the stored payload/CAS identity of old qualifications until
+        # they are explicitly refreshed. New metadata never changes financials.
+        if self.value_scope is None:
+            data.pop("value_scope", None)
+        if not self.statement_warnings:
+            data.pop("statement_warnings", None)
+        return data
