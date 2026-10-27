@@ -1,0 +1,72 @@
+{
+  "facts.json": {
+    "file": "facts.json.gz",
+    "source_sha256": "c9a6b4a62d60d872e33f13224bfaeb98af05481a04ff004248a7d601e6fbe239",
+    "fixture_sha256": "140ca73c1b689a45bac193ddca9b3870ca4da8567a3a0ecb949ee79c3384ef6f"
+  },
+  "o-20211231.htm": {
+    "file": "o-20211231.htm.gz",
+    "source_sha256": "3dd65277848c2ac137c795e564e377a044dfc6ab266b4074c33b07ab4876e5cb",
+    "fixture_sha256": "51c06620ca09b65389665dfcf525204faf8d48ad0ca6ead9e72d0e61a8f81374"
+  },
+  "o-20211231.xsd": {
+    "file": "o-20211231.xsd.gz",
+    "source_sha256": "50dbd87b0c942ba9375cc308c9121eb9215c11c730a37c1e62ac3d823bed7892",
+    "fixture_sha256": "50dbd87b0c942ba9375cc308c9121eb9215c11c730a37c1e62ac3d823bed7892"
+  },
+  "o-20211231_cal.xml": {
+    "file": "o-20211231_cal.xml.gz",
+    "source_sha256": "0c5c8b63a78d74ea93ecca04156f0b278fcec818ff32d2a38ad06aa5ff2abbc7",
+    "fixture_sha256": "0c5c8b63a78d74ea93ecca04156f0b278fcec818ff32d2a38ad06aa5ff2abbc7"
+  },
+  "o-20211231_pre.xml": {
+    "file": "o-20211231_pre.xml.gz",
+    "source_sha256": "675540c01323e1c0cb63296b5336c82e7f3c61d9ad9592a39bac409d7d448074",
+    "fixture_sha256": "675540c01323e1c0cb63296b5336c82e7f3c61d9ad9592a39bac409d7d448074"
+  },
+  "o-20231231.htm": {
+    "file": "o-20231231.htm.gz",
+    "source_sha256": "a8f0c0034d735fc405d2693c85d1aae317820e077be8b102acc82629c5495423",
+    "fixture_sha256": "232a155a58a2890e1d02290b3690d947dd67dd1c708e94b207bc44984ac1bb33"
+  },
+  "o-20231231.xsd": {
+    "file": "o-20231231.xsd.gz",
+    "source_sha256": "6cc185c59dcec0b6957da3106e558f6a3b25864a20679499ff12753bcb5a14d6",
+    "fixture_sha256": "6cc185c59dcec0b6957da3106e558f6a3b25864a20679499ff12753bcb5a14d6"
+  },
+  "o-20231231_cal.xml": {
+    "file": "o-20231231_cal.xml.gz",
+    "source_sha256": "9f8d1979fe5d157638882083e22f1b270cdc1a58a9122da5314e957e6d696cb1",
+    "fixture_sha256": "9f8d1979fe5d157638882083e22f1b270cdc1a58a9122da5314e957e6d696cb1"
+  },
+  "o-20231231_pre.xml": {
+    "file": "o-20231231_pre.xml.gz",
+    "source_sha256": "b3069761432ee6f4d7118e554d61c8c03b758dd9886c57e6cd3f4ac2e2e18221",
+    "fixture_sha256": "b3069761432ee6f4d7118e554d61c8c03b758dd9886c57e6cd3f4ac2e2e18221"
+  },
+  "o-20251231.htm": {
+    "file": "o-20251231.htm.gz",
+    "source_sha256": "abd95294f9ea09b45bbaad1936b0b51c2f1fbb6b123aab0b71b7cfc04731c24a",
+    "fixture_sha256": "e257b2d4037417a99501b60d242af9bee04443653d00bf7fafab0f1eba0f885d"
+  },
+  "o-20251231.xsd": {
+    "file": "o-20251231.xsd.gz",
+    "source_sha256": "6d0d175450671018fdb0573229ab25fe0bc08e873e3bb8e136f2af4b508dd86a",
+    "fixture_sha256": "6d0d175450671018fdb0573229ab25fe0bc08e873e3bb8e136f2af4b508dd86a"
+  },
+  "o-20251231_cal.xml": {
+    "file": "o-20251231_cal.xml.gz",
+    "source_sha256": "d9b06d7454ed89752eb7f46461a23df32c5e357a1588494195ec74099986ad3c",
+    "fixture_sha256": "d9b06d7454ed89752eb7f46461a23df32c5e357a1588494195ec74099986ad3c"
+  },
+  "o-20251231_pre.xml": {
+    "file": "o-20251231_pre.xml.gz",
+    "source_sha256": "edc728d68b9f250670b1071b68a058a3c10cc8454002b35b981238ee82b06960",
+    "fixture_sha256": "edc728d68b9f250670b1071b68a058a3c10cc8454002b35b981238ee82b06960"
+  },
+  "submissions.json": {
+    "file": "submissions.json.gz",
+    "source_sha256": "1f37d6fd77f8a026de40e3edab1a0f9a91bba193e5db7049390c4e6124bd700d",
+    "fixture_sha256": "1f37d6fd77f8a026de40e3edab1a0f9a91bba193e5db7049390c4e6124bd700d"
+  }
+}

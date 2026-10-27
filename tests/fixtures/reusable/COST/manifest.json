@@ -1,0 +1,72 @@
+{
+  "cost-20220828.htm": {
+    "file": "cost-20220828.htm.gz",
+    "source_sha256": "3f156884e89a3ce612e5cd60ed6bd037c425108db852f7ea9e49003f41971e43",
+    "fixture_sha256": "452661dbb50c3b9a0376b1440486abaf728c4cde8448972ecdf6aa8ea9338e61"
+  },
+  "cost-20220828.xsd": {
+    "file": "cost-20220828.xsd.gz",
+    "source_sha256": "b21c11501e98ebb395678440d6637b6c66002d7017fcc583a1e57fe5f43e4c28",
+    "fixture_sha256": "b21c11501e98ebb395678440d6637b6c66002d7017fcc583a1e57fe5f43e4c28"
+  },
+  "cost-20220828_cal.xml": {
+    "file": "cost-20220828_cal.xml.gz",
+    "source_sha256": "7adf8fc32a93f00641993870a8b8cc496fe338553ecc1997dd0e0a1d60d937ed",
+    "fixture_sha256": "7adf8fc32a93f00641993870a8b8cc496fe338553ecc1997dd0e0a1d60d937ed"
+  },
+  "cost-20220828_pre.xml": {
+    "file": "cost-20220828_pre.xml.gz",
+    "source_sha256": "1720290ba9de12c962c9321e81b728cc7ff9df535766b9d20380c86515bb1470",
+    "fixture_sha256": "1720290ba9de12c962c9321e81b728cc7ff9df535766b9d20380c86515bb1470"
+  },
+  "cost-20240901.htm": {
+    "file": "cost-20240901.htm.gz",
+    "source_sha256": "03ee029a589b4dc55d034434d92b5ed0063387de5fff9ab33ba184903151ee0b",
+    "fixture_sha256": "f685b19f6a0fe80293687f225bd115b6d4301ed4fbf692cb1e9c03c05cd28351"
+  },
+  "cost-20240901.xsd": {
+    "file": "cost-20240901.xsd.gz",
+    "source_sha256": "7fa788807d587f6faee09d477e019d6b268e7909e225a5ca79a87290824c7e86",
+    "fixture_sha256": "7fa788807d587f6faee09d477e019d6b268e7909e225a5ca79a87290824c7e86"
+  },
+  "cost-20240901_cal.xml": {
+    "file": "cost-20240901_cal.xml.gz",
+    "source_sha256": "497b7aa2fca370003dc18a0e503b988ca3cddf349707dc9d79399049efe9be1a",
+    "fixture_sha256": "497b7aa2fca370003dc18a0e503b988ca3cddf349707dc9d79399049efe9be1a"
+  },
+  "cost-20240901_pre.xml": {
+    "file": "cost-20240901_pre.xml.gz",
+    "source_sha256": "253d3528d1c3df7640940b8f00dbd818a46665343075afd8df137a82ee724a07",
+    "fixture_sha256": "253d3528d1c3df7640940b8f00dbd818a46665343075afd8df137a82ee724a07"
+  },
+  "cost-20260830.htm": {
+    "file": "cost-20260830.htm.gz",
+    "source_sha256": "35475cd0587f4684cc28d06c6e339af1d72e85bcfcf723885ea07143446b3e82",
+    "fixture_sha256": "f3a87a2d4c7a30b947e0d93a4c99e658cb495a5875db54161587ff9c350e6647"
+  },
+  "cost-20260830.xsd": {
+    "file": "cost-20260830.xsd.gz",
+    "source_sha256": "00006379a84071fa6664e71efbe5951ed9e86819a04a11a6b36b59a4d80c72e8",
+    "fixture_sha256": "00006379a84071fa6664e71efbe5951ed9e86819a04a11a6b36b59a4d80c72e8"
+  },
+  "cost-20260830_cal.xml": {
+    "file": "cost-20260830_cal.xml.gz",
+    "source_sha256": "b57d18ea2ea54b25cb1963539fe7e6dc0f28ab44c2db447042bc6b4d6c5fc396",
+    "fixture_sha256": "b57d18ea2ea54b25cb1963539fe7e6dc0f28ab44c2db447042bc6b4d6c5fc396"
+  },
+  "cost-20260830_pre.xml": {
+    "file": "cost-20260830_pre.xml.gz",
+    "source_sha256": "992f21431be42d7fa18ad62ce1cd115ec80e29c3dff76dd618a3d12c9ae27f45",
+    "fixture_sha256": "992f21431be42d7fa18ad62ce1cd115ec80e29c3dff76dd618a3d12c9ae27f45"
+  },
+  "facts.json": {
+    "file": "facts.json.gz",
+    "source_sha256": "d8beb202e79f17049c1a418a7dcff27d76cbd0ef1df780b984e459c6a333d0e1",
+    "fixture_sha256": "5081fe238e6b3885ee184011c4b035bd2d79ed0aadc552225d4aba81b354e667"
+  },
+  "submissions.json": {
+    "file": "submissions.json.gz",
+    "source_sha256": "203181307403736fbe96d8fe512e4e0456cdcecc769ec98ab2e9b4c4c8a17c2a",
+    "fixture_sha256": "203181307403736fbe96d8fe512e4e0456cdcecc769ec98ab2e9b4c4c8a17c2a"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "CIK0000104169-submissions-001.json": {
+    "file": "CIK0000104169-submissions-001.json.gz",
+    "source_sha256": "a8f153d112a0446ef023c7b9521da074435790834fea280674ce075b1ac45ede",
+    "fixture_sha256": "a8f153d112a0446ef023c7b9521da074435790834fea280674ce075b1ac45ede"
+  },
+  "facts.json": {
+    "file": "facts.json.gz",
+    "source_sha256": "f600e885ea8292ea3126f77da566c9bc50c5df2eb8f41f505d59176b70de8a26",
+    "fixture_sha256": "376fffa3d83abf90691ca97c401c3fb52936c432fe45cd2ae9ba6318540a6ecc"
+  },
+  "submissions.json": {
+    "file": "submissions.json.gz",
+    "source_sha256": "230877d8cccb49d63ad649d2e2d485b0ddb1e5e46649d9b07b48fb02b3072c74",
+    "fixture_sha256": "230877d8cccb49d63ad649d2e2d485b0ddb1e5e46649d9b07b48fb02b3072c74"
+  },
+  "wmt-20220131.htm": {
+    "file": "wmt-20220131.htm.gz",
+    "source_sha256": "07032df62b1bf708964ade00b3317514f69b35d27e64bb6b3441c43383d31a4d",
+    "fixture_sha256": "21ff782a1bce81bfb186fb5ccc499cb5d9f88c87ba83345f67fa04a103dd53f1"
+  },
+  "wmt-20220131.xsd": {
+    "file": "wmt-20220131.xsd.gz",
+    "source_sha256": "bf6798758ded04f579fd10a7b5ba19d305db5096a309dc7674b885a0086e5d88",
+    "fixture_sha256": "bf6798758ded04f579fd10a7b5ba19d305db5096a309dc7674b885a0086e5d88"
+  },
+  "wmt-20220131_cal.xml": {
+    "file": "wmt-20220131_cal.xml.gz",
+    "source_sha256": "41feeb4d0ad13c4c990f2408f87914eb8befe72d76a903d38b3f3c30a7f8c6db",
+    "fixture_sha256": "41feeb4d0ad13c4c990f2408f87914eb8befe72d76a903d38b3f3c30a7f8c6db"
+  },
+  "wmt-20220131_pre.xml": {
+    "file": "wmt-20220131_pre.xml.gz",
+    "source_sha256": "a03a555a7c576d24377cfbd7db3800db76217d247cacd616bd382152690e3568",
+    "fixture_sha256": "a03a555a7c576d24377cfbd7db3800db76217d247cacd616bd382152690e3568"
+  },
+  "wmt-20240131.htm": {
+    "file": "wmt-20240131.htm.gz",
+    "source_sha256": "917ade8f59f98456edb8d8e4b5fd33fe514dcbecf7134c975e50beb8927b86f4",
+    "fixture_sha256": "6536a946d760a30b13a82c5e60fb93cc96dff0980e27f4eab2335b3b1090c108"
+  },
+  "wmt-20240131.xsd": {
+    "file": "wmt-20240131.xsd.gz",
+    "source_sha256": "ac9204af6329569861fd620955fadcd714cc462693f2d5d5471a31f5b1fa0665",
+    "fixture_sha256": "ac9204af6329569861fd620955fadcd714cc462693f2d5d5471a31f5b1fa0665"
+  },
+  "wmt-20240131_cal.xml": {
+    "file": "wmt-20240131_cal.xml.gz",
+    "source_sha256": "4f1d3568f81b3e543ce123b5524d9ce41c303ec5aa63d26384de58062a3dc4f3",
+    "fixture_sha256": "4f1d3568f81b3e543ce123b5524d9ce41c303ec5aa63d26384de58062a3dc4f3"
+  },
+  "wmt-20240131_pre.xml": {
+    "file": "wmt-20240131_pre.xml.gz",
+    "source_sha256": "4a30a9f4393195cbbf3adf50ddce7decc01135d4cb1e25515c4519c64a88892e",
+    "fixture_sha256": "4a30a9f4393195cbbf3adf50ddce7decc01135d4cb1e25515c4519c64a88892e"
+  },
+  "wmt-20260131.htm": {
+    "file": "wmt-20260131.htm.gz",
+    "source_sha256": "085e9808e6b7fa8da5b20b5c55f3fa292ef37b012b9f58c20485ad3b8757ac83",
+    "fixture_sha256": "5d04ed4ef45298003c4cd90a5e42a40a7ef5feb606cf396c04117f822994f1ee"
+  },
+  "wmt-20260131.xsd": {
+    "file": "wmt-20260131.xsd.gz",
+    "source_sha256": "84f839867584daa64830e7aca7fff5823c51ade2c6d0df7ff047184756683d3d",
+    "fixture_sha256": "84f839867584daa64830e7aca7fff5823c51ade2c6d0df7ff047184756683d3d"
+  },
+  "wmt-20260131_cal.xml": {
+    "file": "wmt-20260131_cal.xml.gz",
+    "source_sha256": "fc75342dbc3c3705b528a4d04a8cab46cecdd078cd58b37cfc5c74f0f986c178",
+    "fixture_sha256": "fc75342dbc3c3705b528a4d04a8cab46cecdd078cd58b37cfc5c74f0f986c178"
+  },
+  "wmt-20260131_pre.xml": {
+    "file": "wmt-20260131_pre.xml.gz",
+    "source_sha256": "cce7c7b262a036f53c0e2f016dbff549289263813761b0d06080e93de090026f",
+    "fixture_sha256": "cce7c7b262a036f53c0e2f016dbff549289263813761b0d06080e93de090026f"
+  }
+}

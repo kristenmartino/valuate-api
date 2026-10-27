@@ -9,7 +9,7 @@ from statement_coverage import specs as statement_specs, load_statement_coverage
 from edgar import EdgarClient
 from scoped_inputs import paths as scoped_paths, load_scoped_inputs
 from schemas import Company
-from qualification import qualify
+from qualification import qualify, POLICIES
 from cisco_da import filing_da_history
 from berkshire import extract_berkshire_filing
 from crm_revenue import fetch_saved_filing
@@ -49,12 +49,42 @@ async def qualify_record(company: Company, client=None, facts=None):
             html, company.ticker, [p.fiscal_period_end for p in company.periods]
         )
     if statement_specs(company.cik, latest.filing_accession):
-        loaded = await load_statement_coverage(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
+        loaded = await load_statement_coverage(
+            client,
+            facts,
+            company.cik,
+            latest.fiscal_period_end,
+            latest.filing_accession,
+            [p.fiscal_period_end for p in company.periods],
+        )
         support["statement_inputs"] = loaded["inputs"]
         support["zero_current_borrowings"] = loaded.get("zero_current_borrowings", {})
     if scoped_paths(company.cik, latest.filing_accession):
-        loaded = await load_scoped_inputs(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
+        loaded = await load_scoped_inputs(
+            client,
+            facts,
+            company.cik,
+            latest.fiscal_period_end,
+            latest.filing_accession,
+            [p.fiscal_period_end for p in company.periods],
+        )
         support["scoped_inputs"] = loaded["inputs"]
+    if company.cik.lstrip("0") + ":" + latest.filing_accession not in POLICIES:
+        from reusable_inputs import load_reusable_inputs
+
+        try:
+            loaded = await load_reusable_inputs(
+                client,
+                facts,
+                company.cik,
+                latest.fiscal_period_end,
+                latest.filing_accession,
+                latest.industry,
+            )
+            documents.update(loaded.pop("documents"))
+            support["reusable_inputs"] = loaded
+        except ValueError as exc:
+            support["reusable_error"] = str(exc)
     report = qualify(company, facts, support, metadata["accession_number"])
     checked = company.model_copy(update={"qualification": report})
     # Inline source documents / helper results are preserved as well as company facts.

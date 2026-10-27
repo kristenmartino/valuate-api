@@ -16,6 +16,9 @@ Endpoint map:
 
 import asyncio
 import os
+import time
+import threading
+from collections import OrderedDict
 from typing import Any, Optional
 
 import httpx
@@ -23,6 +26,22 @@ from tickers import normalize_ticker
 
 SEC_DATA_BASE = "https://data.sec.gov"
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
+# One reservation clock across clients, not a per-request sleep that allows
+# parallel requests to burst. Limit this service process to about 5.5 req/sec.
+_REQUEST_LOCK = threading.Lock()
+_NEXT_REQUEST = 0.0
+_TEXT_CACHE = OrderedDict()
+_TEXT_BYTES = 0
+_MAX_TEXT_CACHE = 48 * 1024 * 1024
+
+
+async def _pace():
+    global _NEXT_REQUEST
+    with _REQUEST_LOCK:
+        now = time.monotonic()
+        delay = max(0.0, _NEXT_REQUEST - now)
+        _NEXT_REQUEST = max(now, _NEXT_REQUEST) + 0.18
+    await asyncio.sleep(delay)
 
 
 class EdgarClient:
@@ -46,23 +65,56 @@ class EdgarClient:
         self.semaphore = asyncio.Semaphore(max_concurrent_requests)
         self._ticker_cik_map: Optional[dict[str, str]] = None
 
-    async def _get_json(self, url: str) -> dict[str, Any]:
-        """GET JSON with rate limiting and standard headers."""
+    async def _request(self, url, *, text=False):
         async with self.semaphore:
-            await asyncio.sleep(0.1)  # SEC asks for ≤10 req/sec; this gives headroom
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.get(url, headers=self.headers)
+            for attempt in range(3):
+                await _pace()
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    resp = await client.get(url, headers=self.headers)
+                if resp.status_code in {429, 500, 502, 503, 504} and attempt < 2:
+                    try:
+                        delay = min(
+                            10.0,
+                            max(
+                                1.0, float(resp.headers.get("Retry-After", 2**attempt))
+                            ),
+                        )
+                    except ValueError:
+                        delay = 2**attempt
+                    await asyncio.sleep(delay)
+                    continue
                 resp.raise_for_status()
-                return resp.json()
+                if len(resp.content) > 50 * 1024 * 1024:
+                    raise ValueError("SEC source exceeds the bounded document size")
+                return resp.text if text else resp.json()
+
+    async def _get_json(self, url: str) -> dict[str, Any]:
+        return await self._request(url)
 
     async def _get_text(self, url: str) -> str:
-        """GET raw text (for filing HTML)."""
-        async with self.semaphore:
-            await asyncio.sleep(0.1)
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.get(url, headers=self.headers)
-                resp.raise_for_status()
-                return resp.text
+        # Accession URLs are immutable source documents. This small, bounded
+        # process cache avoids fetching them twice during extraction + checks;
+        # qualification still reparses the original source independently.
+        global _TEXT_BYTES
+        cached = _TEXT_CACHE.get(url)
+        if cached and time.monotonic() - cached[0] < 300:
+            _TEXT_CACHE.move_to_end(url)
+            return cached[1]
+        if cached:
+            _TEXT_BYTES -= len(cached[1].encode())
+            del _TEXT_CACHE[url]
+        value = await self._request(url, text=True)
+        size = len(value.encode())
+        if size <= _MAX_TEXT_CACHE:
+            previous = _TEXT_CACHE.pop(url, None)
+            if previous:
+                _TEXT_BYTES -= len(previous[1].encode())
+            _TEXT_CACHE[url] = (time.monotonic(), value)
+            _TEXT_BYTES += size
+            while _TEXT_BYTES > _MAX_TEXT_CACHE or len(_TEXT_CACHE) > 48:
+                _, old = _TEXT_CACHE.popitem(last=False)
+                _TEXT_BYTES -= len(old[1].encode())
+        return value
 
     async def _load_ticker_map(self) -> dict[str, str]:
         """Load and cache the ticker → CIK mapping from SEC."""
@@ -210,8 +262,16 @@ def latest_value_per_period(
 # verbatim when composing the FinancialPeriod.
 
 STANDARD_CANONICAL_CONCEPTS: dict[str, list[str]] = {
-    "revenue": ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"],
-    "cost_of_revenue": ["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold"],
+    "revenue": [
+        "Revenues",
+        "RevenueFromContractWithCustomerExcludingAssessedTax",
+        "SalesRevenueNet",
+    ],
+    "cost_of_revenue": [
+        "CostOfRevenue",
+        "CostOfGoodsAndServicesSold",
+        "CostOfGoodsSold",
+    ],
     "operating_income": ["OperatingIncomeLoss"],
     "net_income": [
         "NetIncomeLoss",

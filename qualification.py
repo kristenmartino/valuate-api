@@ -1,7 +1,7 @@
 """Fail-closed publication gate for a specific record and annual filing.
 
-A scope-reviewed filing policy AND matching independent filing facts are
-required. Neither a cache hit, a confidence score nor an override grants it.
+A reviewed filing contract or reusable primary-statement rules AND matching
+independent source evidence are required. Neither a cache hit, a confidence score nor an override grants it.
 """
 
 from datetime import datetime, timezone
@@ -23,6 +23,10 @@ from scoped_inputs import contract as scoped_contract, paths as scoped_paths
 
 POLICY_FILES = [
     "qualification.py",
+    "reusable_inputs.py",
+    "reusable_qualification.py",
+    "filing_document.py",
+    "filing_sources.py",
     "filing_coverage.py",
     "statement_evidence.py",
     "statement_coverage.py",
@@ -151,10 +155,14 @@ def qualify(
     cik = company.cik.lstrip("0")
     policy = POLICIES.get(cik + ":" + latest.filing_accession)
     if not policy:
-        issue(
-            "filing_scope_not_reviewed",
-            "company",
-            "This annual filing has no reviewed input-scope policy. Cold extraction is a candidate, not a published valuation.",
+        from reusable_qualification import qualify_reusable
+
+        return qualify_reusable(
+            company,
+            facts,
+            support.get("reusable_inputs"),
+            latest_filing,
+            support.get("reusable_error"),
         )
     if policy and [str(p.fiscal_period_end) for p in company.periods] != policy.get(
         "period_ends"
@@ -178,7 +186,17 @@ def qualify(
         return _report(company, issues, inputs, disclosures, latest_filing)
     # Required special scope operands are selected from the original filing,
     # never trusted from a saved free-text explanation.
-    reviewed = {p.fiscal_period_end: reviewed_selections(facts, company.cik, p.fiscal_period_end, latest.filing_accession, pe0, zero_current_borrowings=support.get("zero_current_borrowings")) for p in company.periods}
+    reviewed = {
+        p.fiscal_period_end: reviewed_selections(
+            facts,
+            company.cik,
+            p.fiscal_period_end,
+            latest.filing_accession,
+            pe0,
+            zero_current_borrowings=support.get("zero_current_borrowings"),
+        )
+        for p in company.periods
+    }
     special = {}
     for p in company.periods:
         pe = p.fiscal_period_end
@@ -237,34 +255,118 @@ def qualify(
         if path in scoped_paths(company.cik, latest.filing_accession):
             scoped = support.get("scoped_inputs", {}).get(pe, {}).get(path)
             if scoped is None or scoped.item.value != item.value:
-                issue("scoped_input_unverified", path, "Every reviewed source operand, context and carrying-value reconciliation must match; missing components cannot become zero.", pe)
+                issue(
+                    "scoped_input_unverified",
+                    path,
+                    "Every reviewed source operand, context and carrying-value reconciliation must match; missing components cannot become zero.",
+                    pe,
+                )
                 return
             row = scoped.rows[0]
-            evidence(p, path, item, row, scoped.scope, scoped.basis,
-                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start") or "", "end": r["end"], "accession": r["accn"], "source_url": r["source_url"], "statement_role": r["role"], "row_label": r["label"], "decimals": r.get("decimals", ""), "dimensions": json.dumps(r.get("dimensions", {}), sort_keys=True)} for r in scoped.rows])
+            evidence(
+                p,
+                path,
+                item,
+                row,
+                scoped.scope,
+                scoped.basis,
+                [
+                    {
+                        "concept": r["concept"],
+                        "value": str(r["value"]),
+                        "start": r.get("start") or "",
+                        "end": r["end"],
+                        "accession": r["accn"],
+                        "source_url": r["source_url"],
+                        "statement_role": r["role"],
+                        "row_label": r["label"],
+                        "decimals": r.get("decimals", ""),
+                        "dimensions": json.dumps(
+                            r.get("dimensions", {}), sort_keys=True
+                        ),
+                    }
+                    for r in scoped.rows
+                ],
+            )
             return
         if path in (policy or {}).get("statement_inputs", {}):
             scoped = support.get("statement_inputs", {}).get(pe, {}).get(path)
             if scoped is None or scoped.item.value != item.value:
-                issue("statement_scope_unverified", path, "Matching consolidated statement role, row label, annual context and company-facts amount are required.", pe)
+                issue(
+                    "statement_scope_unverified",
+                    path,
+                    "Matching consolidated statement role, row label, annual context and company-facts amount are required.",
+                    pe,
+                )
                 return
             row = scoped.rows[0]
-            evidence(p, path, item, row, scoped.scope, scoped.basis,
-                [{"concept": row["concept"], "value": str(row["value"]), "start": row.get("start") or "", "end": row["end"], "accession": row["accn"], "statement_role": row.get("role", "standard unrestricted-cash fact"), "row_label": row.get("row_label", ""), "source_url": row.get("source_url", "")}])
+            evidence(
+                p,
+                path,
+                item,
+                row,
+                scoped.scope,
+                scoped.basis,
+                [
+                    {
+                        "concept": row["concept"],
+                        "value": str(row["value"]),
+                        "start": row.get("start") or "",
+                        "end": row["end"],
+                        "accession": row["accn"],
+                        "statement_role": row.get(
+                            "role", "standard unrestricted-cash fact"
+                        ),
+                        "row_label": row.get("row_label", ""),
+                        "source_url": row.get("source_url", ""),
+                    }
+                ],
+            )
             disclosures.append((policy or {}).get("disclosure", scoped.scope))
             return
         scoped = reviewed[pe].get(field)
         if scoped is not None:
             if scoped.item.value != item.value:
-                issue("scope_or_value_mismatch", path, "Saved input does not match the reviewed filing coverage and amount.", pe)
+                issue(
+                    "scope_or_value_mismatch",
+                    path,
+                    "Saved input does not match the reviewed filing coverage and amount.",
+                    pe,
+                )
                 return
             rows = scoped.rows
-            evidence(p, path, item, {**rows[0], "concept": scoped.item.xbrl_tag}, scoped.scope, scoped.basis,
-                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start", ""), "end": r["end"], "accession": r["accn"], **({"source_url": r["source_url"], "disclosure": r["basis"]} if r.get("basis") else {})} for r in rows])
+            evidence(
+                p,
+                path,
+                item,
+                {**rows[0], "concept": scoped.item.xbrl_tag},
+                scoped.scope,
+                scoped.basis,
+                [
+                    {
+                        "concept": r["concept"],
+                        "value": str(r["value"]),
+                        "start": r.get("start", ""),
+                        "end": r["end"],
+                        "accession": r["accn"],
+                        **(
+                            {"source_url": r["source_url"], "disclosure": r["basis"]}
+                            if r.get("basis")
+                            else {}
+                        ),
+                    }
+                    for r in rows
+                ],
+            )
             disclosures.append((policy or {}).get("disclosure", scoped.scope))
             return
         if field in configured_fields(company.cik, latest.filing_accession):
-            issue("scope_evidence_unavailable", path, "Required complete debt/D&A operands are unavailable or conflict; no generic fallback can qualify this filing.", pe)
+            issue(
+                "scope_evidence_unavailable",
+                path,
+                "Required complete debt/D&A operands are unavailable or conflict; no generic fallback can qualify this filing.",
+                pe,
+            )
             return
         expected = special[pe].get(field)
         special_fields = {
@@ -491,10 +593,21 @@ def qualify(
                 "Annual history must use one model and no future periods.",
                 p.fiscal_period_end,
             )
-        for path in sorted(set((policy or {}).get("statement_inputs", {})) | set((policy or {}).get("required_history_inputs", []))):
+        for path in sorted(
+            set((policy or {}).get("statement_inputs", {}))
+            | set((policy or {}).get("required_history_inputs", []))
+        ):
             verify(p, path)
-        for path, cfg in scoped_contract(company.cik, latest.filing_accession).get("inputs", {}).items():
-            if cfg.get("required", "history") == "history" or p is latest or _item(p, path) is not None:
+        for path, cfg in (
+            scoped_contract(company.cik, latest.filing_accession)
+            .get("inputs", {})
+            .items()
+        ):
+            if (
+                cfg.get("required", "history") == "history"
+                or p is latest
+                or _item(p, path) is not None
+            ):
                 verify(p, path)
         verify(p, "income_statement.net_income")
         if industry in {"standard", "energy"}:
@@ -532,7 +645,12 @@ def qualify(
             verify(latest, "balance_sheet.shareholders_equity")
             verify(latest, "income_statement.interest_expense", False)
         for field in ["long_term_debt", "short_term_debt"]:
-            if field in special[pe0] or field in configured_fields(company.cik, latest.filing_accession) or "balance_sheet." + field in scoped_paths(company.cik, latest.filing_accession):
+            if (
+                field in special[pe0]
+                or field in configured_fields(company.cik, latest.filing_accession)
+                or "balance_sheet." + field
+                in scoped_paths(company.cik, latest.filing_accession)
+            ):
                 verify(latest, "balance_sheet." + field)
             else:
                 _verify_debt(company, facts, bound, inputs, issues)

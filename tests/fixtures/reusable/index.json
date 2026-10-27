@@ -1,0 +1,42 @@
+[
+  {
+    "ticker": "META",
+    "cik": "0001326801",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "NVDA",
+    "cik": "0001045810",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "COST",
+    "cik": "0000909832",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "WMT",
+    "cik": "0000104169",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "CAT",
+    "cik": "0000018230",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "BAC",
+    "cik": "0000070858",
+    "expected_status": "review_required"
+  },
+  {
+    "ticker": "MET",
+    "cik": "0001099219",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "O",
+    "cik": "0000726728",
+    "expected_status": "qualified"
+  }
+]

@@ -1,0 +1,77 @@
+{
+  "CIK0001099219-submissions-001.json": {
+    "file": "CIK0001099219-submissions-001.json.gz",
+    "source_sha256": "1c41508c21ba45fc1b6b347c827579a4b8c2d038b10a9f627a4ac817f0d9e05e",
+    "fixture_sha256": "1c41508c21ba45fc1b6b347c827579a4b8c2d038b10a9f627a4ac817f0d9e05e"
+  },
+  "facts.json": {
+    "file": "facts.json.gz",
+    "source_sha256": "5497eccbd4d72549b64261adfbe30f55ecd5f217be184fd51aaa3836eabe3765",
+    "fixture_sha256": "f7d875c9cc7e120ce12a5354b74a878da130ae39f2dea96584df8fe94eeaaf3d"
+  },
+  "met-20211231.htm": {
+    "file": "met-20211231.htm.gz",
+    "source_sha256": "92072980afbdbb502819838553a68ea0ab016bf8d963a3e9bcf1cf80f71af3c8",
+    "fixture_sha256": "12d2180330c7df241317469589e25c97061dc3198073188f00f2145572f747eb"
+  },
+  "met-20211231.xsd": {
+    "file": "met-20211231.xsd.gz",
+    "source_sha256": "85eb79d6900fc967cbf062c57c0ed5074f6bb714145f20d30c18439165ff1bfe",
+    "fixture_sha256": "85eb79d6900fc967cbf062c57c0ed5074f6bb714145f20d30c18439165ff1bfe"
+  },
+  "met-20211231_cal.xml": {
+    "file": "met-20211231_cal.xml.gz",
+    "source_sha256": "5729246e249750e7601d76decca75f0197c9b6cc7ea0e686fbb9119173aee762",
+    "fixture_sha256": "5729246e249750e7601d76decca75f0197c9b6cc7ea0e686fbb9119173aee762"
+  },
+  "met-20211231_pre.xml": {
+    "file": "met-20211231_pre.xml.gz",
+    "source_sha256": "add9e387660cf1fc26039f39048c0bfba115c40cb81b6a9e17227befd464e61b",
+    "fixture_sha256": "add9e387660cf1fc26039f39048c0bfba115c40cb81b6a9e17227befd464e61b"
+  },
+  "met-20231231.htm": {
+    "file": "met-20231231.htm.gz",
+    "source_sha256": "daa5811e4093991edff0e4c73bf020a289dc55ca6bf033cbc67fdc7a474be3c0",
+    "fixture_sha256": "5617375534649450bf745c96be658314704ddac2665c966751801567b349c42a"
+  },
+  "met-20231231.xsd": {
+    "file": "met-20231231.xsd.gz",
+    "source_sha256": "39e997bd3c5702989889e3fc1127ba40212c549c36d0497d85dc784ced1e449d",
+    "fixture_sha256": "39e997bd3c5702989889e3fc1127ba40212c549c36d0497d85dc784ced1e449d"
+  },
+  "met-20231231_cal.xml": {
+    "file": "met-20231231_cal.xml.gz",
+    "source_sha256": "4f485a57614450d647340a844298a4dc01658166a3d4379c5caf3f80f785441e",
+    "fixture_sha256": "4f485a57614450d647340a844298a4dc01658166a3d4379c5caf3f80f785441e"
+  },
+  "met-20231231_pre.xml": {
+    "file": "met-20231231_pre.xml.gz",
+    "source_sha256": "167993045951312becbf064f77a76c772f0127d6be005553556d179554c34866",
+    "fixture_sha256": "167993045951312becbf064f77a76c772f0127d6be005553556d179554c34866"
+  },
+  "met-20251231.htm": {
+    "file": "met-20251231.htm.gz",
+    "source_sha256": "49424fa2f2c9d20c5fda326370b786a1651c1a9b8dfc183f878ad69a96b9dfde",
+    "fixture_sha256": "e6019c44e12ba5e0808e13662dc82d420f83b06ffd11ba9132fd18c8855ee5b0"
+  },
+  "met-20251231.xsd": {
+    "file": "met-20251231.xsd.gz",
+    "source_sha256": "19771aa218ba21a27b16f78673c8adf346cdc694147641019839eac274894459",
+    "fixture_sha256": "19771aa218ba21a27b16f78673c8adf346cdc694147641019839eac274894459"
+  },
+  "met-20251231_cal.xml": {
+    "file": "met-20251231_cal.xml.gz",
+    "source_sha256": "13e69018e250c06dca5648b38a41f95e11b394853476a0eb945cb6026dc8e008",
+    "fixture_sha256": "13e69018e250c06dca5648b38a41f95e11b394853476a0eb945cb6026dc8e008"
+  },
+  "met-20251231_pre.xml": {
+    "file": "met-20251231_pre.xml.gz",
+    "source_sha256": "2febe8df40eed2cb77306a26aeda5e2ae31fe301b369a8fed3d51ef7197575fe",
+    "fixture_sha256": "2febe8df40eed2cb77306a26aeda5e2ae31fe301b369a8fed3d51ef7197575fe"
+  },
+  "submissions.json": {
+    "file": "submissions.json.gz",
+    "source_sha256": "67f1661c3c6fa0ab6c4ed234c52a0125841413ad49e2ae829c7de8dd5df054f4",
+    "fixture_sha256": "67f1661c3c6fa0ab6c4ed234c52a0125841413ad49e2ae829c7de8dd5df054f4"
+  }
+}

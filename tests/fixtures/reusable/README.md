@@ -1,0 +1,7 @@
+# Unlisted annual-filing source replays
+
+These eight cases start without a saved Company, a per-issuer qualification policy or an AI response. The production graph extracts source values and qualification independently reconstructs them. META, COST, WMT, CAT, MET and O are expected to qualify. NVDA remains review-required because finance-lease debt scope is unresolved. BAC remains review-required because common cash-dividend payments have not been distinguished from total payments and declared dividends; declared dividends are not substituted for cash paid. These outcomes test defined rules, not general extraction accuracy or investment value.
+
+Each manifest records SHA-256 hashes of the original downloaded SEC documents and the fixture content. The compressed inline fixtures retain every numeric fact, context, unit, document identity and row label; surrounding prose is removed. Original schema/presentation/calculation documents and SEC submissions metadata are included. Company-facts fixtures retain annual records from 2020 onward, including conflicting duplicates and later restatements. No saved values or human corrections are extraction inputs.
+
+`python -m eval.reusable_cold` runs this set. `tests/test_reusable_inputs.py` adds missing-operand, conflicting-value, wrong-entity/unit/context, shortened-history, model-scope, mutation and public API withholding checks. Original complete source snapshots and live release evidence are retained outside the repository; fixtures are selected-source regression material, not a complete filing archive.

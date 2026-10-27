@@ -1,0 +1,72 @@
+{
+  "facts.json": {
+    "file": "facts.json.gz",
+    "source_sha256": "4aa9f7962ff880f567e694a3b4200efee8efb8d3e16183574e17b10a2d6d55dc",
+    "fixture_sha256": "3bd17d714f2a5adee4f0fbae3068b23125f1182964691b791656ec6b610469af"
+  },
+  "nvda-20220130.htm": {
+    "file": "nvda-20220130.htm.gz",
+    "source_sha256": "9fba881177c049a8112fc5eb4046befd47b567bc6364b4e86b655a59455c8a5b",
+    "fixture_sha256": "f0873b461b473184d05f8520e9491015b50e90a7b1192377009e8aecf324f351"
+  },
+  "nvda-20220130.xsd": {
+    "file": "nvda-20220130.xsd.gz",
+    "source_sha256": "fa82e1e3a56b9b71b977bc78a9ee4874b466b605d708490ad3e91a5cd76c01d0",
+    "fixture_sha256": "fa82e1e3a56b9b71b977bc78a9ee4874b466b605d708490ad3e91a5cd76c01d0"
+  },
+  "nvda-20220130_cal.xml": {
+    "file": "nvda-20220130_cal.xml.gz",
+    "source_sha256": "e8f1ca57fc84570cd57246a0d5160cc6f565625226da3ffa0a7c998b73abf603",
+    "fixture_sha256": "e8f1ca57fc84570cd57246a0d5160cc6f565625226da3ffa0a7c998b73abf603"
+  },
+  "nvda-20220130_pre.xml": {
+    "file": "nvda-20220130_pre.xml.gz",
+    "source_sha256": "4f8d7445a612e70eafb89532eb6dde085ca59fca4fce69fbfc85b5384aee5f7a",
+    "fixture_sha256": "4f8d7445a612e70eafb89532eb6dde085ca59fca4fce69fbfc85b5384aee5f7a"
+  },
+  "nvda-20240128.htm": {
+    "file": "nvda-20240128.htm.gz",
+    "source_sha256": "f37ae5d776b3d1240afea9fb686e5558e9ca25d2302e4c2436da3b081721ece5",
+    "fixture_sha256": "3e0a23a65d1c3f932d3d099134ad13194b08f5d4aef5352a28870a3149f6c58a"
+  },
+  "nvda-20240128.xsd": {
+    "file": "nvda-20240128.xsd.gz",
+    "source_sha256": "59e6bb1ac3c296b7334c46afa3453db39860a598811e87c75bb19f6323661d80",
+    "fixture_sha256": "59e6bb1ac3c296b7334c46afa3453db39860a598811e87c75bb19f6323661d80"
+  },
+  "nvda-20240128_cal.xml": {
+    "file": "nvda-20240128_cal.xml.gz",
+    "source_sha256": "e68fa0a2003cc9b59e70e8739505e51ba4c44d5aa1b947d09624f13c019e29e3",
+    "fixture_sha256": "e68fa0a2003cc9b59e70e8739505e51ba4c44d5aa1b947d09624f13c019e29e3"
+  },
+  "nvda-20240128_pre.xml": {
+    "file": "nvda-20240128_pre.xml.gz",
+    "source_sha256": "9cd93868196ea19e3b640b2acf6918eb3623ed0e8bc295b8bab26ad894a1e955",
+    "fixture_sha256": "9cd93868196ea19e3b640b2acf6918eb3623ed0e8bc295b8bab26ad894a1e955"
+  },
+  "nvda-20260125.htm": {
+    "file": "nvda-20260125.htm.gz",
+    "source_sha256": "a6aa5ec718c4f182b72f87d43f45b9f49eb3041e867c0740e2bce6de78afc90c",
+    "fixture_sha256": "e81407f8f9ad556f6d50f0348c08fea3d2005d254bc116b8c64a0ad2c8734d69"
+  },
+  "nvda-20260125.xsd": {
+    "file": "nvda-20260125.xsd.gz",
+    "source_sha256": "868736ff0cdf6c28dc54f27f303f12e26e224fa3dc2ff2b327686ae018ed090c",
+    "fixture_sha256": "868736ff0cdf6c28dc54f27f303f12e26e224fa3dc2ff2b327686ae018ed090c"
+  },
+  "nvda-20260125_cal.xml": {
+    "file": "nvda-20260125_cal.xml.gz",
+    "source_sha256": "bedf7dc3c3524905fbae9a862b43e05ad54fd8df114083af3f9fbc1d6af0b73d",
+    "fixture_sha256": "bedf7dc3c3524905fbae9a862b43e05ad54fd8df114083af3f9fbc1d6af0b73d"
+  },
+  "nvda-20260125_pre.xml": {
+    "file": "nvda-20260125_pre.xml.gz",
+    "source_sha256": "4d89c884a4f61bd4b314dc1339e873c52a9a352a9211f58081dd075f2724b5fb",
+    "fixture_sha256": "4d89c884a4f61bd4b314dc1339e873c52a9a352a9211f58081dd075f2724b5fb"
+  },
+  "submissions.json": {
+    "file": "submissions.json.gz",
+    "source_sha256": "24517df64dce22059b351d06369c82cebc7e80fe5884eb376b700e34fe6e2197",
+    "fixture_sha256": "24517df64dce22059b351d06369c82cebc7e80fe5884eb376b700e34fe6e2197"
+  }
+}

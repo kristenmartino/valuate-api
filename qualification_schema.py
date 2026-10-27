@@ -14,6 +14,8 @@ class InputIssue(BaseModel):
 class InputEvidence(BaseModel):
     field_path: str
     period_end: str
+    display_label: str | None = None
+    is_proxy: bool = False
     value: str
     unit: str
     scope: str
@@ -26,6 +28,8 @@ class InputEvidence(BaseModel):
 
 
 class Qualification(BaseModel):
+    method: str = "reviewed_filing_contract"
+    ruleset: str | None = None
     status: Literal["qualified", "review_required", "unsupported"]
     policy_version: str
     record_digest: str

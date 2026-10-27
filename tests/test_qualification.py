@@ -261,7 +261,7 @@ def test_unregistered_filing_is_not_approved_by_matching_numbers_or_confidence(
     )
     q = qualify(c, facts)
     assert q.status == "review_required"
-    assert any(i.code == "filing_scope_not_reviewed" for i in q.issues)
+    assert any(i.code == "statement_evidence_unavailable" for i in q.issues)
 
 
 def test_override_does_not_grant_qualification_even_at_confidence_one(monkeypatch):

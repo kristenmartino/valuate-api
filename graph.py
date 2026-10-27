@@ -742,6 +742,14 @@ def _make_track_b(
         industry = state.get("industry", Industry.STANDARD)
         latest = period_ends[0]
         latest_items = periods_items[latest]
+        if not filing_policy(state["cik"], state["filing_accession"]):
+            from reusable_inputs import load_reusable_inputs, compose_reusable
+            try:
+                loaded = await load_reusable_inputs(edgar_client, state["facts"], state["cik"], latest, state["filing_accession"], industry)
+                company = compose_reusable(state, loaded)
+            except ValueError as exc:
+                raise CompositionError(f"Annual filing evidence is incomplete: {exc}. Valuation is withheld; no AI or missing-as-zero fallback was used.") from exc
+            return {"company": company}
         is_berkshire = (state["cik"].lstrip("0") == "1067983"
                         and normalize_ticker(state["ticker"]) in {"BRK-A", "BRK-B"})
         is_cisco = state["cik"].lstrip("0") == CISCO_CIK
