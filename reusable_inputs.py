@@ -25,6 +25,7 @@ RULESET = "annual-statement-evidence-v1"
 class SourceInput(Selection):
     display_label: str | None = None
     is_proxy: bool = False
+    disclosure: str | None = None
 
 
 def choose(rows):
@@ -48,7 +49,9 @@ def _flatten(rows):
     return out
 
 
-def selection(value, rows, scope, basis, label=None, proxy=False, direct=None):
+def selection(
+    value, rows, scope, basis, label=None, proxy=False, direct=None, disclosure=None
+):
     proof = _flatten(rows)
     unique = {
         (
@@ -87,7 +90,7 @@ def selection(value, rows, scope, basis, label=None, proxy=False, direct=None):
         xbrl_tag=direct if not any(r.get("components") for r in rows) else None,
         source_quote=f"{scope}. {basis}. {operands}; selected amount {value} {unit}; {periods}; SEC accession {accessions}.",
     )
-    return SourceInput(item, proof, scope, basis, label, proxy)
+    return SourceInput(item, proof, scope, basis, label, proxy, disclosure)
 
 
 def corroborates(row, facts, filing, bound):
@@ -407,6 +410,20 @@ def mapped_inputs(doc, facts, filing, bound, pe, industry):
             "Exact consolidated primary-statement total and context; no component or differently scoped row substitution",
             direct=row["concept"],
         )
+    if industry == Industry.BANK:
+        row = doc.fact(
+            "us-gaap:CommonStockDividendsPerShareCashPaid", pe, unit="USD/shares"
+        )
+        if row and row["value"] >= 0 and corroborates(row, facts, filing, bound):
+            result["cash_flow_statement.common_dividends_per_share"] = selection(
+                row["value"],
+                [_prove(row, filing, "annual common-dividend disclosure")],
+                "Annual cash dividends paid per common share",
+                "Explicit paid-common dividend concept, annual entity context, USD/share unit and same-accession SEC corroboration; not declared dividends or aggregate cash flow",
+                "Common cash dividends paid per share (supplemental DDM input)",
+                direct=row["concept"],
+                disclosure="The bank DDM uses filed annual cash dividends paid per common share directly. This supplemental note disclosure is not total cash dividends, declared dividends or a cash-flow statement subtotal. No aggregate cash amount is estimated from average shares.",
+            )
     return balance_totals(doc, facts, filing, bound, pe, result)
 
 
@@ -621,6 +638,7 @@ def carrying_debt(doc, facts, filing, bound, pe):
         noncurrent_inclusive = includes_lease(non_nodes)
         inclusive = current_inclusive and noncurrent_inclusive
         finance = lease_pair(doc, pe, True)
+        debt_disclosure = None
         if finance:
             for dest, row, nodes, covered in zip(
                 [cur, non],
@@ -654,7 +672,37 @@ def carrying_debt(doc, facts, filing, bound, pe):
                 )
             ]
             if finance_activity:
-                continue
+                # Accumulated asset amortization is a historical contra-asset,
+                # not a current obligation. Only this exact semantic case may
+                # proceed, and only with an independently reconciled debt note.
+                allowed = {"us-gaap:FinanceLeaseRightOfUseAssetAccumulatedAmortization"}
+                if {r["concept"] for r in finance_activity} != allowed:
+                    continue
+                amortization = doc.fact(next(iter(allowed)), pe, instant=True)
+                note_rows = [
+                    doc.fact("us-gaap:" + tag, pe, instant=True)
+                    for tag in [
+                        "LongTermDebt",
+                        "LongTermDebtCurrent",
+                        "LongTermDebtNoncurrent",
+                    ]
+                ]
+                if amortization is None or any(x is None for x in note_rows):
+                    continue
+                total, current, noncurrent = note_rows
+                if (
+                    any(x["value"] < 0 for x in [amortization, *note_rows])
+                    or total["value"] != current["value"] + noncurrent["value"]
+                    or sum(x["value"] for x in cur) != current["value"]
+                    or sum(x["value"] for x in non) != noncurrent["value"]
+                    or not all(
+                        corroborates(x, facts, filing, bound)
+                        for x in [amortization, *note_rows]
+                    )
+                ):
+                    continue
+                proof.extend([amortization, *note_rows])
+                debt_disclosure = "Debt uses reported current and noncurrent carrying notes/borrowings, reconciled to the debt-note total and the balance sheet. Historical accumulated asset amortization is not a lease liability. No finance-lease liability is inferred as zero or estimated from that asset amount."
         if (
             "us-gaap:FinanceLeaseLiabilityCurrent" in current_nodes
             and "us-gaap:DebtCurrent" in current_nodes
@@ -729,6 +777,7 @@ def carrying_debt(doc, facts, filing, bound, pe):
                 basis,
                 maturity + " " + scope.lower(),
                 direct=None,
+                disclosure=debt_disclosure,
             )
         candidates.append(pair)
     if (
@@ -944,6 +993,16 @@ def compose_reusable(state, loaded):
     notes = [
         "Source-only SEC statement extraction; optional rows without established scope are left unavailable. No AI backfill was used."
     ]
+    notes.extend(
+        sorted(
+            {
+                s.disclosure
+                for selected in loaded["inputs"].values()
+                for s in selected.values()
+                if s.disclosure
+            }
+        )
+    )
     proxies = {
         s.scope
         for items in loaded["inputs"].values()

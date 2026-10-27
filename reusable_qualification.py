@@ -5,7 +5,7 @@ from qualification_schema import InputEvidence, InputIssue
 from schemas import LineItem, Industry
 
 
-def required_paths(industry, latest=False):
+def required_paths(industry, latest=False, available=None):
     from graph import _industry_fields
 
     schema = _industry_fields(industry)
@@ -27,7 +27,12 @@ def required_paths(industry, latest=False):
             "balance_sheet.operating_lease_liabilities",
         }
     if industry == Industry.BANK:
-        required.add("cash_flow_statement.dividends_paid")
+        path = "cash_flow_statement.common_dividends_per_share"
+        required.add(
+            path
+            if available is not None and path in available
+            else "cash_flow_statement.dividends_paid"
+        )
     if industry == Industry.REIT:
         required.add("income_statement.depreciation_amortization")
     return required
@@ -86,7 +91,7 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
                 pe,
             )
         expected = loaded["inputs"].get(pe, {})
-        required = required_paths(industry, p is latest)
+        required = required_paths(industry, p is latest, expected)
         actual = {
             g + "." + field: getattr(stmt, field)
             for g in ["income_statement", "balance_sheet", "cash_flow_statement"]
@@ -140,6 +145,7 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
                         "short_term_debt",
                         "long_term_debt",
                         "depreciation_amortization",
+                        "common_dividends_per_share",
                     )
                 )
                 and item.value < 0
@@ -175,9 +181,7 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
                     field_path=path,
                     period_end=str(pe),
                     value=str(item.value),
-                    unit="shares"
-                    if path.endswith("diluted_shares_outstanding")
-                    else "USD",
+                    unit=source.rows[0]["unit"],
                     scope=source.scope,
                     basis=source.basis,
                     accession=source.rows[0]["accn"],
@@ -188,6 +192,8 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
                     is_proxy=source.is_proxy,
                 )
             )
+            if source.disclosure:
+                disclosures.append(source.disclosure)
             if source.is_proxy:
                 disclosures.append(
                     source.scope

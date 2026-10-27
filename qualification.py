@@ -565,6 +565,7 @@ def qualify(
             field
             in {
                 "capital_expenditures",
+                "common_dividends_per_share",
                 "cash_and_equivalents",
                 "operating_lease_liabilities",
                 "depreciation_amortization",
@@ -627,6 +628,11 @@ def qualify(
                 verify(p, "income_statement." + field)
             if industry == "bank":
                 verify(p, "cash_flow_statement.dividends_paid", False)
+                if (
+                    getattr(p.cash_flow_statement, "common_dividends_per_share", None)
+                    is not None
+                ):
+                    verify(p, "cash_flow_statement.common_dividends_per_share")
         elif industry == "reit":
             verify(p, "income_statement.revenue")
             for field in ["income_before_tax", "income_tax_expense"]:

@@ -44,7 +44,7 @@ async def source_preflight(ticker, client):
             {
                 "period_end": str(pe),
                 "required_fields_missing": sorted(
-                    required_paths(state["industry"], pe == state["period_end"])
+                    required_paths(state["industry"], pe == state["period_end"], items)
                     - items.keys()
                 ),
             }

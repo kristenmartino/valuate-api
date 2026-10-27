@@ -103,6 +103,11 @@ CONTRACTS = {
         "annual weighted-average diluted shares",
         unit="shares",
     ),
+    "common_dividends_per_share": Contract(
+        ("CommonStockDividendsPerShareCashPaid",),
+        "annual cash dividends paid per common share; not declared dividends",
+        unit="USD/shares",
+    ),
     "dividends_paid": Contract(
         ("PaymentsOfDividendsCommonStock", "PaymentsOfDividends"),
         "reported cash dividends; common/total scope follows concept",

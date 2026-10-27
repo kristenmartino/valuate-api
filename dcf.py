@@ -231,6 +231,21 @@ def _sigma_from_series(values: list[float], bounds: tuple[float, float]) -> Opti
     return max(bounds[0], min(bounds[1], sigma))
 
 
+def _bank_dividend_per_share(period) -> Optional[float]:
+    """Use filed common cash DPS directly; preserve the existing amount path.
+
+    Never multiply annual DPS by average shares to invent total cash paid.
+    Declared dividends and preferred/all-shareholder totals are not substitutes.
+    """
+    cf = period.cash_flow_statement
+    direct = _line_value(getattr(cf, "common_dividends_per_share", None))
+    if direct is not None:
+        return direct
+    amount = _line_value(getattr(cf, "dividends_paid", None))
+    shares = _line_value(period.income_statement.diluted_shares_outstanding)
+    return amount / shares if amount is not None and shares and shares > 0 else None
+
+
 def _default_bank_assumptions(periods: list) -> Assumptions:
     """Bank DDM-flavored defaults.
 
@@ -260,12 +275,9 @@ def _default_bank_assumptions(periods: list) -> Assumptions:
         if ibt is not None and ibt > 0 and tax is not None:
             tax_rates.append(max(0.0, min(0.5, tax / ibt)))
 
-        div_item = getattr(cf, "dividends_paid", None)
-        shares = _line_value(is_.diluted_shares_outstanding)
-        if div_item is not None and shares and shares > 0:
-            div_value = _line_value(div_item)
-            if div_value is not None:
-                div_per_share.append(div_value / shares)
+        dps = _bank_dividend_per_share(p)
+        if dps is not None:
+            div_per_share.append(dps)
 
     def _avg(xs: list[float], fallback: float) -> float:
         return sum(xs) / len(xs) if xs else fallback
@@ -597,20 +609,18 @@ def compute_bank_projection(company: Company, a: Assumptions) -> Projection:
 
     period = company.periods[0]
     is_ = period.income_statement  # BankIncomeStatement
-    cf = period.cash_flow_statement  # BankCashFlowStatement
 
     shares = _line_value(is_.diluted_shares_outstanding) or 0.0
     if shares <= 0:
         raise ValueError("Diluted shares must be positive")
 
-    div_paid = _line_value(getattr(cf, "dividends_paid", None)) or 0.0
-    if div_paid <= 0:
+    div_per_share_now = _bank_dividend_per_share(period)
+    if div_per_share_now is None or div_per_share_now <= 0:
         raise ValueError(
             "Dividend-discount model requires positive dividends "
-            f"(got dividends_paid={div_paid}); a DDM cannot value a "
+            f"(got common cash DPS={div_per_share_now}); a DDM cannot value a "
             "non-dividend-paying bank"
         )
-    div_per_share_now = div_paid / shares
 
     next_year_div = div_per_share_now * (1 + a.terminal_growth)
     fair_value_per_share = next_year_div / (a.wacc - a.terminal_growth)

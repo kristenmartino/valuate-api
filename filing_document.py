@@ -128,6 +128,24 @@ def read_inline(html, cik, end):
         divided = any(local(n) == "divide" for n in unit_node.iter())
         measure = text(measures[0]) if len(measures) == 1 and not divided else None
         unit = {"iso4217:USD": "USD", "xbrli:shares": "shares"}.get(measure)
+        if divided:
+            numerators = [n for n in unit_node.iter() if local(n) == "unitNumerator"]
+            denominators = [
+                n for n in unit_node.iter() if local(n) == "unitDenominator"
+            ]
+            if len(numerators) == len(denominators) == 1:
+                numerator = [
+                    text(n) for n in numerators[0].iter() if local(n) == "measure"
+                ]
+                denominator = [
+                    text(n) for n in denominators[0].iter() if local(n) == "measure"
+                ]
+                if (
+                    numerator == ["iso4217:USD"]
+                    and denominator == ["xbrli:shares"]
+                    and len(measures) == 2
+                ):
+                    unit = "USD/shares"
         key = unit_node.get("id")
         if key in units and units[key] != unit:
             raise ValueError("Conflicting duplicate XBRL unit")

@@ -22,7 +22,7 @@ Cold tests start with no saved record. The reviewed-contract subset of CI replay
 
 ## Broad ticker extraction
 
-The reusable-rule cold set adds eight previously unlisted filings, using no saved Company records, per-issuer policies or AI responses: META, COST, WMT, CAT, MET and O qualify; NVDA is withheld for unresolved finance-lease debt scope, and BAC for common cash-dividend payment scope. Total dividends and declared dividends are not substituted for common cash paid. Fixtures retain inline numeric contexts and original relationships with source hashes; surrounding prose is removed. These are selected-source regression outcomes, not a market-wide coverage rate or extraction-accuracy score. Complete-source replays are checked separately before release.
+The reusable-rule cold set adds eight previously unlisted filings, using no saved Company records, per-issuer policies or AI responses: META, NVDA, COST, WMT, CAT, BAC, MET and O qualify. NVDA and BAC initially exposed gaps in debt-signal classification and per-share dividend coverage; the source-backed rules below resolve them without substituting missing values, total dividends or declared dividends. Fixtures retain inline numeric contexts and original relationships with source hashes; surrounding prose is removed. These are selected-source regression outcomes, not a market-wide coverage rate or extraction-accuracy score. Complete-source replays are checked separately before release.
 
 Enter a US ticker with a SEC 10-K. An uncached filing no longer needs to be added to an issuer allowlist before it can produce a valuation. The source-only path reads the filing-local schema, primary-statement presentation and calculation relationships, annual entity contexts and units. Standard undimensioned values also require matching SEC company-facts amounts. Optional fields with unestablished scope remain unavailable; this path makes no AI backfill or revenue-segmentation calls.
 
@@ -33,6 +33,14 @@ D&A must cover every presented cash-flow component through nonoverlapping calcul
 Independent qualification reconstructs the expected values from the original source documents; saved confidence, quotes and reviewer labels cannot approve a different amount. Reports identify automatic statement rules separately from reviewed filing contracts. Source URLs, periods, concepts and reconciliation operands remain inspectable. Source documents are fetched with process-wide request pacing and bounded retry/cache limits. See the SEC's [API scope](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) and [inline-XBRL explanation](https://www.sec.gov/structureddata/osd-inline-xbrl.html).
 
 Automatic model selection also has limits: financial businesses without a supported model, insurance agencies, non-producer energy businesses, and REITs without property-ownership evidence require model review. Amendments, ambiguous contexts, missing history or incomplete input scope can still withhold a valuation. This restores broad eligible-filing support, not guaranteed coverage of every ticker or investment-model suitability.
+
+## NVDA and BAC source coverage
+
+[NVDA FY2026](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm) reports $0.999B current and $7.469B noncurrent carrying notes, reconciling to $8.468B in its debt note and the balance sheet. The $0.519B accumulated-amortization tag is used on a combined leasehold-improvement/finance-lease asset disclosure; it is not a lease liability or an amount to add to debt. A sole historical asset-amortization signal can proceed only with matching current/noncurrent/total debt-note values, independent SEC corroboration and complete balance-sheet rollups. No finance-lease liability is inferred as zero. An actual lease liability, principal-payment signal, new financed-asset signal, missing note operand or failed reconciliation still blocks this path.
+
+[BAC FY2025](https://www.sec.gov/Archives/edgar/data/70858/000007085826000157/bac-20251231.htm) explicitly reports annual cash dividends paid per common share: $1.08, $1.00, $0.92, $0.86 and $0.78 for FY2025–FY2021. The DDM uses these amounts directly through the supplemental `common_dividends_per_share` field, with annual entity contexts, exact USD/share units and matching `CommonStockDividendsPerShareCashPaid` facts. It does not divide all-shareholder payments by diluted shares, substitute declared dividends, or multiply per-share payments by average shares to invent a total cash outflow. The workspace identifies the dividend-note input separately from the cash-flow statement.
+
+Bank models retain the existing verified aggregate-payment path when no supplemental paid-common DPS is present, preserving existing saved model results. Both paths remain subject to qualification; the new field is checked on reviewed filing policies as well as reusable-rule records. Missing/incorrectly scoped evidence and changed model inputs still withhold valuation. Saved corrections and complete source notes are retained on same-filing publication.
 
 ## Reviewed debt and cash-flow coverage
 
@@ -253,7 +261,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-533 collected tests across 24 files: 532 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
+554 collected tests across 25 files: 553 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -277,6 +285,7 @@ pytest tests/
 - `test_repository_persistence.py` (3) — PostgreSQL persistence across repository restarts, immutable revisions and evidence, and stale-write rejection
 - `test_statement_coverage.py` (30) — statement-role evidence, SBUX five-year recovery, separate historical borrowings, explicit zero-borrowing disclosures, source-only preflight, and atomic repair
 - `test_scoped_inputs.py` (49) — Oracle/Amazon source-only cold onboarding, exact lease/financing operands, five-year history, unsafe-source rejection, preserved optional reviews and rejected conflicting model reviews
+- `test_nvda_bac_coverage.py` (21) — reconciled notes versus accumulated asset amortization, paid-common DPS units/history, unsafe-source rejection and reviewed-policy protection
 - `test_reusable_inputs.py` (37) — unlisted SEC-only cold cases, independent qualification, rounded values, source contexts, model scope, public withholding and source-only preflight
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 

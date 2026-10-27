@@ -39,17 +39,6 @@ def test_cold_unlisted_filings_use_real_graph_and_independent_rules_without_ai(c
     assert q.evidence_digest and evidence["documents"]
     assert len(company.periods) == 5
     assert q.status == case["expected_status"], q.issues
-    if case["ticker"] == "BAC":
-        assert {i.field_path for i in q.issues} == {
-            "cash_flow_statement.dividends_paid"
-        }
-        assert all("Common cash-dividend" in i.message for i in q.issues)
-    if case["ticker"] == "NVDA":
-        assert {i.field_path for i in q.issues} == {
-            "balance_sheet.long_term_debt",
-            "balance_sheet.short_term_debt",
-        }
-        assert all("finance-lease" in i.message for i in q.issues)
     for p in company.periods:
         for g in ["income_statement", "balance_sheet", "cash_flow_statement"]:
             assert not any(
@@ -318,7 +307,13 @@ def test_automatic_record_with_unqualified_debt_cannot_get_public_defaults_or_va
     from app import main as api
     from repository import InMemoryRepo
 
-    c, _ = cold(ticker)
+    c, _ = copy.deepcopy(cold(ticker))
+    # A newly qualified filing must lose publication permission when a
+    # model input changes, even if a caller supplies its own assumptions.
+    if ticker == "NVDA":
+        c.periods[0].balance_sheet.long_term_debt.value += 1
+    else:
+        c.periods[0].cash_flow_statement.common_dividends_per_share.value += 1
     repo = InMemoryRepo()
     asyncio.run(repo.set(ticker, c))
     monkeypatch.setattr(api, "_repo", repo)
@@ -347,7 +342,7 @@ def test_automatic_record_with_unqualified_debt_cannot_get_public_defaults_or_va
 
 
 @pytest.mark.parametrize(
-    "ticker,complete", [("META", True), ("NVDA", False), ("BAC", False)]
+    "ticker,complete", [("META", True), ("NVDA", True), ("BAC", True)]
 )
 def test_unlisted_source_preflight_is_useful_without_granting_qualification(
     ticker, complete

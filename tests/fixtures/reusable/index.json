@@ -7,7 +7,7 @@
   {
     "ticker": "NVDA",
     "cik": "0001045810",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "COST",
@@ -27,7 +27,7 @@
   {
     "ticker": "BAC",
     "cik": "0000070858",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "MET",

@@ -14,7 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, model_serializer, field_serializer
 
 from industry import Industry
 
@@ -310,17 +310,29 @@ class BankCashFlowStatement(BaseModel):
     Banks don't have meaningful "free cash flow" the way industrials do —
     capex is rounding error compared to loan-book changes, and the cash
     flow statement is dominated by deposit/loan flows. What we actually
-    need for a bank DDM is `dividends_paid` — the rest of the cash flow
-    is informational only.
+    need for DDM is common cash dividends: paid DPS directly when available,
+    otherwise a verified aggregate payment divided by diluted shares. The
+    supplemental per-share note disclosure is not a cash-flow subtotal.
     """
 
     kind: Literal["bank"] = "bank"
     cash_from_operations: LineItem
     cash_from_investing: Optional[LineItem] = None
     cash_from_financing: Optional[LineItem] = None
-    dividends_paid: Optional[LineItem] = None  # required for DDM in practice
+    dividends_paid: Optional[LineItem] = None  # common cash amount, if established
+    # Supplemental annual filing disclosure, not an aggregate cash-flow row.
+    common_dividends_per_share: Optional[LineItem] = None  # USD/common share, paid
     depreciation_amortization: Optional[LineItem] = None
     capital_expenditures: Optional[LineItem] = None
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler):
+        data = handler(self)
+        # Preserve the exact payload/digest and CAS identity of older bank
+        # records. The additive input is present only when actually populated.
+        if self.common_dividends_per_share is None:
+            data.pop("common_dividends_per_share", None)
+        return data
 
 
 class InsuranceCashFlowStatement(BaseModel):

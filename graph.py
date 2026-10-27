@@ -170,6 +170,7 @@ BANK_BALANCE_FIELDS = [
     "noncontrolling_interests",
 ]
 BANK_CASH_FLOW_FIELDS = [
+    "common_dividends_per_share",
     "cash_from_operations",
     "cash_from_investing",
     "cash_from_financing",
