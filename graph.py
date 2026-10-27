@@ -35,6 +35,7 @@ from crm_revenue import extract_crm_revenue
 from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VALUATION_NOTE as IBM_NOTE, filing_items as ibm_filing_items, model_items as ibm_model_items
 from intuit import CIK as INTU_CIK, PROTECTED_FIELDS as INTU_FIELDS, VALUATION_NOTE as INTU_NOTE, filing_items as intu_items, coverage_flags as intu_flags
 from microsoft import CIK as MSFT_CIK, PROTECTED_FIELDS as MSFT_FIELDS, VALUATION_NOTE as MSFT_NOTE, filing_items as msft_items, coverage_flags as msft_flags
+from filing_coverage import configured_fields as coverage_fields, filing_items as coverage_items
 from alphabet import CIK as GOOGL_CIK, PROTECTED_FIELDS as GOOGL_FIELDS, VALUATION_NOTE as GOOGL_NOTE, filing_items as googl_items, coverage_flags as googl_flags
 from input_contracts import carrying_debt_items
 from extract_track_a import extract_track_a
@@ -465,6 +466,9 @@ async def track_a(state: GraphState) -> GraphState:
             selected = googl_items(facts, state["cik"], pe, state["filing_accession"], latest)
             for field in GOOGL_FIELDS:
                 items[field] = selected.get(field)
+        reviewed_items = coverage_items(facts, state["cik"], pe, state["filing_accession"], latest)
+        for field in coverage_fields(state["cik"], state["filing_accession"]):
+            items[field] = reviewed_items.get(field)
         debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
@@ -770,7 +774,7 @@ def _make_track_b(
             if is_berkshire:
                 for pe, items in extract_berkshire_filing(html, state["ticker"], period_ends).items():
                     periods_items[pe].update(items)
-            missing = _missing_fields(latest_items, industry)
+            missing = [f for f in _missing_fields(latest_items, industry) if f not in coverage_fields(state["cik"], state["filing_accession"])]
             if is_berkshire:
                 missing = [field for field in missing if field not in BERKSHIRE_FIELDS]
             if is_cisco:
@@ -796,6 +800,8 @@ def _make_track_b(
                     fields_to_extract=missing,
                 )
                 for field, line_item in claude_items.items():
+                    if field in coverage_fields(state["cik"], state["filing_accession"]):
+                        continue
                     if field == "noncontrolling_interests":
                         continue  # This component requires matching tagged instant facts.
                     if is_berkshire and field in BERKSHIRE_FIELDS:
@@ -864,6 +870,9 @@ def _make_track_b(
 
         if is_intu and any(latest_items.get(field) is None for field in INTU_FIELDS):
             raise CompositionError("Required INTU annual D&A/current/noncurrent debt coverage is unavailable; refusing partial inputs.")
+        protected_coverage = coverage_fields(state["cik"], state["filing_accession"])
+        if any(latest_items.get(field) is None for field in protected_coverage):
+            raise CompositionError("Required reviewed debt/D&A inputs are missing; AI fallback cannot replace filing evidence")
         if is_msft and any(latest_items.get(field) is None for field in MSFT_FIELDS):
             raise CompositionError("Required MSFT annual D&A/current/noncurrent debt coverage is unavailable; refusing partial inputs.")
 
@@ -887,6 +896,9 @@ def _make_track_b(
             company = company.model_copy(update={"valuation_note": MSFT_NOTE})
         if is_googl:
             company = company.model_copy(update={"valuation_note": GOOGL_NOTE})
+        if protected_coverage:
+            from filing_coverage import POLICIES as coverage_policies
+            company = company.model_copy(update={"valuation_note": coverage_policies[state["cik"].lstrip("0") + ":" + state["filing_accession"]]["disclosure"]})
         return {"company": company}
 
     return track_b

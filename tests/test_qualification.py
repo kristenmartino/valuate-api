@@ -169,10 +169,16 @@ def test_saved_qualification_cannot_survive_changed_inputs_or_policy(
 
 
 @pytest.mark.parametrize("ticker", ["ADBE", "CRM", "EOG", "PEP", "TXN"])
-def test_known_unresolved_coverage_blocks_caller_supplied_assumptions(
+def test_unresolved_coverage_still_blocks_caller_supplied_assumptions(
     monkeypatch, ticker
 ):
     c = saved(ticker)
+    # An incorrect current-debt amount must still fail after the five filings
+    # gain reviewed scope; saved confidence/notes cannot rescue the mismatch.
+    from schemas import LineItem, ExtractionSource
+    p = c.periods[0]
+    p = p.model_copy(update={"balance_sheet": p.balance_sheet.model_copy(update={"short_term_debt": LineItem(value=Decimal(1), source=ExtractionSource.XBRL, confidence=1)})})
+    c = c.model_copy(update={"periods": [p, *c.periods[1:]]})
     q = qualify(c, FixtureEdgar(ticker).facts)
     assert q.status == "review_required"
     c = c.model_copy(update={"qualification": q})
@@ -288,6 +294,7 @@ def test_override_does_not_grant_qualification_even_at_confidence_one(monkeypatc
     [
         ("/admin/import/MSFT", "post"),
         ("/admin/qualify/MSFT", "post"),
+        ("/admin/repair-coverage/ADBE", "post"),
         ("/admin/cold-extract", "post"),
         ("/admin/publish/fake", "post"),
         ("/admin/history/MSFT", "get"),

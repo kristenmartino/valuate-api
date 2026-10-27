@@ -5,7 +5,7 @@
   },
   {
     "ticker": "ADBE",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "BRK-A",
@@ -17,7 +17,7 @@
   },
   {
     "ticker": "CRM",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "CSCO",
@@ -25,7 +25,7 @@
   },
   {
     "ticker": "EOG",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "GOOGL",
@@ -49,7 +49,7 @@
   },
   {
     "ticker": "PEP",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   },
   {
     "ticker": "PLD",
@@ -61,6 +61,6 @@
   },
   {
     "ticker": "TXN",
-    "expected_status": "review_required"
+    "expected_status": "qualified"
   }
 ]

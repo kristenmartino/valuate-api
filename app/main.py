@@ -561,6 +561,31 @@ async def cold_extract(req: ExtractRequest):
     return {"candidate_id": candidate_id, "company": company}
 
 
+@app.post("/admin/repair-coverage/{ticker}", dependencies=[Depends(require_admin_auth)])
+async def repair_reviewed_coverage(ticker: str):
+    """Apply only reviewed source-backed debt/D&A repairs; never call AI."""
+    from filing_coverage import repair_company as repair_coverage
+
+    ticker = normalize_ticker(ticker)
+    async with _company_lock(ticker):
+        company = await _require_repo().get(ticker)
+        if company is None:
+            raise HTTPException(404, "No saved record")
+        try:
+            facts = await EdgarClient().get_company_facts(company.cik)
+            repaired = validate_company(repair_coverage(company, facts))
+            checked, evidence = await qualify_record(repaired, facts=facts)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+        except Exception as exc:
+            _logger.warning("Coverage evidence unavailable for %s (%s)", ticker, type(exc).__name__)
+            raise HTTPException(503, "Filing evidence unavailable; saved record remains unchanged")
+        candidate_id = await _require_repo().stage(checked, evidence)
+        _check_input_coverage(checked)
+        await _require_repo().set(ticker, checked, expected_id=payload_id(company.model_dump(mode="json")))
+        return {"candidate_id": candidate_id, "company": checked}
+
+
 @app.post("/admin/publish/{candidate_id}", dependencies=[Depends(require_admin_auth)])
 async def publish_candidate(candidate_id: str):
     company = await _require_repo().candidate(candidate_id)

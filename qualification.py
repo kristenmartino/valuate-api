@@ -18,9 +18,11 @@ from input_contracts import (
 )
 from qualification_schema import InputEvidence, InputIssue, Qualification
 from schemas import Company, ExtractionSource
+from filing_coverage import configured_fields, selections as reviewed_selections
 
 POLICY_FILES = [
     "qualification.py",
+    "filing_coverage.py",
     "qualification_schema.py",
     "qualification_service.py",
     "input_contracts.py",
@@ -172,6 +174,7 @@ def qualify(
         return _report(company, issues, inputs, disclosures, latest_filing)
     # Required special scope operands are selected from the original filing,
     # never trusted from a saved free-text explanation.
+    reviewed = {p.fiscal_period_end: reviewed_selections(facts, company.cik, p.fiscal_period_end, latest.filing_accession, pe0) for p in company.periods}
     special = {}
     for p in company.periods:
         pe = p.fiscal_period_end
@@ -224,6 +227,19 @@ def qualify(
             return
         if not item.value.is_finite():
             issue("invalid_number", path, "Input must be finite.", pe)
+            return
+        scoped = reviewed[pe].get(field)
+        if scoped is not None:
+            if scoped.item.value != item.value:
+                issue("scope_or_value_mismatch", path, "Saved input does not match the reviewed filing coverage and amount.", pe)
+                return
+            rows = scoped.rows
+            evidence(p, path, item, {**rows[0], "concept": scoped.item.xbrl_tag}, scoped.scope, scoped.basis,
+                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start", ""), "end": r["end"], "accession": r["accn"]} for r in rows])
+            disclosures.append((policy or {}).get("disclosure", scoped.scope))
+            return
+        if field in configured_fields(company.cik, latest.filing_accession):
+            issue("scope_evidence_unavailable", path, "Required complete debt/D&A operands are unavailable or conflict; no generic fallback can qualify this filing.", pe)
             return
         expected = special[pe].get(field)
         special_fields = {
@@ -486,7 +502,7 @@ def qualify(
             verify(latest, "balance_sheet.shareholders_equity")
             verify(latest, "income_statement.interest_expense", False)
         for field in ["long_term_debt", "short_term_debt"]:
-            if field in special[pe0]:
+            if field in special[pe0] or field in configured_fields(company.cik, latest.filing_accession):
                 verify(latest, "balance_sheet." + field)
             else:
                 _verify_debt(company, facts, bound, inputs, issues)

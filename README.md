@@ -18,7 +18,28 @@ The report is bound to the complete saved record and a fingerprint of the financ
 
 Production uses PostgreSQL and refuses to start with process-local reviewer storage. Active records, immutable prior revisions, cold candidates and raw filing-evidence snapshots are stored separately. Versioned writes reject stale updates; same-filing publication preserves saved reviewer corrections. A new filing does not inherit old reviews as if they applied to its new figures. Revisions retain prior values and notes, but the shared demo credential does not identify individual reviewers.
 
-Cold tests start with no saved record. CI replays 16 filing cases through the real extraction graph and qualification logic using selected SEC facts, inline-XBRL fixtures and recorded AI backfill responses. The expected outcomes include 11 qualified cases and five withheld cases; a safe rejection is not scored as extraction accuracy. Separate live cold runs exercise fresh retrieval and AI extraction, stage their candidates without replacing active records, and test rejection of unqualified publication. The historical May extraction baseline remains separate and has not been rerun for these mappings.
+Cold tests start with no saved record. CI replays 16 filing cases through the real extraction graph and qualification logic using selected SEC facts, inline-XBRL fixtures and recorded AI backfill responses. The 16 reviewed filing replays now qualify, including the five repaired debt/D&A cases. Separate missing-operand, conflicting-value, wrong-unit, wrong-period and changed-record tests must withhold valuation; a safe rejection is not scored as extraction accuracy. Separate live cold runs exercise fresh retrieval and AI extraction, stage their candidates without replacing active records, and test rejection of unqualified publication. The historical May extraction baseline remains separate and has not been rerun for these mappings.
+
+## Reviewed debt and cash-flow coverage
+
+The five filings below have explicit source contracts. Amounts are USD billions; debt columns are non-overlapping carrying amounts, not face values or credit-facility capacity.
+
+| Filing | Noncurrent debt | Current debt | Cash-flow add-back | Scope |
+|---|---:|---:|---:|---|
+| [ADBE FY2025](https://www.sec.gov/Archives/edgar/data/796343/000079634326000003/adbe-20251128.htm) | 6.210 | 0.000 | 0.818 | Debt includes the filed swap basis adjustment. Add-back includes accretion; it is a combined proxy, not pure D&A. |
+| [CRM FY2026](https://www.sec.gov/Archives/edgar/data/1108524/000110852426000060/crm-20260131.htm) | 10.439 | 4.000 | 3.631 | Current and noncurrent debt reconcile to the 14.439 total. Existing cash-flow D&A is retained. |
+| [EOG FY2025](https://www.sec.gov/Archives/edgar/data/821189/000082118926000054/eog-20251231.htm) | 7.909 | 0.027 | 4.461 | Debt already includes finance leases. The add-back includes depletion. Operating leases remain separate. |
+| [PEP FY2025](https://www.sec.gov/Archives/edgar/data/77476/000007747626000007/pep-20251227.htm) | 42.321 | 6.861 | 3.451 | Current debt includes current notes and other borrowings. Historical add-backs follow the cash-flow total. |
+| [TXN FY2025](https://www.sec.gov/Archives/edgar/data/97476/000009747626000059/txn-20251231.htm) | 13.548 | 0.500 | 1.999 | Notes reconcile to 14.048; explicitly filed commercial paper is zero. Add-back sums depreciation and software amortization. |
+
+Adobe's `LongTermDebt` concept labels the balance-sheet noncurrent carrying amount in this filing; it is not treated as an inclusive total. Its zero current debt is an explicit filed amount. Statement rows, assumptions and projections label **D&A + accretion**, and the DCF-implied EV/EBITDA multiple is unavailable for that combined proxy. These disclosures retain the existing add-back values and valuation formula.
+
+PepsiCo's older `DepreciationAndAmortization` note amounts exclude separately reported intangible amortization, while the cash-flow total includes it. The existing cash-flow series of 3.451, 3.160, 2.948, 2.763 and 2.710 is retained with that scope. The generic ambiguity rule remains in place for other filers.
+
+TXN's complete five-year cash-flow add-back series is 1.999, 1.580, 1.238, 0.979 and 0.954. The 2021 amount includes 0.142 of acquisition-related intangible amortization as well as 0.755 depreciation and 0.057 software amortization. Required components come from one common annual filing per period, bounded by the reviewed anchor; absent components cannot be guessed or supplied by AI. The capex/revenue starting ratio and exact restore behavior are unchanged.
+
+Saved repairs require complete matching evidence across the existing annual history before changing any amount. They preserve reviewer values and full notes, never split a reviewer-held debt pair automatically, and publish only after the independent qualification gate passes. Missing or conflicting evidence leaves the saved record unchanged. New filings still require separate scope review; these checks do not certify unrelated fields or expand the historical May extraction-accuracy baseline.
+
 
 ## What this service does
 
@@ -342,6 +363,8 @@ railway run --no-local -- python -m ops.migrate_records --snapshots /path/to/bac
 railway run --no-local -- python -m eval.live_cold --output /path/to/cold-evidence --max-extractions 29
 ```
 
-Administrative import, qualification, cold extraction, candidate publication and history endpoints always require the configured service token, including in local mode. The frontend proxy does not inject credentials onto these routes. Import strips supplied qualification metadata and refuses to overwrite a saved record. Candidate publication rechecks qualification and preserves same-filing reviews; an unqualified candidate receives HTTP 422. These are maintainer operations, not public approval controls.
+Administrative import, qualification, coverage repair, cold extraction, candidate publication and history endpoints always require the configured service token, including in local mode. The frontend proxy does not inject credentials onto these routes. Import strips supplied qualification metadata and refuses to overwrite a saved record. Candidate publication rechecks qualification and preserves same-filing reviews; an unqualified candidate receives HTTP 422. These are maintainer operations, not public approval controls.
 
 The live cold cohort is the 18 sample tickers, nine additional regression tickers and two held-out tickers (ORCL and SBUX). Coverage results must distinguish qualified, withheld and composition-failed cases. The two held-out filings have no scope policy and must not be published automatically. CI runs the offline cases and real PostgreSQL restart/conflict tests. A weekday GitHub Actions job checks SEC annual-filing metadata without AI calls or publication writes and fails when a policy's filing has been superseded; the new filing needs source review and a new policy.
+
+`POST /admin/repair-coverage/{ticker}` applies the reviewed five-filing contracts without AI calls. It fetches SEC evidence, checks every saved period, retains reviewer corrections, stages the result, then writes only if qualification passes and the saved revision is still current. It returns 422 for incomplete or conflicting coverage, 503 when evidence is unavailable, and does not replace the active record on either failure. Requalify other saved records with `POST /admin/qualify/{ticker}` after a financial-policy fingerprint changes. These routes require the existing service token; the frontend proxy never injects it for administrative requests.
