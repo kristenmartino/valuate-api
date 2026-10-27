@@ -53,7 +53,12 @@ def validate_history(sources, industry):
                 for pe in overlap:
                     old, new = values[pe], prior[pe]
                     a, b = old.rows[0], new.rows[0]
-                    concepts = lambda source: {r["concept"] for r in source.rows if r.get("usage", "input component") == "input component"}
+                    def concepts(source):
+                        if path == "balance_sheet.shareholders_equity" and source.item.xbrl_tag == "us-gaap:StockholdersEquity":
+                            # Independently reconciled parent columns and a
+                            # direct parent total establish the same scope.
+                            return {source.item.xbrl_tag}
+                        return {r["concept"] for r in source.rows if r.get("usage", "input component") == "input component"}
                     if (a.get("start"), a["unit"]) != (b.get("start"), b["unit"]):
                         issues.append({"path": path, "period": str(pe), "reason": "Overlapping annual dates or units differ"})
                     elif old.is_proxy != new.is_proxy or (

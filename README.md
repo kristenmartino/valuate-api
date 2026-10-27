@@ -23,9 +23,9 @@ Cold tests start with no saved record. The reviewed-contract subset of CI replay
 ## Broad ticker extraction
 
 <!-- valuate:source-coverage:start -->
-The reusable-rule cold set starts without saved Company records, per-issuer policies or AI responses. META, NVDA, COST, WMT, CAT, BAC and O qualify; MET is withheld for unresolved source/model coverage. MET: Historical parent/consolidated equity coverage is unresolved. These are selected-source regressions, not a market-wide coverage rate or extraction-accuracy score. Complete-source checks are separate from the historical May extraction baseline.
+The reusable-rule cold set starts without saved Company records, per-issuer policies or AI responses. META, NVDA, COST, WMT, CAT, BAC, MET and O qualify. These are selected-source regressions, not a market-wide coverage rate or extraction-accuracy score. Complete-source checks are separate from the historical May extraction baseline.
 
-Publication checks the meaning and basis of model inputs, not just whether a number occurs in a filing. Carrying debt must have complete nonoverlapping components; cash and cash-flow add-backs retain their source scope. Historical shares and direct paid-common dividends per share require consistent split bases and independent same-period bridges before conversion. Model-driving history cannot silently change units, annual dates, parent/consolidated coverage or pure/combined add-back scope. Same-concept comparative revisions retain the newer inspected figures and are disclosed; they never authorize rescaling a different year. Older periods may not all be restated on a uniform accounting basis. Missing or ambiguous coverage requires review, and saved corrections do not bypass qualification.
+Publication checks the meaning and basis of model inputs, not just whether a number occurs in a filing. Carrying debt must have complete nonoverlapping components; cash and cash-flow add-backs retain their source scope. Historical shares and direct paid-common dividends per share require consistent split bases and independent same-period bridges before conversion. Model-driving history cannot silently change units, annual dates, parent/consolidated coverage or pure/combined add-back scope. Parent equity may also come from an explicit parent column in a primary equity statement, only when the same-period parent and noncontrolling columns reconcile to the filed consolidated total and the ownership relationship is established. This recovers MET's historical parent scope without substituting inclusive equity or unrevised balances. Same-scope comparative revisions retain the newer inspected figures and are disclosed; they never authorize rescaling a different year. Older periods may not all be restated on a uniform accounting basis. Missing or ambiguous coverage requires review, and saved corrections do not bypass qualification.
 
 A weekday SEC-only cold canary checks current filings without saved records, AI calls or publication writes. Its report distinguishes qualified, review-required and source-failed results; a failure requires maintainer review. Browser regressions exercise qualification withholding, exact assumption restoration, source-note readability, per-share units and proxy/residual labels against recorded responses with all external APIs blocked. These checks catch defined failure classes; they do not establish model suitability, investment accuracy or universal ticker coverage.
 <!-- valuate:source-coverage:end -->
@@ -273,7 +273,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-606 collected tests across 30 files: 605 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
+626 collected tests across 31 files: 625 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -299,8 +299,9 @@ pytest tests/
 - `test_scoped_inputs.py` (49) — Oracle/Amazon source-only cold onboarding, exact lease/financing operands, five-year history, unsafe-source rejection, preserved optional reviews and rejected conflicting model reviews
 - `test_share_basis.py` (20) — cross-filing share-basis bridges, explicit split evidence, forward/reverse conversions, unsafe-evidence rejection, unchanged latest valuation and independent qualification
 - `test_history_consistency.py` (16) — history scope/revision distinctions, parent-equity model basis, inverse DPS split checks, public withholding and bank-default provenance
+- `test_parent_equity.py` (19) — reusable parent-column recovery, same-period ownership reconciliation, unsafe-context refusal, MET restated history and saved-scope validation
 - `test_latest_annual.py` (8) — archive-aware latest annual discovery, source/entity/date safety and bounded retrieval
-- `test_source_canary.py` (2) — SEC-only cold qualification statuses, no AI/repository writes and bounded failures
+- `test_source_canary.py` (3) — SEC-only cold qualification statuses, no AI/repository writes and bounded failures
 - `test_docs_contract.py` (6) — shared-claim boundaries, layout independence and generated test inventory
 - `test_nvda_bac_coverage.py` (21) — reconciled notes versus accumulated asset amortization, paid-common DPS units/history, unsafe-source rejection and reviewed-policy protection
 - `test_reusable_inputs.py` (37) — unlisted SEC-only cold cases, independent qualification, rounded values, source contexts, model scope, public withholding and source-only preflight

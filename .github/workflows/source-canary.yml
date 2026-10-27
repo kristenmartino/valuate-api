@@ -5,7 +5,7 @@ on:
       tickers:
         description: SEC-only cold tickers (up to 12; no AI or publication)
         required: false
-        default: META,NVDA,COST,WMT,CAT,BAC,O,HD,KO
+        default: META,NVDA,COST,WMT,CAT,BAC,MET,O,HD,KO
         type: string
   schedule:
     - cron: '50 12 * * 1-5'
@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 30
     env:
       SEC_USER_AGENT: Valuate filing coverage kristen@kristenmartino.ai
-      CANARY_TICKERS: ${{ inputs.tickers || 'META,NVDA,COST,WMT,CAT,BAC,O,HD,KO' }}
+      CANARY_TICKERS: ${{ inputs.tickers || 'META,NVDA,COST,WMT,CAT,BAC,MET,O,HD,KO' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

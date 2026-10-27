@@ -281,6 +281,12 @@ class FilingDocument:
                 or "us-gaap:StockholdersEquity" in concepts
             ):
                 kind = "balance_sheet"
+            elif (
+                "us-gaap:StatementEquityComponentsAxis" in concepts
+                and "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest" in concepts
+                and "equity" in norm(text)
+            ):
+                kind = "equity_statement"
             elif concepts & {
                 "us-gaap:NetIncomeLoss",
                 "us-gaap:ProfitLoss",

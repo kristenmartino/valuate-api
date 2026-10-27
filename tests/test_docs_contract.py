@@ -4,7 +4,7 @@ from ops.sync_docs import canonical, sync, START, END
 
 def test_shared_claims_cannot_drift_or_depend_on_document_order():
     expected = canonical()
-    assert "MET is withheld" in expected
+    assert "MET and O qualify" in expected and "MET is withheld" not in expected
     for position in ["intro", "evaluation", "appendix"]:
         original = f"Unrelated {position}\n{START}\nstale copy\n{END}\nUnrelated ending"
         updated = sync(original, expected)
@@ -31,6 +31,6 @@ def test_mdx_uses_valid_comment_syntax_without_changing_shared_claims():
     from ops.sync_docs import MDX_START, MDX_END
     old = f"Intro\n{MDX_START}\nstale\n{MDX_END}\nEnding"
     updated = sync(old, canonical())
-    assert "<!--" not in updated and "MET is withheld" in updated
+    assert "<!--" not in updated and "MET and O qualify" in updated
     assert sync(updated, canonical()) == updated
     with pytest.raises(ValueError): sync(old + START + END, canonical())

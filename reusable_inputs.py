@@ -192,6 +192,76 @@ def statement_total(doc, rows, pe, kind, *, instant=False):
     return choose(candidates)
 
 
+def parent_equity_column(doc, facts, filing, bound, pe):
+    """Recover parent scope from a reconciled equity statement, never a guess.
+
+    Older balance-sheet dates may appear only as dimensional opening/closing
+    equity balances. Require the explicit standard parent and NCI columns in
+    one primary equity role, and the filed total = parent + NCI relationship.
+    Extra scenario/adoption/entity dimensions are deliberately not accepted.
+    """
+    parent_tag = "us-gaap:StockholdersEquity"
+    total_tag = "us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"
+    nci_tag = "us-gaap:MinorityInterest"
+    axis = "us-gaap:StatementEquityComponentsAxis"
+    members = {"us-gaap:ParentMember", "us-gaap:NoncontrollingInterestMember"}
+    if not any(
+        {(c, w) for c, w, _ in doc.children(role, total_tag)}
+        == {(parent_tag, Decimal(1)), (nci_tag, Decimal(1))}
+        for role in doc.roles("balance_sheet")
+    ):
+        return None
+    for role in doc.roles("equity_statement"):
+        edges = doc.presentations.get(role, {})
+        seen = set()
+
+        def visit(node):
+            if node in seen:
+                return
+            seen.add(node)
+            for child, _, _ in edges.get(node, []):
+                visit(child)
+
+        visit(axis)
+        if not members <= seen or total_tag not in doc.concepts[role]:
+            continue
+        parent = doc.fact(total_tag, pe, instant=True, dimensions={axis: "us-gaap:ParentMember"})
+        nci = doc.fact(total_tag, pe, instant=True, dimensions={axis: "us-gaap:NoncontrollingInterestMember"})
+        total = doc.fact(total_tag, pe, instant=True)
+        rows = [parent, nci, total]
+        if any(r is None for r in rows) or parent["value"] + nci["value"] != total["value"]:
+            continue
+        if not all(corroborates(r, facts, filing, bound) for r in rows):
+            continue
+        # Cross-check the explicit undimensioned amounts when also reported.
+        # Conflicting repeats must not be treated as absent observations.
+        conflict = False
+        for tag, column in [(parent_tag, parent), (nci_tag, nci)]:
+            candidates = [r for r in doc.index.get((tag, str(pe), "USD", True), []) if not r["dimensions"]]
+            direct = doc.fact(tag, pe, instant=True)
+            if candidates and (direct is None or direct["value"] != column["value"] or not corroborates(direct, facts, filing, bound)):
+                conflict = True
+        if conflict:
+            continue
+        proof = [_prove(parent, filing, role)] + [
+            {**_prove(r, filing, role), "usage": "ownership-scope reconciliation"}
+            for r in [nci, total]
+        ]
+        selected = selection(
+            parent["value"], proof,
+            "Parent shareholders' equity, excluding noncontrolling interests",
+            "Explicit parent equity column; parent plus noncontrolling column equals filed consolidated equity in the same period and unit",
+            label="Parent shareholders' equity",
+            disclosure="Historical parent equity can come from an explicitly dimensioned equity-statement column. Its parent and noncontrolling amounts must reconcile to the same filed consolidated total; this does not assert that all older accounting periods were restated uniformly.",
+        )
+        # Canonical output concept expresses the established parent basis.
+        # The DERIVED source and original dimensional operand tags remain in
+        # the quote and independently reconstructed qualification evidence.
+        selected.item = selected.item.model_copy(update={"xbrl_tag": parent_tag})
+        return selected
+    return None
+
+
 def balance_totals(doc, facts, filing, bound, pe, output):
     for role in doc.roles("balance_sheet"):
         proof = doc.reconcile(
@@ -424,6 +494,11 @@ def mapped_inputs(doc, facts, filing, bound, pe, industry):
                 direct=row["concept"],
                 disclosure="The bank DDM uses filed annual cash dividends paid per common share directly. This supplemental note disclosure is not total cash dividends, declared dividends or a cash-flow statement subtotal. No aggregate cash amount is estimated from average shares.",
             )
+    path = "balance_sheet.shareholders_equity"
+    if path not in result or result[path].item.xbrl_tag != "us-gaap:StockholdersEquity":
+        parent = parent_equity_column(doc, facts, filing, bound, pe)
+        if parent is not None:
+            result[path] = parent
     return balance_totals(doc, facts, filing, bound, pe, result)
 
 

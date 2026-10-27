@@ -72,7 +72,7 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
             f"{revision['path']} for {revision['period']} uses the newer filed comparative "
             f"({revision['new_value']}; {revision['new_accession']}) rather than "
             f"{revision['old_value']} from {revision['old_accession']}. "
-            "The same source concept is retained; no different-year value was rescaled."
+            "The same independently established input scope is retained; no different-year value was rescaled."
         )
     latest = company.periods[0]
     industry = latest.industry
@@ -144,6 +144,14 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
                     "Positive annual diluted shares are required.",
                     pe,
                 )
+                continue
+            if (
+                industry in {Industry.BANK, Industry.INSURER}
+                and path == "balance_sheet.shareholders_equity"
+                and item.xbrl_tag != source.item.xbrl_tag
+            ):
+                issue("equity_scope_unverified", path,
+                      "Saved equity must retain the independently established parent ownership basis; a matching amount alone is insufficient.", pe)
                 continue
             if (
                 path.endswith(

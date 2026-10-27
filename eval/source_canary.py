@@ -15,7 +15,7 @@ from qualification import POLICIES
 from qualification_service import qualify_record
 from reusable_inputs import load_reusable_inputs, compose_reusable
 
-DEFAULT_TICKERS = ["META", "NVDA", "COST", "WMT", "CAT", "BAC", "O", "HD", "KO"]
+DEFAULT_TICKERS = ["META", "NVDA", "COST", "WMT", "CAT", "BAC", "MET", "O", "HD", "KO"]
 
 
 async def inspect_source(ticker, client):

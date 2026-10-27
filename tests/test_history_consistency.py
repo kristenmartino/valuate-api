@@ -112,6 +112,9 @@ def test_unpublished_insurer_scope_gap_is_caught_before_any_public_estimate(monk
     from app import main as api
     from repository import InMemoryRepo
     from dcf import default_assumptions
+    # Removing the recovery evidence must still fail closed after MET becomes
+    # a positive cold regression. Never approve an issuer by ticker alone.
+    monkeypatch.setattr("reusable_inputs.parent_equity_column", lambda *args: None)
     c, _ = asyncio.run(run_fixture("MET"))
     assert c.qualification.status == "review_required"
     assert any(i.code == "history_basis_unverified" and i.field_path.endswith("shareholders_equity") for i in c.qualification.issues)

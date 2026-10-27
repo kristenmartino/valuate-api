@@ -25,7 +25,7 @@ def canonical():
         outcomes += "; " + names(withheld) + (" is" if len(withheld) == 1 else " are") + " withheld for unresolved source/model coverage"
     content = content.replace("{{COLD_OUTCOMES}}", outcomes + ".")
     notes = " ".join(c["ticker"] + ": " + c["withheld_reason"].rstrip(".") + "." for c in cases if c["expected_status"] != "qualified" and c.get("withheld_reason"))
-    content = content.replace("{{WITHHOLDING_NOTES}}", notes)
+    content = content.replace("{{WITHHOLDING_NOTES}} ", notes + " " if notes else "")
     if re.search(r"\b(?:above|below)\b|\bsection\s+\d", content, re.I):
         raise ValueError("Shared source-coverage copy must not depend on page position or section numbers")
     return START + "\n" + content + "\n" + END
