@@ -218,7 +218,17 @@
     ],
     "reviewed_input_scope": {
       "debt": "reconciled_notes",
-      "debt_scope": "Current and noncurrent carrying notes reconcile to the filed total. The reviewed filing reports no outstanding commercial-paper, revolving-facility or Japanese-facility borrowings at the anchor date; borrowing capacity is not an outstanding debt amount"
+      "debt_scope": "Current plus noncurrent carrying notes reconcile to the filed notes total; current debt additionally includes separate short-term borrowings. FY2025 explicitly has no outstanding commercial-paper or facility borrowings; historical short-term amounts must be filed, not assumed zero",
+      "additional_current_borrowings": {
+        "concept": "ShortTermBorrowings",
+        "zero_disclosures": {
+          "2025-09-28": [
+            "We had no borrowings outstanding under our commercial paper program as of September 28, 2025, and September 29, 2024.",
+            "As of September 28, 2025 and September 29, 2024, we had no borrowings outstanding under these credit facilities.",
+            "No amounts were outstanding under our 2025 credit facility as of September 28, 2025, or our 2021 credit facility as of September 29, 2024."
+          ]
+        }
+      }
     },
     "required_history_context": [
       "income_statement.income_before_tax",

@@ -775,6 +775,7 @@ def _make_track_b(
                 loaded = await load_statement_coverage(edgar_client, state["facts"], state["cik"], latest, state["filing_accession"], period_ends, anchor_html=html)
                 for pe, selected in loaded["inputs"].items():
                     apply_statement_items(periods_items[pe], selected)
+                    periods_items[pe].update(coverage_items(state["facts"], state["cik"], pe, state["filing_accession"], latest, zero_current_borrowings=loaded.get("zero_current_borrowings")))
             elif industry in {Industry.STANDARD, Industry.ENERGY}:
                 missing_cash = [pe for pe in period_ends if periods_items[pe].get("cash_and_equivalents") is None]
                 if missing_cash:

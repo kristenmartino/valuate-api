@@ -36,6 +36,7 @@ def test_five_year_recovery_keeps_statement_roles_and_original_fields():
     p=c.periods[0]
     assert p.balance_sheet.long_term_debt.value==14575900000
     assert p.balance_sheet.short_term_debt.value==1498900000
+    assert [p.balance_sheet.short_term_debt.value for p in c.periods]==[1498900000,1248900000,1852100000,1924000000,998900000]
     assert p.balance_sheet.long_term_debt.value+p.balance_sheet.short_term_debt.value==16074800000
     assert not c.extraction_flags
     paths=set(policy(c.cik,p.filing_accession)['statement_inputs'])|set(policy(c.cik,p.filing_accession)['required_history_context'])|{'balance_sheet.short_term_debt','balance_sheet.long_term_debt'}
@@ -166,3 +167,32 @@ def test_statement_cash_recovery_generalizes_without_approving_another_filer():
     f.get_filing_html=cashflow_only
     loaded=asyncio.run(load_statement_coverage(f,f.facts,'12345',ends[0],f.saved.periods[0].filing_accession,ends,candidate_cash_only=True))
     assert loaded['missing']
+
+@pytest.mark.parametrize('broken',['historical_borrowing','zero_disclosure','wrong_zero_date'])
+def test_separate_borrowings_and_latest_zero_require_evidence(broken):
+    f=FixtureEdgar('SBUX')
+    if broken=='historical_borrowing':
+        rows=f.facts['facts']['us-gaap']['ShortTermBorrowings']['units']['USD']
+        f.facts['facts']['us-gaap']['ShortTermBorrowings']['units']['USD']=[r for r in rows if r['end']!='2023-10-01']
+    else:
+        original=f.get_filing_html
+        async def html(url):
+            s=await original(url)
+            quote=policy(f.saved.cik,f.saved.periods[0].filing_accession)['reviewed_input_scope']['additional_current_borrowings']['zero_disclosures']['2025-09-28'][0]
+            return s.replace(quote, '' if broken=='zero_disclosure' else quote.replace('2025','2026'))
+        f.get_filing_html=html
+    with pytest.raises(ValueError):repair(f)
+
+
+def test_latest_debt_without_an_independent_zero_proof_is_withheld():
+    from qualification import qualify
+    f=FixtureEdgar('SBUX');c=repair(f);loaded=load(f)
+    q=qualify(c,f.facts,{'statement_inputs':loaded['inputs']})
+    assert q.status=='review_required'
+    assert any(i.field_path.endswith('debt') for i in q.issues)
+
+
+def test_a_positive_borrowing_fact_cannot_be_overridden_by_a_zero_disclosure():
+    f=FixtureEdgar('SBUX');p=f.saved.periods[0]
+    f.facts['facts']['us-gaap']['ShortTermBorrowings']['units']['USD'].append({'end':str(p.fiscal_period_end),'val':1,'accn':p.filing_accession,'filed':'2025-11-14','form':'10-K','fp':'FY','fy':2025})
+    with pytest.raises(ValueError):repair(f)

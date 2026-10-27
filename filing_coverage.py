@@ -71,7 +71,7 @@ def _selection(value, rows, scope, basis, *, tag=None):
     return Selection(item, rows, scope, basis)
 
 
-def selections(facts, cik, pe, accession, latest):
+def selections(facts, cik, pe, accession, latest, *, zero_current_borrowings=None):
     cik = cik.lstrip("0")
     policy = POLICIES.get(cik + ":" + accession, {})
     scope = policy.get("reviewed_input_scope", {})
@@ -93,7 +93,22 @@ def selections(facts, cik, pe, accession, latest):
         debt_tags = ["LongTermDebtNoncurrent", "LongTermDebtCurrent", "LongTermDebt"]
     if debt_tags is None:
         return {}
+    additional = scope.get("additional_current_borrowings")
+    zero = (zero_current_borrowings or {}).get(pe)
+    needs_zero = additional and str(pe) in additional.get("zero_disclosures", {})
+    if additional and not needs_zero:
+        debt_tags = debt_tags + [additional["concept"]]
     debt = _common(facts, debt_tags, pe, latest, accession, bound, True)
+    if needs_zero:
+        filed_rows = [r for r in facts.get("facts", {}).get("us-gaap", {}).get(additional["concept"], {}).get("units", {}).get("USD", [])
+                      if r.get("end") == str(pe) and r.get("accn") == accession]
+        observed = annual_fact(facts, additional["concept"], pe, latest, accession, bound, instant=True)
+        if filed_rows and (observed is None or observed["value"] != 0):
+            debt = None
+        if not zero or zero.get("accn") != accession or zero.get("end") != str(pe) or zero.get("value") != 0:
+            debt = None
+        elif debt:
+            debt.append(zero)
     if debt:
         noncurrent, current = debt[:2]
         short_value = current["value"]
@@ -107,6 +122,8 @@ def selections(facts, cik, pe, accession, latest):
         elif cik == "97476":
             valid = debt[3]["value"] == noncurrent["value"] + short_value
             short_value += debt[2]["value"]
+        if valid and additional:
+            short_value += debt[3]["value"]
         if valid:
             basis = {
                 "796343": "Adobe balance-sheet noncurrent carrying debt, including the filed swap basis adjustment; DebtCurrent is the separate current carrying amount. The LongTermDebt tag is not a total in this filing",
@@ -117,7 +134,7 @@ def selections(facts, cik, pe, accession, latest):
             }.get(cik, scope.get("debt_scope", "Reconciled current and noncurrent carrying notes"))
             output["long_term_debt"] = _selection(noncurrent["value"], debt, "Noncurrent debt, excluding current maturities", basis, tag=noncurrent["concept"])
             output["short_term_debt"] = _selection(short_value, debt, "Current debt, including filed current borrowings", basis,
-                tag=current["concept"] if cik != "97476" else None)
+                tag=current["concept"] if cik != "97476" and not additional else None)
     if scope.get("da") == "adobe_cashflow" and cik == "796343":
         rows = _common(facts, ["DepreciationDepletionAndAmortization"], pe, latest, accession, bound, False)
         if rows:
@@ -146,8 +163,8 @@ def selections(facts, cik, pe, accession, latest):
     return output
 
 
-def filing_items(facts, cik, pe, accession, latest):
-    return {k: s.item for k, s in selections(facts, cik, pe, accession, latest).items()}
+def filing_items(facts, cik, pe, accession, latest, *, zero_current_borrowings=None):
+    return {k: s.item for k, s in selections(facts, cik, pe, accession, latest, zero_current_borrowings=zero_current_borrowings).items()}
 
 
 def repair_company(company: Company, facts: dict) -> Company:

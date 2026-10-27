@@ -176,7 +176,7 @@ def qualify(
         return _report(company, issues, inputs, disclosures, latest_filing)
     # Required special scope operands are selected from the original filing,
     # never trusted from a saved free-text explanation.
-    reviewed = {p.fiscal_period_end: reviewed_selections(facts, company.cik, p.fiscal_period_end, latest.filing_accession, pe0) for p in company.periods}
+    reviewed = {p.fiscal_period_end: reviewed_selections(facts, company.cik, p.fiscal_period_end, latest.filing_accession, pe0, zero_current_borrowings=support.get("zero_current_borrowings")) for p in company.periods}
     special = {}
     for p in company.periods:
         pe = p.fiscal_period_end
@@ -249,7 +249,7 @@ def qualify(
                 return
             rows = scoped.rows
             evidence(p, path, item, {**rows[0], "concept": scoped.item.xbrl_tag}, scoped.scope, scoped.basis,
-                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start", ""), "end": r["end"], "accession": r["accn"]} for r in rows])
+                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start", ""), "end": r["end"], "accession": r["accn"], **({"source_url": r["source_url"], "disclosure": r["basis"]} if r.get("basis") else {})} for r in rows])
             disclosures.append((policy or {}).get("disclosure", scoped.scope))
             return
         if field in configured_fields(company.cik, latest.filing_accession):

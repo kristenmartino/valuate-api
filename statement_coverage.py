@@ -7,6 +7,8 @@ policy. A broader cash taxonomy tag never becomes a generic cash fallback.
 from datetime import date
 from decimal import Decimal
 import json
+import re
+from bs4 import BeautifulSoup
 from pathlib import Path
 
 from filing_coverage import Selection, _selection, filing_items as debt_items
@@ -68,12 +70,20 @@ async def load_statement_coverage(client, facts, cik, latest, accession, period_
     if anchor is None:
         raise ValueError("Saved annual filing does not match source metadata")
     documents = {};used = set();current = anchor
+    zero_borrowings = {}
     # At most three annual documents for a five-year window. Missing coverage
     # remains explicit; this function never calls AI or writes a repository.
     for _ in range(3):
         html = anchor_html if current["accn"] == accession and anchor_html is not None else await client.get_filing_html(current["url"])
         documents[current["url"]] = html;used.add(current["accn"])
         rows = read_statement_facts(html, cik, current["end"])
+        zero_quotes = policy(cik, accession).get("reviewed_input_scope", {}).get("additional_current_borrowings", {}).get("zero_disclosures", {}).get(str(current["end"]), [])
+        if current["accn"] == accession and rows and zero_quotes:
+            text = re.sub(r"\s+", " ", BeautifulSoup(html, "xml").get_text(" ", strip=True))
+            if all(quote in text for quote in zero_quotes):
+                zero_borrowings[latest] = {"concept": "reviewed-filing:NoOutstandingShortTermBorrowings", "value": Decimal(0),
+                    "end": str(latest), "start": "", "accn": accession, "unit": "USD", "source_url": current["url"],
+                    "basis": " ".join(zero_quotes)}
         for pe in period_ends:
             if pe == latest and current["accn"] != accession:
                 continue
@@ -97,7 +107,10 @@ async def load_statement_coverage(client, facts, cik, latest, accession, period_
             break
         current = max(candidates, key=lambda f: (f["filed"], f["accn"]))
     missing = [{"period_end": str(pe), "field_path": path} for pe in period_ends for path in selected_specs if path not in results[pe]]
-    return {"inputs": results, "documents": documents, "missing": missing}
+    for pe in period_ends:
+        if str(pe) in policy(cik, accession).get("reviewed_input_scope", {}).get("additional_current_borrowings", {}).get("zero_disclosures", {}) and pe not in zero_borrowings:
+            missing.append({"period_end": str(pe), "field_path": "balance_sheet.short_term_debt"})
+    return {"inputs": results, "documents": documents, "missing": missing, "zero_current_borrowings": zero_borrowings}
 
 
 def apply_items(items, selected):
@@ -133,7 +146,7 @@ def repair_statement_history(company: Company, facts, loaded):
     anchor = company.periods[0];old = {x.fiscal_period_end:x for x in company.periods};periods=[]
     for pe in expected:
         items = extract_track_a(pe, facts, concepts=concepts_for(anchor.industry), latest_end=anchor.fiscal_period_end, accession=anchor.filing_accession)
-        debt = debt_items(facts, company.cik, pe, anchor.filing_accession, anchor.fiscal_period_end)
+        debt = debt_items(facts, company.cik, pe, anchor.filing_accession, anchor.fiscal_period_end, zero_current_borrowings=loaded.get("zero_current_borrowings"))
         if not {"long_term_debt", "short_term_debt"} <= debt.keys():
             raise ValueError("Complete same-filing carrying debt is required across the reviewed history")
         items.update(debt);apply_items(items, loaded["inputs"][pe]);fill_history_context(items, facts, company.cik, pe, anchor.filing_accession, anchor.fiscal_period_end)

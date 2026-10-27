@@ -50,6 +50,7 @@ async def qualify_record(company: Company, client=None, facts=None):
     if statement_specs(company.cik, latest.filing_accession):
         loaded = await load_statement_coverage(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
         support["statement_inputs"] = loaded["inputs"]
+        support["zero_current_borrowings"] = loaded.get("zero_current_borrowings", {})
     report = qualify(company, facts, support, metadata["accession_number"])
     checked = company.model_copy(update={"qualification": report})
     # Inline source documents / helper results are preserved as well as company facts.
