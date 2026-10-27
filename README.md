@@ -229,7 +229,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-268 collected tests across seventeen files (the network integration test is skipped by default):
+445 collected tests across 22 files: 444 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -247,6 +247,11 @@ pytest tests/
 - `test_ibm.py` (26) — same-filing EBIT proxy, signed tax benefits, unsafe-fact rejection, explicit review status, successful no-LLM composition, missing-data failure and preserved correction state
 - `test_intuit.py` (24) — full cash-flow amortization versus expense-component coverage, five-year D&A and noncurrent debt, unsafe-context rejection, atomic repair, preserved reviewer values, fresh/saved failure behavior and valuation effects
 - `test_microsoft.py` (30) — pure D&A expense scope, five-year consistent repair, reconciled current/noncurrent debt, unsafe-fact rejection, preserved reviews and aggregate debt, fresh/saved failure behavior and valuation effects
+- `test_alphabet.py` (29) — carrying-value debt and current/noncurrent split, historical finance-lease scope, PPE-depreciation proxy disclosures, and preserved inputs
+- `test_filing_coverage.py` (63) — reviewed debt and cash-flow contracts, complete historical operands, unsafe-evidence rejection, source-only atomic repair, and saved-review preservation
+- `test_qualification.py` (52) — cold graph replays, filing/record/policy-bound qualification, public valuation gating, candidate publication, and preserved reviews
+- `test_repository_persistence.py` (3) — PostgreSQL persistence across repository restarts, immutable revisions and evidence, and stale-write rejection
+- `test_statement_coverage.py` (30) — statement-role evidence, SBUX five-year recovery, separate historical borrowings, explicit zero-borrowing disclosures, source-only preflight, and atomic repair
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
@@ -278,7 +283,7 @@ Required env vars (set in the Railway project UI):
 |---|---|---|
 | `SEC_USER_AGENT` | yes | SEC blocks requests without one. Format: `"Your Name your.email@domain.com"` |
 | `ANTHROPIC_API_KEY` | yes | Track B and segment extraction need it; `sk-ant-...` from `console.anthropic.com/settings/keys` |
-| `DATABASE_URL` | optional | Required in deployed environments; use a service reference such as `${{Postgres.DATABASE_URL}}`. In-memory storage is available only for local development. |
+| `DATABASE_URL` | required in production; optional locally | Deployed startup fails without persistent storage. Use a service reference such as `${{Postgres.DATABASE_URL}}`. Local development may use in-memory storage. |
 | `VALUATE_OVERRIDE_TOKEN` | optional | When set, `PUT /company/{ticker}/override` requires `Authorization: Bearer <token>`. The Vercel frontend injects the same token via its `proxy.ts` from a same-named env var. When unset, `/override` runs unauthenticated (fine for local dev). |
 | `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited (it's the Anthropic-burning endpoint); read endpoints aren't. |
 | `VALUATE_DISABLE_STRUCTURED_LOGGING` | optional | Set to `1` to skip the JSON-per-request middleware (`app/logging_middleware.py`). Useful for local dev when reading plain Python tracebacks in stderr is preferable. |
