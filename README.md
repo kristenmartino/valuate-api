@@ -320,7 +320,7 @@ This is an eval baseline over a curated public-filer set, not a guarantee across
 
 The threat model is "random scraping / accidental corruption," not "sophisticated adversary." The public correction route and the separate administrative routes are gated by the existing shared service credential; `/extract` is rate-limited by IP because each call costs real Anthropic credits. A production deployment would put both behind real per-user auth.
 
-Local dev with both env vars unset behaves identically to the pre-auth era — useful for poking at the override flow without setting up tokens.
+In local development, leaving `VALUATE_OVERRIDE_TOKEN` unset disables authentication only for the public correction endpoint. All `/admin/*` routes still require a configured token, including locally. `/extract` remains rate-limited: when `VALUATE_EXTRACT_RATE_LIMIT` is unset, the default is 10 requests per hour per IP.
 
 ## Universe
 
