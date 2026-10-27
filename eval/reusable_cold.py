@@ -2,7 +2,8 @@
 
 Fixtures retain all inline numeric facts/contexts and original relationships,
 with surrounding prose removed. Manifests pin original and fixture hashes.
-Company-facts fixtures retain annual records from 2020 onward. No saved Company
+Company-facts fixtures retain annual records from 2020 onward and the explicit
+NVDA split-event metadata (including quarterly contexts). No saved Company
 or AI response is an input, and the production extraction/check paths are used.
 """
 

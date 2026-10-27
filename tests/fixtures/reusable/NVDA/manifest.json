@@ -2,7 +2,7 @@
   "facts.json": {
     "file": "facts.json.gz",
     "source_sha256": "4aa9f7962ff880f567e694a3b4200efee8efb8d3e16183574e17b10a2d6d55dc",
-    "fixture_sha256": "3bd17d714f2a5adee4f0fbae3068b23125f1182964691b791656ec6b610469af"
+    "fixture_sha256": "c6973eae3552dedab40332464cad3b023d47176fa3530d32f4d35140e010aa7f"
   },
   "nvda-20220130.htm": {
     "file": "nvda-20220130.htm.gz",

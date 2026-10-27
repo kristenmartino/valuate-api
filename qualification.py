@@ -24,6 +24,7 @@ from scoped_inputs import contract as scoped_contract, paths as scoped_paths
 POLICY_FILES = [
     "qualification.py",
     "reusable_inputs.py",
+    "share_basis.py",
     "reusable_qualification.py",
     "filing_document.py",
     "filing_sources.py",

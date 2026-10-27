@@ -840,6 +840,7 @@ async def load_reusable_inputs(
     ends = _history_ends(facts, filings, latest, bound)
     inputs = {pe: {} for pe in ends}
     source_documents = []
+    share_sources = []
     for filing in filings[::2]:
         html = (
             anchor_html
@@ -850,12 +851,16 @@ async def load_reusable_inputs(
         documents.update(linked["documents"])
         doc = await asyncio.to_thread(FilingDocument, html, cik, filing["end"], linked)
         source_documents.append((filing, doc))
+        filing_shares = {}
         for pe in ends:
             if pe > filing["end"] or (
                 pe == latest and filing["accession"] != accession
             ):
                 continue
             selected = mapped_inputs(doc, facts, filing, bound, pe, industry)
+            share_path = "income_statement.diluted_shares_outstanding"
+            if share_path in selected:
+                filing_shares[pe] = selected[share_path]
             if industry in {Industry.STANDARD, Industry.ENERGY, Industry.REIT}:
                 da = cash_addback(doc, facts, filing, bound, pe)
                 if da:
@@ -904,6 +909,10 @@ async def load_reusable_inputs(
             # with a conveniently different amount from an older document.
             for path, value in selected.items():
                 inputs[pe].setdefault(path, value)
+        share_sources.append((filing, filing_shares))
+    from share_basis import reconcile_share_history
+
+    adjusted_shares = reconcile_share_history(inputs, share_sources, facts)
     metadata = await client.get_submissions(cik)
     model_issue = model_scope_issue(metadata, industry, source_documents[0][1], latest)
     return {
@@ -914,6 +923,7 @@ async def load_reusable_inputs(
         "model_issue": model_issue,
         "ruleset": RULESET,
         "source_only": True,
+        "split_adjusted_shares": adjusted_shares,
     }
 
 
@@ -1018,4 +1028,7 @@ def compose_reusable(state, loaded):
         notes.append(
             "Approximate FFO is net income plus filed cash-flow D&A; it is not reported Nareit FFO or complete AFFO."
         )
-    return company.model_copy(update={"valuation_note": " ".join(notes)})
+    updates = {"valuation_note": " ".join(notes)}
+    if loaded.get("split_adjusted_shares"):
+        updates["share_count_label"] = "Diluted shares (split-adjusted history)"
+    return company.model_copy(update=updates)
