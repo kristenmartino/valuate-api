@@ -36,6 +36,7 @@ from ibm import CIK as IBM_CIK, PROTECTED_FIELDS as IBM_FIELDS, PROXY_LABEL, VAL
 from intuit import CIK as INTU_CIK, PROTECTED_FIELDS as INTU_FIELDS, VALUATION_NOTE as INTU_NOTE, filing_items as intu_items, coverage_flags as intu_flags
 from microsoft import CIK as MSFT_CIK, PROTECTED_FIELDS as MSFT_FIELDS, VALUATION_NOTE as MSFT_NOTE, filing_items as msft_items, coverage_flags as msft_flags
 from filing_coverage import configured_fields as coverage_fields, filing_items as coverage_items
+from statement_coverage import policy as filing_policy, specs as statement_specs, protected_fields as statement_fields, load_statement_coverage, apply_items as apply_statement_items, fill_history_context
 from alphabet import CIK as GOOGL_CIK, PROTECTED_FIELDS as GOOGL_FIELDS, VALUATION_NOTE as GOOGL_NOTE, filing_items as googl_items, coverage_flags as googl_flags
 from input_contracts import carrying_debt_items
 from extract_track_a import extract_track_a
@@ -436,7 +437,8 @@ async def track_a(state: GraphState) -> GraphState:
     industry = state.get("industry", Industry.STANDARD)
     concepts = concepts_for(industry)
 
-    period_ends = _recent_period_ends(facts, latest)
+    reviewed_history = filing_policy(state["cik"], state["filing_accession"]).get("period_ends")
+    period_ends = [date.fromisoformat(pe) for pe in reviewed_history] if reviewed_history else _recent_period_ends(facts, latest)
     if not period_ends:
         period_ends = [latest]
 
@@ -469,6 +471,9 @@ async def track_a(state: GraphState) -> GraphState:
         reviewed_items = coverage_items(facts, state["cik"], pe, state["filing_accession"], latest)
         for field in coverage_fields(state["cik"], state["filing_accession"]):
             items[field] = reviewed_items.get(field)
+        for field in statement_fields(state["cik"], state["filing_accession"]):
+            items[field] = None
+        fill_history_context(items, facts, state["cik"], pe, state["filing_accession"], latest)
         debt = filing_debt(facts, state["cik"], pe, state["filing_accession"], latest)
         if debt is not None:
             items["long_term_debt"] = debt
@@ -607,6 +612,8 @@ def _build_financial_period(
 ) -> FinancialPeriod:
     income_fields, balance_fields, cashflow_fields, *_ = _industry_fields(industry)
     income_kwargs: dict[str, Any] = {f: items.get(f) for f in income_fields}
+    if items.get("income_depreciation_amortization") is not None:
+        income_kwargs["depreciation_amortization"] = items["income_depreciation_amortization"]
     balance_kwargs: dict[str, Any] = {f: items.get(f) for f in balance_fields}
     cash_flow_kwargs: dict[str, Any] = {f: items.get(f) for f in cashflow_fields}
 
@@ -764,6 +771,16 @@ def _make_track_b(
 
         try:
             html = await edgar_client.get_filing_html(state["filing_url"])
+            if statement_specs(state["cik"], state["filing_accession"]):
+                loaded = await load_statement_coverage(edgar_client, state["facts"], state["cik"], latest, state["filing_accession"], period_ends, anchor_html=html)
+                for pe, selected in loaded["inputs"].items():
+                    apply_statement_items(periods_items[pe], selected)
+            elif industry in {Industry.STANDARD, Industry.ENERGY}:
+                missing_cash = [pe for pe in period_ends if periods_items[pe].get("cash_and_equivalents") is None]
+                if missing_cash:
+                    loaded = await load_statement_coverage(edgar_client, state["facts"], state["cik"], latest, state["filing_accession"], missing_cash, anchor_html=html, candidate_cash_only=True)
+                    for pe, selected in loaded["inputs"].items():
+                        apply_statement_items(periods_items[pe], selected)
             if is_cisco:
                 for pe, item in (await filing_da_history(
                     edgar_client, state["cik"], latest, state["filing_accession"], period_ends, anchor_html=html,
@@ -774,7 +791,7 @@ def _make_track_b(
             if is_berkshire:
                 for pe, items in extract_berkshire_filing(html, state["ticker"], period_ends).items():
                     periods_items[pe].update(items)
-            missing = [f for f in _missing_fields(latest_items, industry) if f not in coverage_fields(state["cik"], state["filing_accession"])]
+            missing = [f for f in _missing_fields(latest_items, industry) if f not in (coverage_fields(state["cik"], state["filing_accession"]) | statement_fields(state["cik"], state["filing_accession"]))]
             if is_berkshire:
                 missing = [field for field in missing if field not in BERKSHIRE_FIELDS]
             if is_cisco:
@@ -800,7 +817,7 @@ def _make_track_b(
                     fields_to_extract=missing,
                 )
                 for field, line_item in claude_items.items():
-                    if field in coverage_fields(state["cik"], state["filing_accession"]):
+                    if field in (coverage_fields(state["cik"], state["filing_accession"]) | statement_fields(state["cik"], state["filing_accession"])):
                         continue
                     if field == "noncontrolling_interests":
                         continue  # This component requires matching tagged instant facts.
@@ -870,7 +887,7 @@ def _make_track_b(
 
         if is_intu and any(latest_items.get(field) is None for field in INTU_FIELDS):
             raise CompositionError("Required INTU annual D&A/current/noncurrent debt coverage is unavailable; refusing partial inputs.")
-        protected_coverage = coverage_fields(state["cik"], state["filing_accession"])
+        protected_coverage = coverage_fields(state["cik"], state["filing_accession"]) | statement_fields(state["cik"], state["filing_accession"])
         if any(latest_items.get(field) is None for field in protected_coverage):
             raise CompositionError("Required reviewed debt/D&A inputs are missing; AI fallback cannot replace filing evidence")
         if is_msft and any(latest_items.get(field) is None for field in MSFT_FIELDS):
@@ -879,6 +896,14 @@ def _make_track_b(
         if is_googl and any(latest_items.get(field) is None for field in GOOGL_FIELDS):
             raise CompositionError("Required GOOGL annual PPE proxy/carrying-value debt coverage is unavailable; refusing partial inputs.")
 
+        if filing_policy(state["cik"], state["filing_accession"]).get("period_ends"):
+            for pe in period_ends:
+                missing_history = _missing_required_for_period(periods_items[pe], industry)
+                for path in filing_policy(state["cik"], state["filing_accession"]).get("required_history_context", []) + filing_policy(state["cik"], state["filing_accession"]).get("required_history_inputs", []):
+                    if periods_items[pe].get(path.split(".")[1]) is None:
+                        missing_history.append(path)
+                if missing_history:
+                    raise CompositionError(f"Reviewed annual history is incomplete for {pe}: {missing_history}; refusing to shorten the model window.")
         company = _compose_company(
             ticker=state["ticker"],
             cik=state["cik"],

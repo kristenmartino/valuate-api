@@ -23,6 +23,8 @@ from filing_coverage import configured_fields, selections as reviewed_selections
 POLICY_FILES = [
     "qualification.py",
     "filing_coverage.py",
+    "statement_evidence.py",
+    "statement_coverage.py",
     "qualification_schema.py",
     "qualification_service.py",
     "input_contracts.py",
@@ -210,6 +212,8 @@ def qualify(
 
     def verify(p, path, required=True):
         field = path.split(".")[1]
+        if path in (policy or {}).get("required_history_context", []):
+            required = True
         item = _item(p, path)
         pe = p.fiscal_period_end
         if item is None:
@@ -227,6 +231,16 @@ def qualify(
             return
         if not item.value.is_finite():
             issue("invalid_number", path, "Input must be finite.", pe)
+            return
+        if path in (policy or {}).get("statement_inputs", {}):
+            scoped = support.get("statement_inputs", {}).get(pe, {}).get(path)
+            if scoped is None or scoped.item.value != item.value:
+                issue("statement_scope_unverified", path, "Matching consolidated statement role, row label, annual context and company-facts amount are required.", pe)
+                return
+            row = scoped.rows[0]
+            evidence(p, path, item, row, scoped.scope, scoped.basis,
+                [{"concept": row["concept"], "value": str(row["value"]), "start": row.get("start") or "", "end": row["end"], "accession": row["accn"], "statement_role": row.get("role", "standard unrestricted-cash fact"), "row_label": row.get("row_label", ""), "source_url": row.get("source_url", "")}])
+            disclosures.append((policy or {}).get("disclosure", scoped.scope))
             return
         scoped = reviewed[pe].get(field)
         if scoped is not None:
@@ -466,6 +480,8 @@ def qualify(
                 "Annual history must use one model and no future periods.",
                 p.fiscal_period_end,
             )
+        for path in sorted(set((policy or {}).get("statement_inputs", {})) | set((policy or {}).get("required_history_inputs", []))):
+            verify(p, path)
         verify(p, "income_statement.net_income")
         if industry in {"standard", "energy"}:
             for path in [

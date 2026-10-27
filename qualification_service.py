@@ -2,6 +2,10 @@
 
 import hashlib
 import json
+from dataclasses import is_dataclass, asdict
+from datetime import date
+from decimal import Decimal
+from statement_coverage import specs as statement_specs, load_statement_coverage
 from edgar import EdgarClient
 from schemas import Company
 from qualification import qualify
@@ -43,24 +47,16 @@ async def qualify_record(company: Company, client=None, facts=None):
         support["berkshire"] = extract_berkshire_filing(
             html, company.ticker, [p.fiscal_period_end for p in company.periods]
         )
+    if statement_specs(company.cik, latest.filing_accession):
+        loaded = await load_statement_coverage(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
+        support["statement_inputs"] = loaded["inputs"]
     report = qualify(company, facts, support, metadata["accession_number"])
     checked = company.model_copy(update={"qualification": report})
     # Inline source documents / helper results are preserved as well as company facts.
     evidence = {
         "facts": facts,
         "latest_10k": metadata,
-        "support": {
-            key: {
-                str(pe): {
-                    field: item.model_dump(mode="json") for field, item in items.items()
-                }
-                if isinstance(items, dict)
-                else items.model_dump(mode="json")
-                for pe, items in values.items()
-            }
-            for key, values in support.items()
-            if isinstance(values, dict)
-        },
+        "support": _source_json(support),
         "inline_accession": support.get("inline_accession"),
         "documents": documents,
     }
@@ -73,3 +69,17 @@ async def qualify_record(company: Company, client=None, facts=None):
     )
     checked = company.model_copy(update={"qualification": report})
     return checked, evidence
+
+
+def _source_json(value):
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    if is_dataclass(value):
+        return _source_json(asdict(value))
+    if isinstance(value, dict):
+        return {str(k): _source_json(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_source_json(v) for v in value]
+    if isinstance(value, (date, Decimal)):
+        return str(value)
+    return value

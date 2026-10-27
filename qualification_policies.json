@@ -203,5 +203,72 @@
       "debt": true,
       "da": "ti_cashflow"
     }
+  },
+  "829224:0000829224-25-000114": {
+    "model": "standard",
+    "scope_review": "Reviewed consolidated balance-sheet, cash-flow, income-statement and debt-note coverage. Amounts must match independent annual contexts; this policy alone never qualifies a record.",
+    "disclosure": "SBUX uses the consolidated cash-flow D&A total, not the separately presented income-statement D&A expense line. Cash is the balance-sheet row labeled cash and cash equivalents; its broader taxonomy name is not a generic restricted-cash fallback. Carrying debt separates current maturities from noncurrent notes and reconciles to the filed total. The filing reports no outstanding commercial paper or credit-facility borrowings at the anchor date; facility limits are not debt. Five annual periods, including reported tax context, support the historical assumptions. The simplified model retains GAAP operating income, including restructuring/impairment costs; it does not normalize those charges or certify other displayed non-model fields.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/829224/000082922425000114/sbux-20250928.htm",
+    "period_ends": [
+      "2025-09-28",
+      "2024-09-29",
+      "2023-10-01",
+      "2022-10-02",
+      "2021-10-03"
+    ],
+    "reviewed_input_scope": {
+      "debt": "reconciled_notes",
+      "debt_scope": "Current and noncurrent carrying notes reconcile to the filed total. The reviewed filing reports no outstanding commercial-paper, revolving-facility or Japanese-facility borrowings at the anchor date; borrowing capacity is not an outstanding debt amount"
+    },
+    "required_history_context": [
+      "income_statement.income_before_tax",
+      "income_statement.income_tax_expense"
+    ],
+    "statement_inputs": {
+      "balance_sheet.cash_and_equivalents": {
+        "role": "balance_sheet",
+        "concepts": [
+          "us-gaap:CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+          "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        ],
+        "labels": [
+          "Cash and cash equivalents"
+        ],
+        "instant": true,
+        "scope": "SBUX consolidated balance-sheet cash and cash equivalents, excluding separately reported investments",
+        "basis": "Reviewed balance-sheet row and consolidated year-end context; the broad taxonomy concept alone does not establish cash coverage",
+        "fallback_concepts": [
+          "CashAndCashEquivalentsAtCarryingValue"
+        ]
+      },
+      "cash_flow_statement.depreciation_amortization": {
+        "role": "cash_flow_statement",
+        "concepts": [
+          "us-gaap:DepreciationDepletionAndAmortization"
+        ],
+        "labels": [
+          "Depreciation and amortization"
+        ],
+        "instant": false,
+        "scope": "SBUX consolidated cash-flow depreciation and amortization total",
+        "basis": "Full annual cash-flow adjustment, distinct from the narrower income-statement expense line"
+      },
+      "income_statement.depreciation_amortization": {
+        "role": "income_statement",
+        "concepts": [
+          "us-gaap:DepreciationAndAmortization"
+        ],
+        "labels": [
+          "Depreciation and amortization expenses"
+        ],
+        "instant": false,
+        "scope": "SBUX separately presented income-statement depreciation and amortization expense line",
+        "basis": "Operating-expense presentation; not substituted for the cash-flow D&A total"
+      }
+    },
+    "required_history_inputs": [
+      "balance_sheet.short_term_debt",
+      "balance_sheet.long_term_debt"
+    ]
   }
 }

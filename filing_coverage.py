@@ -1,4 +1,4 @@
-"""Reviewed debt/D&A contracts for five specific annual filings.
+"""Reviewed debt/D&A contracts for specific annual filings.
 
 Scope comes from the reviewed filing policy; amounts always come from matching
 annual USD contexts. Unknown filings and missing operands are never inferred.
@@ -14,7 +14,7 @@ from input_contracts import anchor_date, annual_fact
 from schemas import Company, ExtractionSource, LineItem
 
 POLICIES = json.loads((Path(__file__).parent / "qualification_policies.json").read_text())
-SUPPORTED = {"796343", "1108524", "821189", "77476", "97476"}
+SUPPORTED = {"796343", "1108524", "821189", "77476", "97476"} | {key.split(":")[0] for key, value in POLICIES.items() if value.get("reviewed_input_scope", {}).get("debt") == "reconciled_notes"}
 DEBT_FIELDS = {"short_term_debt", "long_term_debt"}
 
 
@@ -88,13 +88,17 @@ def selections(facts, cik, pe, accession, latest):
         "821189": ["LongTermDebtNoncurrent", "LongTermDebtCurrent"],
         "77476": ["LongTermDebtNoncurrent", "DebtCurrent", "LongTermDebt"],
         "97476": ["LongTermDebtNoncurrent", "LongTermDebtCurrent", "CommercialPaper", "LongTermDebt"],
-    }[cik]
+    }.get(cik)
+    if debt_tags is None and scope.get("debt") == "reconciled_notes":
+        debt_tags = ["LongTermDebtNoncurrent", "LongTermDebtCurrent", "LongTermDebt"]
+    if debt_tags is None:
+        return {}
     debt = _common(facts, debt_tags, pe, latest, accession, bound, True)
     if debt:
         noncurrent, current = debt[:2]
         short_value = current["value"]
         valid = True
-        if cik == "1108524":
+        if cik == "1108524" or scope.get("debt") == "reconciled_notes":
             valid = debt[2]["value"] == noncurrent["value"] + short_value
         elif cik == "77476":
             # Total notes include their current portion; DebtCurrent also
@@ -110,7 +114,7 @@ def selections(facts, cik, pe, accession, latest):
                 "821189": "EOG balance-sheet carrying debt includes finance leases; the separately filed current portion is counted once, including current finance leases",
                 "77476": "Noncurrent carrying debt plus total current borrowings; the inclusive long-term notes total is not added to DebtCurrent",
                 "97476": "Noncurrent carrying notes plus current maturities and explicitly filed commercial paper; notes reconcile before commercial paper is added",
-            }[cik]
+            }.get(cik, scope.get("debt_scope", "Reconciled current and noncurrent carrying notes"))
             output["long_term_debt"] = _selection(noncurrent["value"], debt, "Noncurrent debt, excluding current maturities", basis, tag=noncurrent["concept"])
             output["short_term_debt"] = _selection(short_value, debt, "Current debt, including filed current borrowings", basis,
                 tag=current["concept"] if cik != "97476" else None)

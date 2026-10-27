@@ -17,6 +17,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from decimal import Decimal
+from datetime import date
 from time import monotonic
 from typing import Any, Optional
 
@@ -563,7 +564,7 @@ async def cold_extract(req: ExtractRequest):
 
 @app.post("/admin/repair-coverage/{ticker}", dependencies=[Depends(require_admin_auth)])
 async def repair_reviewed_coverage(ticker: str):
-    """Apply only reviewed source-backed debt/D&A repairs; never call AI."""
+    """Apply reviewed input and history repairs from filing evidence; never call AI."""
     from filing_coverage import repair_company as repair_coverage
 
     ticker = normalize_ticker(ticker)
@@ -572,8 +573,16 @@ async def repair_reviewed_coverage(ticker: str):
         if company is None:
             raise HTTPException(404, "No saved record")
         try:
-            facts = await EdgarClient().get_company_facts(company.cik)
-            repaired = validate_company(repair_coverage(company, facts))
+            client = EdgarClient()
+            facts = await client.get_company_facts(company.cik)
+            from statement_coverage import specs as statement_specs, policy as statement_policy, load_statement_coverage, repair_statement_history
+            if statement_specs(company.cik, company.periods[0].filing_accession):
+                anchor = company.periods[0]
+                expected = [date.fromisoformat(pe) for pe in statement_policy(company.cik, anchor.filing_accession)["period_ends"]]
+                loaded = await load_statement_coverage(client, facts, company.cik, anchor.fiscal_period_end, anchor.filing_accession, expected)
+                repaired = validate_company(repair_statement_history(company, facts, loaded))
+            else:
+                repaired = validate_company(repair_coverage(company, facts))
             checked, evidence = await qualify_record(repaired, facts=facts)
         except ValueError as exc:
             raise HTTPException(422, str(exc))

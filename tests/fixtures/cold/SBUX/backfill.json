@@ -1,0 +1,721 @@
+{
+  "ticker": "SBUX",
+  "cik": "0000829224",
+  "name": "STARBUCKS CORP",
+  "fiscal_year_end_month": 9,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-09-28",
+      "filing_accession": "0000829224-25-000114",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "37184400000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Revenues: 37184400000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": {
+          "value": "11658200000",
+          "source": "llm_html",
+          "confidence": 0.92,
+          "source_quote": "Product and distribution costs 11,658.2 11,180.6 11,409.1",
+          "xbrl_tag": null
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": {
+          "value": "2617200000",
+          "source": "llm_html",
+          "confidence": 0.9,
+          "source_quote": "General and administrative expenses 2,617.2 2,523.3 2,441.3",
+          "xbrl_tag": null
+        },
+        "depreciation_amortization": {
+          "value": "1771500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed DepreciationDepletionAndAmortization: 1771500000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "share_based_compensation": {
+          "value": "318300000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 318300000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "2936600000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 2936600000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "542600000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Interest expense ( 542.6 ) ( 562.0 ) ( 550.1 )",
+          "xbrl_tag": null
+        },
+        "income_before_tax": {
+          "value": "2507300000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Earnings before income taxes 2,507.3 4,969.6 5,401.9",
+          "xbrl_tag": null
+        },
+        "income_tax_expense": {
+          "value": "650600000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Income tax expense 650.6 1,207.3 1,277.2",
+          "xbrl_tag": null
+        },
+        "net_income": {
+          "value": "1856400000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 1856400000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "1139800000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 1139800000 shares; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": [
+          {
+            "name": "North America",
+            "revenue": {
+              "value": "27373100000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "North America ... Total net revenues $ 27,373.1",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "International",
+            "revenue": {
+              "value": "7819900000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "International ... Total net revenues ... 7,819.9",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Channel Development",
+            "revenue": {
+              "value": "1871700000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Channel Development ... Total net revenues ... 1,871.7",
+              "xbrl_tag": null
+            }
+          },
+          {
+            "name": "Corporate and Other",
+            "revenue": {
+              "value": "119700000",
+              "source": "llm_html",
+              "confidence": 0.97,
+              "source_quote": "Corporate and Other ... Total net revenues ... 119.7",
+              "xbrl_tag": null
+            }
+          }
+        ]
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "3219800000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Cash and cash equivalents $ 3,219.8 $ 3,286.2",
+          "xbrl_tag": null
+        },
+        "short_term_investments": {
+          "value": "247200000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Short-term investments 247.2 257.0",
+          "xbrl_tag": null
+        },
+        "accounts_receivable": {
+          "value": "1277500000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts receivable, net 1,277.5 1,213.8",
+          "xbrl_tag": null
+        },
+        "inventory": {
+          "value": "2185600000",
+          "source": "llm_html",
+          "confidence": 0.95,
+          "source_quote": "Total $ 2,185.6 $ 1,777.3",
+          "xbrl_tag": null
+        },
+        "total_current_assets": {
+          "value": "7382300000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Total current assets 7,382.3 6,847.4",
+          "xbrl_tag": null
+        },
+        "property_plant_equipment_net": {
+          "value": "8493500000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Property, plant and equipment, net $ 8,493.5 $ 8,665.5",
+          "xbrl_tag": null
+        },
+        "total_assets": {
+          "value": "32019700000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 32019700000 USD; period year-end instant to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": {
+          "value": "1852800000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Accounts payable $ 1,852.8 $ 1,595.5",
+          "xbrl_tag": null
+        },
+        "short_term_debt": {
+          "value": "1498900000",
+          "source": "llm_html",
+          "confidence": 0.9,
+          "source_quote": "Current portion of long-term debt 1,498.9 1,248.9",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": {
+          "value": "10210400000",
+          "source": "llm_html",
+          "confidence": 0.97,
+          "source_quote": "Total current liabilities 10,210.4 9,070.0",
+          "xbrl_tag": null
+        },
+        "long_term_debt": {
+          "value": "14575900000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed LongTermDebtNoncurrent: 14575900000 USD; period year-end instant to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "10536700000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 10536700000 USD; period year-end instant to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "40108900000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Liabilities: 40108900000 USD; period year-end instant to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "-8096600000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: -8096600000 USD; period year-end instant to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": {
+          "value": "7400000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "SEC XBRL noncontrolling interests, instant 2025-09-28, accession 0000829224-25-000114; separate from parent stockholders' equity.",
+          "xbrl_tag": "us-gaap:MinorityInterest"
+        }
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "1771500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed DepreciationDepletionAndAmortization: 1771500000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "4747500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 4747500000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "2305500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed PaymentsToAcquirePropertyPlantAndEquipment: 2305500000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-2485400000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -2485400000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-2298000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: -2298000000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "2771400000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsOfDividends: 2771400000 USD; period 2024-09-30 to 2025-09-28; SEC accession 0000829224-25-000114.",
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2021,
+      "fiscal_period_end": "2021-10-03",
+      "filing_accession": "0000829224-25-000114",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "29060600000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Revenues: 29060600000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:Revenues"
+        },
+        "cost_of_revenue": null,
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": {
+          "value": "1524100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed DepreciationDepletionAndAmortization: 1524100000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "share_based_compensation": {
+          "value": "319100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 319100000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "4872100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 4872100000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": null,
+        "income_tax_expense": null,
+        "net_income": {
+          "value": "4199300000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 4199300000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "1185500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 1185500000 shares; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "6455700000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 6455700000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-21-000086.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "31392600000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 31392600000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-22-000058.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "13616900000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed LongTermDebtNoncurrent: 13616900000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-22-000058.",
+          "xbrl_tag": "us-gaap:LongTermDebtNoncurrent"
+        },
+        "operating_lease_liabilities": {
+          "value": "8989300000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 8989300000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-21-000086.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "36707100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Liabilities: 36707100000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-22-000058.",
+          "xbrl_tag": "us-gaap:Liabilities"
+        },
+        "shareholders_equity": {
+          "value": "-5321200000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: -5321200000 USD; period year-end instant to 2021-10-03; SEC accession 0000829224-22-000058.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "1524100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed DepreciationDepletionAndAmortization: 1524100000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "5989100000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 5989100000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "1470000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed PaymentsToAcquirePropertyPlantAndEquipment: 1470000000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        },
+        "cash_from_investing": {
+          "value": "-319500000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -319500000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-3651000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: -3651000000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": {
+          "value": "2119000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsOfDividends: 2119000000 USD; period 2020-09-28 to 2021-10-03; SEC accession 0000829224-23-000058.",
+          "xbrl_tag": "us-gaap:PaymentsOfDividends"
+        }
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [],
+  "share_count_label": null,
+  "operating_income_label": null,
+  "valuation_note": null,
+  "qualification": {
+    "status": "review_required",
+    "policy_version": "filing-inputs-v1-e1d1b104816b",
+    "record_digest": "73fd15ed5e50a66f5479065cb83dd389fb6d1be050922f8542fcf8cfc411372c",
+    "filing_accession": "0000829224-25-000114",
+    "checked_at": "2026-10-27T01:16:53.924429+00:00",
+    "issues": [
+      {
+        "code": "filing_scope_not_reviewed",
+        "field_path": "company",
+        "period_end": null,
+        "message": "This annual filing has no reviewed input-scope policy. Cold extraction is a candidate, not a published valuation."
+      },
+      {
+        "code": "ambiguous_da_scope",
+        "field_path": "cash_flow_statement.depreciation_amortization",
+        "period_end": "2025-09-28",
+        "message": "Annual D&A concepts report different amounts; coverage requires review."
+      },
+      {
+        "code": "ambiguous_da_scope",
+        "field_path": "cash_flow_statement.depreciation_amortization",
+        "period_end": "2021-10-03",
+        "message": "Annual D&A concepts report different amounts; coverage requires review."
+      },
+      {
+        "code": "filing_value_unverified",
+        "field_path": "balance_sheet.cash_and_equivalents",
+        "period_end": "2025-09-28",
+        "message": "No unique, matching annual filing fact establishes this input and coverage."
+      },
+      {
+        "code": "debt_basis_unverified",
+        "field_path": "balance_sheet.long_term_debt",
+        "period_end": "2025-09-28",
+        "message": "Current/noncurrent carrying-value debt and current-borrowing coverage have not been established together. Missing debt is not zero."
+      },
+      {
+        "code": "debt_basis_unverified",
+        "field_path": "balance_sheet.short_term_debt",
+        "period_end": "2025-09-28",
+        "message": "Current/noncurrent carrying-value debt and current-borrowing coverage have not been established together. Missing debt is not zero."
+      }
+    ],
+    "disclosures": [
+      "Capex coverage follows the reported cash-investment concept; it may exclude software or other reinvestment. The model does not claim total reinvestment coverage.",
+      "income_statement.income_before_tax (2021-10-03) is unavailable; the documented model fallback applies.",
+      "income_statement.income_tax_expense (2021-10-03) is unavailable; the documented model fallback applies."
+    ],
+    "inputs": [
+      {
+        "field_path": "income_statement.net_income",
+        "period_end": "2025-09-28",
+        "value": "1856400000",
+        "unit": "USD",
+        "scope": "reported GAAP earnings; attributable coverage follows concept",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:NetIncomeLoss"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.revenue",
+        "period_end": "2025-09-28",
+        "value": "37184400000",
+        "unit": "USD",
+        "scope": "consolidated revenue; selected concept retained",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:Revenues"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.operating_income",
+        "period_end": "2025-09-28",
+        "value": "2936600000",
+        "unit": "USD",
+        "scope": "GAAP operating income",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:OperatingIncomeLoss"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "cash_flow_statement.capital_expenditures",
+        "period_end": "2025-09-28",
+        "value": "2305500000",
+        "unit": "USD",
+        "scope": "reported cash investment component; not total reinvestment",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.income_before_tax",
+        "period_end": "2025-09-28",
+        "value": "2507300000",
+        "unit": "USD",
+        "scope": "consolidated pre-tax continuing income",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.income_tax_expense",
+        "period_end": "2025-09-28",
+        "value": "650600000",
+        "unit": "USD",
+        "scope": "reported income-tax expense or benefit",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:IncomeTaxExpenseBenefit"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.net_income",
+        "period_end": "2021-10-03",
+        "value": "4199300000",
+        "unit": "USD",
+        "scope": "reported GAAP earnings; attributable coverage follows concept",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-23-000058",
+        "start": "2020-09-28",
+        "concepts": [
+          "us-gaap:NetIncomeLoss"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.revenue",
+        "period_end": "2021-10-03",
+        "value": "29060600000",
+        "unit": "USD",
+        "scope": "consolidated revenue; selected concept retained",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-23-000058",
+        "start": "2020-09-28",
+        "concepts": [
+          "us-gaap:Revenues"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.operating_income",
+        "period_end": "2021-10-03",
+        "value": "4872100000",
+        "unit": "USD",
+        "scope": "GAAP operating income",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-23-000058",
+        "start": "2020-09-28",
+        "concepts": [
+          "us-gaap:OperatingIncomeLoss"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "cash_flow_statement.capital_expenditures",
+        "period_end": "2021-10-03",
+        "value": "1470000000",
+        "unit": "USD",
+        "scope": "reported cash investment component; not total reinvestment",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-23-000058",
+        "start": "2020-09-28",
+        "concepts": [
+          "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.diluted_shares_outstanding",
+        "period_end": "2025-09-28",
+        "value": "1139800000",
+        "unit": "shares",
+        "scope": "annual weighted-average diluted shares",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "balance_sheet.operating_lease_liabilities",
+        "period_end": "2025-09-28",
+        "value": "10536700000",
+        "unit": "USD",
+        "scope": "current plus noncurrent operating-lease liabilities",
+        "basis": "carrying amount",
+        "accession": "0000829224-25-000114",
+        "start": null,
+        "concepts": [
+          "us-gaap:OperatingLeaseLiability"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "balance_sheet.shareholders_equity",
+        "period_end": "2025-09-28",
+        "value": "-8096600000",
+        "unit": "USD",
+        "scope": "equity; attributable coverage follows concept",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": null,
+        "concepts": [
+          "us-gaap:StockholdersEquity"
+        ],
+        "operands": [],
+        "dimensions": {}
+      },
+      {
+        "field_path": "income_statement.interest_expense",
+        "period_end": "2025-09-28",
+        "value": "542600000",
+        "unit": "USD",
+        "scope": "reported interest expense",
+        "basis": "reported GAAP amount",
+        "accession": "0000829224-25-000114",
+        "start": "2024-09-30",
+        "concepts": [
+          "us-gaap:InterestExpense"
+        ],
+        "operands": [],
+        "dimensions": {}
+      }
+    ],
+    "evidence_digest": "cea2501484def3d32253a13704346c7d5e9fd6589ac34cbad99890f300f645f6",
+    "latest_filing_checked": "0000829224-25-000114"
+  }
+}

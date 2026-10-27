@@ -1,0 +1,69 @@
+"""Cost-free SEC source preflight: no AI, repository writes or publication.
+
+Use this during ticker onboarding to find source/history gaps before a public
+search. A complete source checklist still requires independent qualification.
+"""
+
+import argparse
+import asyncio
+import json
+from pathlib import Path
+
+from edgar import EdgarClient
+from graph import _make_ingest, track_a, _derive_missing_required, _missing_required_for_period
+from schemas import Industry
+from statement_coverage import specs, load_statement_coverage, apply_items, policy
+
+
+async def source_preflight(ticker, client):
+    state = await _make_ingest(client)({"ticker": ticker})
+    state.update(await track_a(state))
+    configured = specs(state["cik"], state["filing_accession"])
+    loaded = {"inputs": {}, "missing": []}
+    if configured or state["industry"] in {Industry.STANDARD, Industry.ENERGY}:
+        loaded = await load_statement_coverage(client, state["facts"], state["cik"], state["period_end"], state["filing_accession"], state["period_ends"], candidate_cash_only=not bool(configured))
+        for pe, selected in loaded["inputs"].items():
+            apply_items(state["periods_items"][pe], selected)
+    reviewed = policy(state["cik"], state["filing_accession"])
+    periods = []
+    for pe in state["period_ends"]:
+        items = _derive_missing_required(state["periods_items"][pe], state["industry"])
+        missing = _missing_required_for_period(items, state["industry"])
+        for path in reviewed.get("required_history_context", []) + reviewed.get("required_history_inputs", []):
+            if items.get(path.split(".")[1]) is None:
+                missing.append(path)
+        if pe == state["period_end"] and state["industry"] in {Industry.STANDARD, Industry.ENERGY}:
+            for field in ["short_term_debt", "long_term_debt", "operating_lease_liabilities"]:
+                if items.get(field) is None:
+                    missing.append("balance_sheet." + field)
+        periods.append({"period_end": str(pe), "required_fields_missing": sorted(set(missing))})
+    complete = not any(p["required_fields_missing"] for p in periods) and not loaded["missing"]
+    return {"ticker": state["ticker"], "filing": state["filing_accession"], "mode": "SEC sources only; no AI or publication",
+            "reviewed_filing_policy": bool(reviewed), "source_checklist_complete": complete,
+            "periods": periods, "statement_evidence_missing": loaded["missing"],
+            "next_step": "independent qualification required" if complete and reviewed else "resolve source gaps and review filing scope",
+            "qualification_granted": False}
+
+
+async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tickers", required=True, help="Comma-separated onboarding tickers")
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    client = EdgarClient()
+    results = []
+    for ticker in dict.fromkeys(t.strip().upper() for t in args.tickers.split(",") if t.strip()):
+        try:
+            results.append(await source_preflight(ticker, client))
+        except Exception as exc:
+            results.append({"ticker": ticker, "source_checklist_complete": False, "qualification_granted": False, "error_type": type(exc).__name__})
+    report = json.dumps({"source_preflight": results}, indent=2) + "\n"
+    if args.output:
+        args.output.write_text(report)
+    print(report, end="")
+    if any(not r.get("source_checklist_complete") or not r.get("reviewed_filing_policy") for r in results):
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

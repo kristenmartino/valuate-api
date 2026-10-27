@@ -1,0 +1,32 @@
+name: SEC source preflight
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: Comma-separated proposed onboarding tickers (SEC only; no AI or publication)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  source-checklist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SEC_USER_AGENT: Valuate filing coverage kristen@kristenmartino.ai
+      PREFLIGHT_TICKERS: ${{ inputs.tickers }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Check proposed source coverage without AI or publication
+        run: python -m eval.preflight --tickers "$PREFLIGHT_TICKERS" --output source-preflight.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-preflight
+          path: source-preflight.json

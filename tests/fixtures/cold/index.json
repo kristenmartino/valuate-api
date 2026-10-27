@@ -62,5 +62,9 @@
   {
     "ticker": "TXN",
     "expected_status": "qualified"
+  },
+  {
+    "ticker": "SBUX",
+    "expected_status": "qualified"
   }
 ]

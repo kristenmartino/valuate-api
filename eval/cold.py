@@ -49,6 +49,12 @@ class FixtureEdgar(EdgarClient):
                     else "cisco-da-2026.html"
                 )
             ).read_text()
+        if self.ticker == "SBUX":
+            if "sbux-20231001" in url:
+                return (FIXTURES / "starbucks-2023-statements.xml").read_text()
+            if "sbux-20250928" in url:
+                return (FIXTURES / "starbucks-2025-statements.xml").read_text()
+            return "<html>No pinned statement evidence for this accession.</html>"
         if self.ticker == "CRM":
             return (FIXTURES / "salesforce-2026-revenue-inline.xml").read_text()
         return "<html><body>Offline replay: the recorded latest-period backfill response supplies fields absent from tagged facts.</body></html>"

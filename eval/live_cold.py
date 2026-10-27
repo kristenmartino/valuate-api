@@ -30,8 +30,8 @@ SAMPLES = [
     "PLD",
     "EOG",
 ]
-REGRESSIONS = ["INTU", "IBM", "BRK-A", "BRK-B", "TXN", "ADBE", "CRM", "CSCO", "PEP"]
-HELD_OUT = ["ORCL", "SBUX"]
+REGRESSIONS = ["INTU", "IBM", "BRK-A", "BRK-B", "TXN", "ADBE", "CRM", "CSCO", "PEP", "SBUX"]
+HELD_OUT = ["ORCL"]
 
 
 def main():
