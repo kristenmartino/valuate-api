@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 from statement_coverage import specs as statement_specs, load_statement_coverage
 from edgar import EdgarClient
+from scoped_inputs import paths as scoped_paths, load_scoped_inputs
 from schemas import Company
 from qualification import qualify
 from cisco_da import filing_da_history
@@ -51,6 +52,9 @@ async def qualify_record(company: Company, client=None, facts=None):
         loaded = await load_statement_coverage(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
         support["statement_inputs"] = loaded["inputs"]
         support["zero_current_borrowings"] = loaded.get("zero_current_borrowings", {})
+    if scoped_paths(company.cik, latest.filing_accession):
+        loaded = await load_scoped_inputs(client, facts, company.cik, latest.fiscal_period_end, latest.filing_accession, [p.fiscal_period_end for p in company.periods])
+        support["scoped_inputs"] = loaded["inputs"]
     report = qualify(company, facts, support, metadata["accession_number"])
     checked = company.model_copy(update={"qualification": report})
     # Inline source documents / helper results are preserved as well as company facts.

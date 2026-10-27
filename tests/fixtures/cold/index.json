@@ -66,5 +66,13 @@
   {
     "ticker": "SBUX",
     "expected_status": "qualified"
+  },
+  {
+    "ticker": "ORCL",
+    "expected_status": "qualified"
+  },
+  {
+    "ticker": "AMZN",
+    "expected_status": "qualified"
   }
 ]

@@ -30,8 +30,8 @@ SAMPLES = [
     "PLD",
     "EOG",
 ]
-REGRESSIONS = ["INTU", "IBM", "BRK-A", "BRK-B", "TXN", "ADBE", "CRM", "CSCO", "PEP", "SBUX"]
-HELD_OUT = ["ORCL"]
+REGRESSIONS = ["INTU", "IBM", "BRK-A", "BRK-B", "TXN", "ADBE", "CRM", "CSCO", "PEP", "SBUX", "ORCL"]
+HELD_OUT = ["MCD"]
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--base", default="https://valuate.kristenmartino.ai/api")
     parser.add_argument("--tickers")
-    parser.add_argument("--max-extractions", type=int, default=29)
+    parser.add_argument("--max-extractions", type=int, default=30)
     args = parser.parse_args()
     tickers = list(
         dict.fromkeys(

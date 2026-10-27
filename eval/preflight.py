@@ -11,6 +11,7 @@ from pathlib import Path
 
 from edgar import EdgarClient
 from graph import _make_ingest, track_a, _derive_missing_required, _missing_required_for_period
+from scoped_inputs import paths as scoped_paths, load_scoped_inputs, apply_inputs as apply_scoped_inputs
 from schemas import Industry
 from filing_coverage import filing_items as debt_items
 from statement_coverage import specs, load_statement_coverage, apply_items, policy
@@ -26,6 +27,11 @@ async def source_preflight(ticker, client):
         for pe, selected in loaded["inputs"].items():
             apply_items(state["periods_items"][pe], selected)
             state["periods_items"][pe].update(debt_items(state["facts"], state["cik"], pe, state["filing_accession"], state["period_end"], zero_current_borrowings=loaded.get("zero_current_borrowings")))
+    if scoped_paths(state["cik"], state["filing_accession"]):
+        scoped = await load_scoped_inputs(client, state["facts"], state["cik"], state["period_end"], state["filing_accession"], state["period_ends"])
+        for pe, selected in scoped["inputs"].items():
+            apply_scoped_inputs(state["periods_items"][pe], selected)
+        loaded["missing"].extend(scoped["missing"])
     reviewed = policy(state["cik"], state["filing_accession"])
     periods = []
     for pe in state["period_ends"]:

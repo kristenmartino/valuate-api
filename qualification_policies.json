@@ -280,5 +280,331 @@
       "balance_sheet.short_term_debt",
       "balance_sheet.long_term_debt"
     ]
+  },
+  "1341439:0001193125-26-277521": {
+    "model": "standard",
+    "scope_review": "Reviewed annual consolidated statements, debt and lease notes. Source completeness and reconciled carrying-value inputs are required independently of this policy. Historical debt rows are withheld if all combined components cannot be established.",
+    "disclosure": "ORCL uses filed cash-flow depreciation plus intangible amortization. Current and noncurrent carrying notes already include commercial paper and other borrowings; finance-lease liabilities are added to the matching slots, and operating leases remain separate in net debt. Cash excludes separately reported investments. Gross cash PP&E purchases drive capex; noncash leased additions and the reported $260B of uncommenced lease commitments are not separately projected or added as current debt. Historical averages retain GAAP restructuring and acquisition effects. Older debt rows are unavailable where combined coverage is incomplete. This is a simplified historical-input DCF, not a valuation of contracted cloud backlog or a forecast of announced spending. A nonpositive equity result is an unfloored residual after net debt, not a stock-price estimate.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1341439/000119312526277521/orcl-20260531.htm",
+    "period_ends": [
+      "2026-05-31",
+      "2025-05-31",
+      "2024-05-31",
+      "2023-05-31",
+      "2022-05-31"
+    ],
+    "source_only": true,
+    "required_history_context": [
+      "income_statement.income_before_tax",
+      "income_statement.income_tax_expense"
+    ],
+    "scoped_source": {
+      "documents": [
+        "0001193125-26-277521",
+        "0000950170-24-075605"
+      ],
+      "facts": {
+        "depreciation": {
+          "concept": "us-gaap:Depreciation",
+          "instant": false,
+          "role": "cash_flow_statement",
+          "labels": [
+            "Depreciation"
+          ]
+        },
+        "amortization": {
+          "concept": "us-gaap:AmortizationOfIntangibleAssets",
+          "instant": false,
+          "role": "cash_flow_statement",
+          "labels": [
+            "Amortization of intangible assets"
+          ]
+        },
+        "notes_current": {
+          "concept": "us-gaap:NotesPayableCurrent",
+          "instant": true,
+          "role": "balance_sheet",
+          "labels": [
+            "Notes payable and other borrowings, current"
+          ]
+        },
+        "notes_noncurrent": {
+          "concept": "us-gaap:LongTermNotesAndLoans",
+          "instant": true,
+          "role": "balance_sheet",
+          "labels": [
+            "Notes payable and other borrowings, non-current"
+          ]
+        },
+        "notes_total": {
+          "concept": "us-gaap:DebtLongtermAndShorttermCombinedAmount",
+          "instant": true
+        },
+        "finance_current": {
+          "concept": "us-gaap:FinanceLeaseLiabilityCurrent",
+          "instant": true
+        },
+        "finance_noncurrent": {
+          "concept": "us-gaap:FinanceLeaseLiabilityNoncurrent",
+          "instant": true
+        },
+        "finance_total": {
+          "concept": "us-gaap:FinanceLeaseLiability",
+          "instant": true
+        },
+        "pretax": {
+          "concept": "orcl:IncomeLossFromContinuingOperationsIncludingNoncontrollingInterestBeforeIncomeTaxesExtraordinaryItems",
+          "instant": false,
+          "labels": [
+            "Income before income taxes"
+          ],
+          "company_facts": false
+        },
+        "interest": {
+          "concept": "us-gaap:InterestExpense",
+          "instant": false,
+          "labels": [
+            "Interest expense"
+          ]
+        }
+      },
+      "checks": {
+        "notes_reconcile": {
+          "lhs": {
+            "notes_current": 1,
+            "notes_noncurrent": 1
+          },
+          "rhs": {
+            "notes_total": 1
+          }
+        },
+        "finance_reconcile": {
+          "lhs": {
+            "finance_current": 1,
+            "finance_noncurrent": 1
+          },
+          "rhs": {
+            "finance_total": 1
+          }
+        }
+      },
+      "inputs": {
+        "cash_flow_statement.depreciation_amortization": {
+          "formula": {
+            "depreciation": 1,
+            "amortization": 1
+          },
+          "scope": "Oracle consolidated cash-flow depreciation plus intangible-asset amortization",
+          "basis": "Two separately filed, non-overlapping cash-flow adjustments; depreciation includes finance-lease asset depreciation as reported",
+          "required": "history",
+          "checks": []
+        },
+        "balance_sheet.short_term_debt": {
+          "formula": {
+            "notes_current": 1,
+            "finance_current": 1
+          },
+          "scope": "Current carrying notes and borrowings plus current finance-lease liabilities",
+          "basis": "Commercial paper is already inside current notes/borrowings; facility limits are not debt",
+          "required": "latest",
+          "checks": [
+            "notes_reconcile",
+            "finance_reconcile"
+          ]
+        },
+        "balance_sheet.long_term_debt": {
+          "formula": {
+            "notes_noncurrent": 1,
+            "finance_noncurrent": 1
+          },
+          "scope": "Noncurrent carrying notes and borrowings plus noncurrent finance-lease liabilities",
+          "basis": "Finance leases are separate from notes; operating leases are added separately in the model bridge",
+          "required": "latest",
+          "checks": [
+            "notes_reconcile",
+            "finance_reconcile"
+          ]
+        },
+        "income_statement.income_before_tax": {
+          "formula": {
+            "pretax": 1
+          },
+          "scope": "Oracle consolidated GAAP income before income taxes, including noncontrolling interests",
+          "basis": "Exact annual consolidated income-statement row; domestic and foreign amounts are not substituted for the total",
+          "required": "history",
+          "checks": []
+        },
+        "income_statement.interest_expense": {
+          "formula": {
+            "interest": 1
+          },
+          "scope": "Reported consolidated income-statement interest expense",
+          "basis": "Filed annual interest expense for the historical-cost WACC starting rule",
+          "required": "latest",
+          "checks": []
+        }
+      }
+    }
+  },
+  "1018724:0001018724-26-000004": {
+    "model": "standard",
+    "scope_review": "Reviewed annual cash-flow add-back, debt, lease and recognized financing obligations. Broader add-back scope is an explicit model proxy. Custom financing facts and the senior-notes discount dimension must match exact consolidated annual filing contexts.",
+    "disclosure": "AMZN uses its filed combined cash-flow add-back, including property/equipment and content amortization, operating lease assets and other items. It is not pure D&A; DCF-implied EV/EBITDA is withheld. Debt includes carrying notes, short-term borrowings, finance leases and recognized financing obligations; the latter retain the filing\u2019s rounded noncurrent amount. Operating leases enter net debt separately. Cash excludes restricted cash and marketable securities. Capex is gross cash PP&E purchases; noncash acquisitions and future commitments are not separately projected. GAAP operating income and taxes are retained. This simplified historical-ratio DCF is not Amazon-reported free cash flow; older debt rows are unavailable if full combined coverage is missing.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+    "period_ends": [
+      "2025-12-31",
+      "2024-12-31",
+      "2023-12-31",
+      "2022-12-31",
+      "2021-12-31"
+    ],
+    "source_only": true,
+    "required_history_context": [
+      "income_statement.income_before_tax",
+      "income_statement.income_tax_expense"
+    ],
+    "scoped_source": {
+      "documents": [
+        "0001018724-26-000004",
+        "0001018724-24-000008"
+      ],
+      "facts": {
+        "addback": {
+          "concept": "us-gaap:DepreciationDepletionAndAmortization",
+          "instant": false,
+          "role": "cash_flow_statement",
+          "labels": [
+            "Depreciation and amortization of property and equipment and capitalized content costs, operating lease assets, and other"
+          ]
+        },
+        "notes_noncurrent": {
+          "concept": "us-gaap:LongTermDebtNoncurrent",
+          "instant": true,
+          "role": "balance_sheet",
+          "labels": [
+            "Long-term debt"
+          ]
+        },
+        "notes_current": {
+          "concept": "us-gaap:LongTermDebtCurrent",
+          "instant": true
+        },
+        "notes_face": {
+          "concept": "us-gaap:LongTermDebt",
+          "instant": true
+        },
+        "notes_discount": {
+          "concept": "us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet",
+          "instant": true,
+          "company_facts": false,
+          "dimensions": {
+            "us-gaap:LongtermDebtTypeAxis": "us-gaap:SeniorNotesMember"
+          }
+        },
+        "borrowings": {
+          "concept": "us-gaap:ShortTermBorrowings",
+          "instant": true
+        },
+        "finance_current": {
+          "concept": "us-gaap:FinanceLeaseLiabilityCurrent",
+          "instant": true
+        },
+        "finance_noncurrent": {
+          "concept": "us-gaap:FinanceLeaseLiabilityNoncurrent",
+          "instant": true
+        },
+        "finance_total": {
+          "concept": "us-gaap:FinanceLeaseLiability",
+          "instant": true
+        },
+        "obligations_current": {
+          "concept": "amzn:FinancingObligationsCurrent",
+          "instant": true,
+          "company_facts": false
+        },
+        "obligations_noncurrent": {
+          "concept": "amzn:FinancingObligationsNoncurrent",
+          "instant": true,
+          "company_facts": false
+        },
+        "interest": {
+          "concept": "us-gaap:InterestExpenseNonoperating",
+          "instant": false,
+          "labels": [
+            "Interest expense"
+          ]
+        }
+      },
+      "checks": {
+        "notes_reconcile": {
+          "lhs": {
+            "notes_current": 1,
+            "notes_noncurrent": 1
+          },
+          "rhs": {
+            "notes_face": 1,
+            "notes_discount": -1
+          }
+        },
+        "finance_reconcile": {
+          "lhs": {
+            "finance_current": 1,
+            "finance_noncurrent": 1
+          },
+          "rhs": {
+            "finance_total": 1
+          }
+        }
+      },
+      "inputs": {
+        "cash_flow_statement.depreciation_amortization": {
+          "formula": {
+            "addback": 1
+          },
+          "scope": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments",
+          "basis": "Filed combined proxy includes operating lease assets and other items; not pure D&A",
+          "required": "history",
+          "checks": []
+        },
+        "balance_sheet.short_term_debt": {
+          "formula": {
+            "notes_current": 1,
+            "borrowings": 1,
+            "finance_current": 1,
+            "obligations_current": 1
+          },
+          "scope": "Current carrying notes, short-term borrowings, finance leases and financing obligations",
+          "basis": "Current obligations use filed carrying amounts; unused facilities, face totals, future interest and uncommenced commitments are excluded",
+          "required": "latest",
+          "checks": [
+            "notes_reconcile",
+            "finance_reconcile"
+          ]
+        },
+        "balance_sheet.long_term_debt": {
+          "formula": {
+            "notes_noncurrent": 1,
+            "finance_noncurrent": 1,
+            "obligations_noncurrent": 1
+          },
+          "scope": "Noncurrent carrying notes, finance leases and financing obligations",
+          "basis": "Financing obligations retain the filed rounded noncurrent amount; operating leases are separate in net debt",
+          "required": "latest",
+          "checks": [
+            "notes_reconcile",
+            "finance_reconcile"
+          ]
+        },
+        "income_statement.interest_expense": {
+          "formula": {
+            "interest": 1
+          },
+          "scope": "Reported consolidated income-statement interest expense",
+          "basis": "Filed annual interest expense for the historical-cost WACC starting rule",
+          "required": "latest",
+          "checks": []
+        }
+      }
+    }
   }
 }

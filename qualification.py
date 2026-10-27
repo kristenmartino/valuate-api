@@ -19,12 +19,14 @@ from input_contracts import (
 from qualification_schema import InputEvidence, InputIssue, Qualification
 from schemas import Company, ExtractionSource
 from filing_coverage import configured_fields, selections as reviewed_selections
+from scoped_inputs import contract as scoped_contract, paths as scoped_paths
 
 POLICY_FILES = [
     "qualification.py",
     "filing_coverage.py",
     "statement_evidence.py",
     "statement_coverage.py",
+    "scoped_inputs.py",
     "qualification_schema.py",
     "qualification_service.py",
     "input_contracts.py",
@@ -231,6 +233,15 @@ def qualify(
             return
         if not item.value.is_finite():
             issue("invalid_number", path, "Input must be finite.", pe)
+            return
+        if path in scoped_paths(company.cik, latest.filing_accession):
+            scoped = support.get("scoped_inputs", {}).get(pe, {}).get(path)
+            if scoped is None or scoped.item.value != item.value:
+                issue("scoped_input_unverified", path, "Every reviewed source operand, context and carrying-value reconciliation must match; missing components cannot become zero.", pe)
+                return
+            row = scoped.rows[0]
+            evidence(p, path, item, row, scoped.scope, scoped.basis,
+                [{"concept": r["concept"], "value": str(r["value"]), "start": r.get("start") or "", "end": r["end"], "accession": r["accn"], "source_url": r["source_url"], "statement_role": r["role"], "row_label": r["label"], "decimals": r.get("decimals", ""), "dimensions": json.dumps(r.get("dimensions", {}), sort_keys=True)} for r in scoped.rows])
             return
         if path in (policy or {}).get("statement_inputs", {}):
             scoped = support.get("statement_inputs", {}).get(pe, {}).get(path)
@@ -482,6 +493,9 @@ def qualify(
             )
         for path in sorted(set((policy or {}).get("statement_inputs", {})) | set((policy or {}).get("required_history_inputs", []))):
             verify(p, path)
+        for path, cfg in scoped_contract(company.cik, latest.filing_accession).get("inputs", {}).items():
+            if cfg.get("required", "history") == "history" or p is latest or _item(p, path) is not None:
+                verify(p, path)
         verify(p, "income_statement.net_income")
         if industry in {"standard", "energy"}:
             for path in [
@@ -518,7 +532,7 @@ def qualify(
             verify(latest, "balance_sheet.shareholders_equity")
             verify(latest, "income_statement.interest_expense", False)
         for field in ["long_term_debt", "short_term_debt"]:
-            if field in special[pe0] or field in configured_fields(company.cik, latest.filing_accession):
+            if field in special[pe0] or field in configured_fields(company.cik, latest.filing_accession) or "balance_sheet." + field in scoped_paths(company.cik, latest.filing_accession):
                 verify(latest, "balance_sheet." + field)
             else:
                 _verify_debt(company, facts, bound, inputs, issues)

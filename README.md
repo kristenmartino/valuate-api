@@ -18,11 +18,11 @@ The report is bound to the complete saved record and a fingerprint of the financ
 
 Production uses PostgreSQL and refuses to start with process-local reviewer storage. Active records, immutable prior revisions, cold candidates and raw filing-evidence snapshots are stored separately. Versioned writes reject stale updates; same-filing publication preserves saved reviewer corrections. A new filing does not inherit old reviews as if they applied to its new figures. Revisions retain prior values and notes, but the shared demo credential does not identify individual reviewers.
 
-Cold tests start with no saved record. CI replays 17 ticker/share-class cases covering 16 annual filings through the real extraction graph and qualification logic using selected SEC facts, inline-XBRL fixtures and recorded AI backfill responses. All 17 reviewed cases qualify, including SBUX and the five earlier debt/D&A repairs. Separate missing-operand, conflicting-value, wrong-unit, wrong-period and changed-record tests must withhold valuation; a safe rejection is not scored as extraction accuracy. Separate live cold runs exercise fresh retrieval and AI extraction, stage their candidates without replacing active records, and test rejection of unqualified publication. The historical May extraction baseline remains separate and has not been rerun for these mappings.
+Cold tests start with no saved record. CI replays 19 ticker/share-class cases covering 18 annual filings through the real extraction graph and qualification logic using selected SEC facts, inline-XBRL fixtures and recorded AI backfill responses. All 19 reviewed cases qualify. Oracle and Amazon use source-only contracts; the other cases replay recorded AI backfill where needed. Separate missing-operand, conflicting-value, wrong-unit, wrong-period and changed-record tests must withhold valuation; a safe rejection is not scored as extraction accuracy. Separate live cold runs exercise fresh retrieval and AI extraction, stage their candidates without replacing active records, and test rejection of unqualified publication. The historical May extraction baseline remains separate and has not been rerun for these mappings.
 
 ## Reviewed debt and cash-flow coverage
 
-The six filings below have explicit source contracts. Amounts are USD billions; debt columns are non-overlapping carrying amounts, not face values or credit-facility capacity.
+The eight filings below have explicit source contracts. Amounts are USD billions; debt columns are non-overlapping carrying amounts, not face values or credit-facility capacity.
 
 | Filing | Noncurrent debt | Current debt | Cash-flow add-back | Scope |
 |---|---:|---:|---:|---|
@@ -32,6 +32,8 @@ The six filings below have explicit source contracts. Amounts are USD billions; 
 | [PEP FY2025](https://www.sec.gov/Archives/edgar/data/77476/000007747626000007/pep-20251227.htm) | 42.321 | 6.861 | 3.451 | Current debt includes current notes and other borrowings. Historical add-backs follow the cash-flow total. |
 | [TXN FY2025](https://www.sec.gov/Archives/edgar/data/97476/000009747626000059/txn-20251231.htm) | 13.548 | 0.500 | 1.999 | Notes reconcile to 14.048; explicitly filed commercial paper is zero. Add-back sums depreciation and software amortization. |
 | [SBUX FY2025](https://www.sec.gov/Archives/edgar/data/829224/000082922425000114/sbux-20250928.htm) | 14.5759 | 1.4989 | 1.7715 | Notes reconcile to 16.0748; cash-flow D&A differs from the 1.6847 income expense line. |
+| [ORCL FY2026](https://www.sec.gov/Archives/edgar/data/1341439/000119312526277521/orcl-20260531.htm) | 129.423 | 7.819 | 9.294 | Notes and borrowings plus separately recognized finance leases; D&A sums the two cash-flow components. |
+| [AMZN FY2025](https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm) | 84.190 | 5.105 | 65.756 | Carrying notes, short-term borrowings, finance leases and recognized financing obligations; the add-back includes content, lease assets and other adjustments. |
 
 Adobe's `LongTermDebt` concept labels the balance-sheet noncurrent carrying amount in this filing; it is not treated as an inclusive total. Its zero current debt is an explicit filed amount. Statement rows, assumptions and projections label **D&A + accretion**, and the DCF-implied EV/EBITDA multiple is unavailable for that combined proxy. These disclosures retain the existing add-back values and valuation formula.
 
@@ -41,9 +43,17 @@ TXN's complete five-year cash-flow add-back series is 1.999, 1.580, 1.238, 0.979
 
 SBUX's reviewed window is FY2021–FY2025. Its cash series is 3.2198, 3.2862, 3.5515, 2.8184 and 6.4557; the four recent balance sheets explicitly label those amounts cash and cash equivalents despite using a broader taxonomy concept. A generic restricted-cash fallback remains prohibited. Statement-role selection cross-checks the row label, entity, annual context, units, accession and company-facts amount. Cash-flow D&A is 1.7715, 1.5924, 1.4503, 1.5294 and 1.5241; the separate operating-expense series is 1.6847, 1.5126, 1.3626, 1.4479 and 1.4417. Current plus noncurrent notes must reconcile across all five years. Historical current debt includes separate short-term borrowings: $0.175B of commercial paper in FY2022 and $0.0335B from Japanese facilities in FY2023. Current debt totals are 1.4989, 1.2489, 1.8521, 1.9240 and 0.9989 across the five years. A notes-only reconciliation would miss those borrowings. The latest filing reports no commercial-paper or facility borrowings; the zero is established by explicit dated filing statements, not missing tags, and capacity is not debt. Restoring missing years changes the historical starting ratios. GAAP operating income still includes restructuring and impairment costs; the model does not normalize them. Non-model optional fields are not certified by this repair.
 
+Oracle and Amazon use reviewed, source-only onboarding contracts: neither extraction calls AI backfill or AI revenue segmentation. Exact annual contexts, statement rows and allowed dimensions are checked against two pinned accessions per company; standard undimensioned facts also require matching company-facts amounts. Missing operands or failed reconciliations cannot be replaced with estimates. Both contracts require five years of model-driving income, tax and cash-flow inputs. Older debt cells remain unknown when all recognized components cannot be established; they are not used as zeros or in historical debt averages.
+
+Oracle's FY2026 cash-flow D&A is 7.623 depreciation plus 1.671 intangible amortization. Current/noncurrent notes and other borrowings of 7.199/122.342 reconcile to 129.541 and already include 1.468 commercial paper. Separate finance leases of 0.620/7.081 bring the modeled debt slots to 7.819/129.423. Operating leases of 30.190 remain separate in the net-debt bridge; cash is 31.289. Consolidated pre-tax income comes from Oracle's exact inline custom total, not a domestic or foreign subtotal. The five-year D&A series is 9.294, 6.174, 6.139, 6.108 and 3.122. The starting DCF produces a **negative equity residual**, displayed as an unfloored model residual per share with no DCF-implied trading multiples. It is not a negative stock-price estimate. The simple historical-input model does not value cloud backlog or separately project 260 billion of disclosed uncommenced lease commitments.
+
+Amazon's 68.836 face-value notes less 0.440 discounts/issuance costs reconcile to 68.396 carrying notes, split 2.748 current and 65.648 noncurrent. The slots also include 0.455 separate short-term borrowings, 1.544/10.742 finance leases and 0.358/7.800 recognized financing obligations. The 7.800 amount is reported rounded to 0.1 billion. Recognized financing obligations are distinct from future gross payments including interest. Operating leases of 89.252 remain separate; cash of 86.810 excludes restricted cash and marketable securities. The discount requires the exact senior-notes dimension; financing obligations require the reviewed custom inline concepts and consolidated contexts.
+
+Amazon's cash-flow add-back covers depreciation/amortization of property, equipment and capitalized content costs, operating-lease assets, and other adjustments. Its 65.756, 52.795, 48.663, 41.921 and 34.433 series is a **combined model proxy, not pure D&A**. Statements, assumptions and projections retain that scope, and DCF-implied EV/EBITDA is unavailable. Neither filing's cash-flow aggregate is copied into an income-expense row. Both DCFs use gross cash PP&E capex, omit separate noncash additions/future commitments and retain GAAP operating effects; they do not reproduce company-reported free cash flow or forecast spending plans. Qualification establishes the reviewed input scope, not predictive accuracy or a positive equity result.
+
 A reusable statement reader and declarative filing contracts protect these inputs from AI replacement. Reviewed policies set the required history window; missing years cannot be silently dropped. The backend's `python -m eval.preflight --tickers SBUX --output preflight.json` checks SEC source completeness without AI calls, estimates, repository writes or publication. The manually dispatched **SEC source preflight** GitHub Actions workflow runs the same command and retains the checklist artifact. Run it on proposed tickers during onboarding, resolve missing or ambiguous scope, pin a cold regression fixture, then require independent qualification before publishing. Source completeness is a checklist, not approval; new or unreviewed filings can still be withheld.
 
-Saved repairs require complete matching evidence across the existing annual history before changing any amount. They preserve reviewer values and full notes, never split a reviewer-held debt pair automatically, and publish only after the independent qualification gate passes. Missing or conflicting evidence leaves the saved record unchanged. New filings still require separate scope review; these checks do not certify unrelated fields or expand the historical May extraction-accuracy baseline.
+Repairs under the existing six-filing repair contracts require complete matching evidence across the existing annual history before changing any amount. They preserve reviewer values and full notes, never split a reviewer-held debt pair automatically, and publish only after the independent qualification gate passes. Missing or conflicting evidence leaves the saved record unchanged. New filings still require separate scope review; these checks do not certify unrelated fields or expand the historical May extraction-accuracy baseline.
 
 
 ## What this service does
@@ -229,7 +239,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-445 collected tests across 22 files: 444 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
+496 collected tests across 23 files: 495 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -249,9 +259,10 @@ pytest tests/
 - `test_microsoft.py` (30) — pure D&A expense scope, five-year consistent repair, reconciled current/noncurrent debt, unsafe-fact rejection, preserved reviews and aggregate debt, fresh/saved failure behavior and valuation effects
 - `test_alphabet.py` (29) — carrying-value debt and current/noncurrent split, historical finance-lease scope, PPE-depreciation proxy disclosures, and preserved inputs
 - `test_filing_coverage.py` (63) — reviewed debt and cash-flow contracts, complete historical operands, unsafe-evidence rejection, source-only atomic repair, and saved-review preservation
-- `test_qualification.py` (52) — cold graph replays, filing/record/policy-bound qualification, public valuation gating, candidate publication, and preserved reviews
+- `test_qualification.py` (54) — cold graph replays, filing/record/policy-bound qualification, public valuation gating, candidate publication, and preserved reviews
 - `test_repository_persistence.py` (3) — PostgreSQL persistence across repository restarts, immutable revisions and evidence, and stale-write rejection
 - `test_statement_coverage.py` (30) — statement-role evidence, SBUX five-year recovery, separate historical borrowings, explicit zero-borrowing disclosures, source-only preflight, and atomic repair
+- `test_scoped_inputs.py` (49) — Oracle/Amazon source-only cold onboarding, exact lease/financing operands, five-year history, unsafe-source rejection, preserved optional reviews and rejected conflicting model reviews
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
 
 The default `pytest tests/` skips the network-gated test. Run it explicitly with `pytest tests/ -m network` (requires `SEC_USER_AGENT`). It's intended as a periodic deploy health check, but is run manually today — there's no scheduled CI job wired up yet.
@@ -365,18 +376,20 @@ Scoped extraction protects these inputs from AI backfill. Saved repair requires 
 ## Qualification operations and cold coverage
 
 ```bash
-# Deterministic, cost-free cold graph replay (recorded AI responses).
+# Deterministic, cost-free cold graph replay (recorded AI where needed; source-only ORCL/AMZN).
 python -m eval.cold
 # SEC-only onboarding preflight; no AI, repository writes or publication.
 python -m eval.preflight --tickers SBUX --output preflight.json
 # Run with the existing authenticated service environment; no credential is printed.
 railway run --no-local -- python -m ops.migrate_records --snapshots /path/to/backup --output /path/to/evidence --commit EXPECTED_RELEASE_SHA
-# At most 29 fresh extractions, once per ticker; no automatic AI retries or publication.
-railway run --no-local -- python -m eval.live_cold --output /path/to/cold-evidence --max-extractions 29
+# At most 30 fresh extractions, once per ticker; no automatic AI retries or publication.
+railway run --no-local -- python -m eval.live_cold --output /path/to/cold-evidence --max-extractions 30
 ```
 
 Administrative import, qualification, coverage repair, cold extraction, candidate publication and history endpoints always require the configured service token, including in local mode. The frontend proxy does not inject credentials onto these routes. Import strips supplied qualification metadata and refuses to overwrite a saved record. Candidate publication rechecks qualification and preserves same-filing reviews; an unqualified candidate receives HTTP 422. These are maintainer operations, not public approval controls.
 
-The live cold cohort is the 18 sample tickers, ten additional regression tickers (now including SBUX) and one held-out ticker (ORCL). Coverage results must distinguish qualified, withheld and composition-failed cases. ORCL has no reviewed scope policy and must not be published automatically. SBUX is now a reviewed regression case. The original 29-ticker live cold run predates this repair; it is not a fresh AI-accuracy result for the updated pipeline. CI runs the offline cases and real PostgreSQL restart/conflict tests. A weekday GitHub Actions job checks SEC annual-filing metadata without AI calls or publication writes and fails when a policy's filing has been superseded; the new filing needs source review and a new policy.
+The live cold cohort is the 18 sample tickers, eleven additional regression tickers (including SBUX and ORCL) and one held-out ticker (MCD): 30 total. Coverage results must distinguish qualified, withheld and composition-failed cases. MCD has no reviewed scope policy and must not be published automatically. ORCL and AMZN are now reviewed source-only cases. The original 29-ticker live cold run predates these changes; it is not a fresh AI-accuracy result for the updated pipeline. CI runs the offline cases and real PostgreSQL restart/conflict tests. A weekday GitHub Actions job checks SEC annual-filing metadata without AI calls or publication writes and fails when a policy's filing has been superseded; the new filing needs source review and a new policy.
 
 `POST /admin/repair-coverage/{ticker}` applies the reviewed six-filing contracts, including SBUX history recovery without AI calls. It fetches SEC evidence, checks every saved period, retains reviewer corrections, stages the result, then writes only if qualification passes and the saved revision is still current. It returns 422 for incomplete or conflicting coverage, 503 when evidence is unavailable, and does not replace the active record on either failure. Requalify other saved records with `POST /admin/qualify/{ticker}` after a financial-policy fingerprint changes. These routes require the existing service token; the frontend proxy never injects it for administrative requests.
+
+ORCL and AMZN onboarding uses `POST /admin/cold-extract` to stage a source-only candidate, followed by independent qualification and `POST /admin/publish/{candidate_id}`. Staging leaves the active record unchanged. The six-filing `repair-coverage` route does not apply these two onboarding contracts. Publication retains same-filing saved corrections and full review notes; a conflicting model-input correction must be resolved before the candidate can qualify.

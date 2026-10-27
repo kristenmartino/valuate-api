@@ -1,0 +1,867 @@
+{
+  "ticker": "AMZN",
+  "cik": "0001018724",
+  "name": "AMAZON COM INC",
+  "fiscal_year_end_month": 12,
+  "periods": [
+    {
+      "fiscal_year": 2025,
+      "fiscal_period_end": "2025-12-31",
+      "filing_accession": "0001018724-26-000004",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "716924000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed RevenueFromContractWithCustomerExcludingAssessedTax: 716924000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "356414000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed CostOfGoodsAndServicesSold: 356414000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:CostOfGoodsAndServicesSold"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": null,
+        "share_based_compensation": {
+          "value": "19467000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 19467000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "79975000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 79975000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "2274000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Reported consolidated income-statement interest expense. Filed annual interest expense for the historical-cost WACC starting rule. us-gaap:InterestExpenseNonoperating=2274000000 USD; selected amount 2274000000 USD; 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:InterestExpenseNonoperating"
+        },
+        "income_before_tax": {
+          "value": "97311000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 97311000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"
+        },
+        "income_tax_expense": {
+          "value": "19087000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 19087000000 USD; annual period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "77670000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 77670000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "10827000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 10827000000 shares; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": []
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "86810000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 86810000000 USD; period year-end instant to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "818042000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 818042000000 USD; period year-end instant to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "5105000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Current carrying notes, short-term borrowings, finance leases and financing obligations. Current obligations use filed carrying amounts; unused facilities, face totals, future interest and uncommenced commitments are excluded. us-gaap:ShortTermBorrowings=455000000 USD; us-gaap:FinanceLeaseLiabilityCurrent=1544000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=10742000000 USD; us-gaap:FinanceLeaseLiability=12286000000 USD; us-gaap:LongTermDebtCurrent=2748000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=440000000 USD; us-gaap:LongTermDebt=68836000000 USD; us-gaap:LongTermDebtNoncurrent=65648000000 USD; amzn:FinancingObligationsCurrent=358000000 USD; selected amount 5105000000 USD; year-end 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "84190000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Noncurrent carrying notes, finance leases and financing obligations. Financing obligations retain the filed rounded noncurrent amount; operating leases are separate in net debt. us-gaap:FinanceLeaseLiabilityCurrent=1544000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=10742000000 USD; us-gaap:FinanceLeaseLiability=12286000000 USD; us-gaap:LongTermDebtCurrent=2748000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=440000000 USD; us-gaap:LongTermDebt=68836000000 USD; us-gaap:LongTermDebtNoncurrent=65648000000 USD; amzn:FinancingObligationsNoncurrent=7800000000 USD; selected amount 84190000000 USD; year-end 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": null
+        },
+        "operating_lease_liabilities": {
+          "value": "89252000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 89252000000 USD; period year-end instant to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "406977000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Derived: total_assets \u2212 shareholders_equity (818042000000 \u2212 411065000000) \u2212 noncontrolling_interests (0)",
+          "xbrl_tag": null
+        },
+        "shareholders_equity": {
+          "value": "411065000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: 411065000000 USD; period year-end instant to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "65756000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments. Filed combined proxy includes operating lease assets and other items; not pure D&A. us-gaap:DepreciationDepletionAndAmortization=65756000000 USD; selected amount 65756000000 USD; 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "139514000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 139514000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "131819000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsToAcquireProductiveAssets: 131819000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquireProductiveAssets"
+        },
+        "cash_from_investing": {
+          "value": "-142545000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -142545000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "9661000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: 9661000000 USD; period 2025-01-01 to 2025-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2024,
+      "fiscal_period_end": "2024-12-31",
+      "filing_accession": "0001018724-26-000004",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "637959000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed RevenueFromContractWithCustomerExcludingAssessedTax: 637959000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "326288000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed CostOfGoodsAndServicesSold: 326288000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:CostOfGoodsAndServicesSold"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": null,
+        "share_based_compensation": {
+          "value": "22011000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 22011000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "68593000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 68593000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "2406000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Reported consolidated income-statement interest expense. Filed annual interest expense for the historical-cost WACC starting rule. us-gaap:InterestExpenseNonoperating=2406000000 USD; selected amount 2406000000 USD; 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:InterestExpenseNonoperating"
+        },
+        "income_before_tax": {
+          "value": "68614000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 68614000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"
+        },
+        "income_tax_expense": {
+          "value": "9265000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 9265000000 USD; annual period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "59248000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 59248000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "10721000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 10721000000 shares; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "78779000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 78779000000 USD; period year-end instant to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "624894000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 624894000000 USD; period year-end instant to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": {
+          "value": "6855000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Current carrying notes, short-term borrowings, finance leases and financing obligations. Current obligations use filed carrying amounts; unused facilities, face totals, future interest and uncommenced commitments are excluded. us-gaap:ShortTermBorrowings=151000000 USD; us-gaap:FinanceLeaseLiabilityCurrent=1375000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=9227000000 USD; us-gaap:FinanceLeaseLiability=10602000000 USD; us-gaap:LongTermDebtCurrent=5017000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=360000000 USD; us-gaap:LongTermDebt=58000000000 USD; us-gaap:LongTermDebtNoncurrent=52623000000 USD; amzn:FinancingObligationsCurrent=312000000 USD; selected amount 6855000000 USD; year-end 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": null
+        },
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "68950000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Noncurrent carrying notes, finance leases and financing obligations. Financing obligations retain the filed rounded noncurrent amount; operating leases are separate in net debt. us-gaap:FinanceLeaseLiabilityCurrent=1375000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=9227000000 USD; us-gaap:FinanceLeaseLiability=10602000000 USD; us-gaap:LongTermDebtCurrent=5017000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=360000000 USD; us-gaap:LongTermDebt=58000000000 USD; us-gaap:LongTermDebtNoncurrent=52623000000 USD; amzn:FinancingObligationsNoncurrent=7100000000 USD; selected amount 68950000000 USD; year-end 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": null
+        },
+        "operating_lease_liabilities": {
+          "value": "79596000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 79596000000 USD; period year-end instant to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "338924000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Derived: total_assets \u2212 shareholders_equity (624894000000 \u2212 285970000000) \u2212 noncontrolling_interests (0)",
+          "xbrl_tag": null
+        },
+        "shareholders_equity": {
+          "value": "285970000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: 285970000000 USD; period year-end instant to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "52795000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments. Filed combined proxy includes operating lease assets and other items; not pure D&A. us-gaap:DepreciationDepletionAndAmortization=52795000000 USD; selected amount 52795000000 USD; 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "115877000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 115877000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "82999000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsToAcquireProductiveAssets: 82999000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquireProductiveAssets"
+        },
+        "cash_from_investing": {
+          "value": "-94342000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -94342000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-11812000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: -11812000000 USD; period 2024-01-01 to 2024-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2023,
+      "fiscal_period_end": "2023-12-31",
+      "filing_accession": "0001018724-26-000004",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "574785000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed RevenueFromContractWithCustomerExcludingAssessedTax: 574785000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "304739000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed CostOfGoodsAndServicesSold: 304739000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:CostOfGoodsAndServicesSold"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": null,
+        "share_based_compensation": {
+          "value": "24023000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 24023000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "36852000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 36852000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": {
+          "value": "3182000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Reported consolidated income-statement interest expense. Filed annual interest expense for the historical-cost WACC starting rule. us-gaap:InterestExpenseNonoperating=3182000000 USD; selected amount 3182000000 USD; 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:InterestExpenseNonoperating"
+        },
+        "income_before_tax": {
+          "value": "37557000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 37557000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"
+        },
+        "income_tax_expense": {
+          "value": "7120000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 7120000000 USD; annual period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "30425000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 30425000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "10492000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 10492000000 shares; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "73387000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 73387000000 USD; period year-end instant to 2023-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "527854000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 527854000000 USD; period year-end instant to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "74991000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Noncurrent carrying notes, finance leases and financing obligations. Financing obligations retain the filed rounded noncurrent amount; operating leases are separate in net debt. us-gaap:FinanceLeaseLiabilityCurrent=2032000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=10077000000 USD; us-gaap:FinanceLeaseLiability=12109000000 USD; us-gaap:LongTermDebtCurrent=8494000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=374000000 USD; us-gaap:LongTermDebt=67182000000 USD; us-gaap:LongTermDebtNoncurrent=58314000000 USD; amzn:FinancingObligationsNoncurrent=6600000000 USD; selected amount 74991000000 USD; year-end 2023-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": null
+        },
+        "operating_lease_liabilities": {
+          "value": "75639000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 75639000000 USD; period year-end instant to 2023-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "325979000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Derived: total_assets \u2212 shareholders_equity (527854000000 \u2212 201875000000) \u2212 noncontrolling_interests (0)",
+          "xbrl_tag": null
+        },
+        "shareholders_equity": {
+          "value": "201875000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: 201875000000 USD; period year-end instant to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "48663000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments. Filed combined proxy includes operating lease assets and other items; not pure D&A. us-gaap:DepreciationDepletionAndAmortization=48663000000 USD; selected amount 48663000000 USD; 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "84946000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 84946000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "52729000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsToAcquireProductiveAssets: 52729000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquireProductiveAssets"
+        },
+        "cash_from_investing": {
+          "value": "-49833000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -49833000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "-15879000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: -15879000000 USD; period 2023-01-01 to 2023-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2022,
+      "fiscal_period_end": "2022-12-31",
+      "filing_accession": "0001018724-26-000004",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "513983000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed RevenueFromContractWithCustomerExcludingAssessedTax: 513983000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "288831000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed CostOfGoodsAndServicesSold: 288831000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:CostOfGoodsAndServicesSold"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": null,
+        "share_based_compensation": {
+          "value": "19621000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 19621000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "12248000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 12248000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": {
+          "value": "-5936000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: -5936000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"
+        },
+        "income_tax_expense": {
+          "value": "-3217000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: -3217000000 USD; annual period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "-2722000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: -2722000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "10189000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 10189000000 shares; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "53888000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 53888000000 USD; period year-end instant to 2022-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "462675000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 462675000000 USD; period year-end instant to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": {
+          "value": "85236000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Noncurrent carrying notes, finance leases and financing obligations. Financing obligations retain the filed rounded noncurrent amount; operating leases are separate in net debt. us-gaap:FinanceLeaseLiabilityCurrent=4397000000 USD; us-gaap:FinanceLeaseLiabilityNoncurrent=11386000000 USD; us-gaap:FinanceLeaseLiability=15783000000 USD; us-gaap:LongTermDebtCurrent=2999000000 USD; us-gaap:DebtInstrumentUnamortizedDiscountPremiumNet=393000000 USD; us-gaap:LongTermDebt=70542000000 USD; us-gaap:LongTermDebtNoncurrent=67150000000 USD; amzn:FinancingObligationsNoncurrent=6700000000 USD; selected amount 85236000000 USD; year-end 2022-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": null
+        },
+        "operating_lease_liabilities": {
+          "value": "69040000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 69040000000 USD; period year-end instant to 2022-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "316632000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Derived: total_assets \u2212 shareholders_equity (462675000000 \u2212 146043000000) \u2212 noncontrolling_interests (0)",
+          "xbrl_tag": null
+        },
+        "shareholders_equity": {
+          "value": "146043000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: 146043000000 USD; period year-end instant to 2022-12-31; SEC accession 0001018724-26-000004.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "41921000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments. Filed combined proxy includes operating lease assets and other items; not pure D&A. us-gaap:DepreciationDepletionAndAmortization=41921000000 USD; selected amount 41921000000 USD; 2022-01-01 to 2022-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "46752000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 46752000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "63645000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsToAcquireProductiveAssets: 63645000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquireProductiveAssets"
+        },
+        "cash_from_investing": {
+          "value": "-37601000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -37601000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "9718000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: 9718000000 USD; period 2022-01-01 to 2022-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null
+      },
+      "standardized_measure": null
+    },
+    {
+      "fiscal_year": 2021,
+      "fiscal_period_end": "2021-12-31",
+      "filing_accession": "0001018724-26-000004",
+      "filing_type": "10-K",
+      "industry": "standard",
+      "income_statement": {
+        "kind": "standard",
+        "revenue": {
+          "value": "469822000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed RevenueFromContractWithCustomerExcludingAssessedTax: 469822000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+        },
+        "cost_of_revenue": {
+          "value": "272344000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed CostOfGoodsAndServicesSold: 272344000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:CostOfGoodsAndServicesSold"
+        },
+        "gross_profit": null,
+        "research_and_development": null,
+        "selling_general_administrative": null,
+        "depreciation_amortization": null,
+        "share_based_compensation": {
+          "value": "12757000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed ShareBasedCompensation: 12757000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:ShareBasedCompensation"
+        },
+        "operating_income": {
+          "value": "24879000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingIncomeLoss: 24879000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:OperatingIncomeLoss"
+        },
+        "interest_expense": null,
+        "income_before_tax": {
+          "value": "38151000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_before_tax: 38151000000 USD; annual period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments"
+        },
+        "income_tax_expense": {
+          "value": "4791000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed income_tax_expense: 4791000000 USD; annual period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:IncomeTaxExpenseBenefit"
+        },
+        "net_income": {
+          "value": "33364000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetIncomeLoss: 33364000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:NetIncomeLoss"
+        },
+        "diluted_shares_outstanding": {
+          "value": "10296000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed WeightedAverageNumberOfDilutedSharesOutstanding: 10296000000 shares; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding"
+        },
+        "revenue_segments": null
+      },
+      "balance_sheet": {
+        "kind": "standard",
+        "cash_and_equivalents": {
+          "value": "36220000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed CashAndCashEquivalentsAtCarryingValue: 36220000000 USD; period year-end instant to 2021-12-31; SEC accession 0001018724-23-000004.",
+          "xbrl_tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+        },
+        "short_term_investments": null,
+        "accounts_receivable": null,
+        "inventory": null,
+        "total_current_assets": null,
+        "property_plant_equipment_net": null,
+        "total_assets": {
+          "value": "420549000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed Assets: 420549000000 USD; period year-end instant to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:Assets"
+        },
+        "accounts_payable": null,
+        "short_term_debt": null,
+        "total_current_liabilities": null,
+        "long_term_debt": null,
+        "operating_lease_liabilities": {
+          "value": "58330000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed OperatingLeaseLiability: 58330000000 USD; period year-end instant to 2021-12-31; SEC accession 0001018724-23-000004.",
+          "xbrl_tag": "us-gaap:OperatingLeaseLiability"
+        },
+        "total_liabilities": {
+          "value": "282304000000",
+          "source": "derived",
+          "confidence": 0.99,
+          "source_quote": "Derived: total_assets \u2212 shareholders_equity (420549000000 \u2212 138245000000) \u2212 noncontrolling_interests (0)",
+          "xbrl_tag": null
+        },
+        "shareholders_equity": {
+          "value": "138245000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed StockholdersEquity: 138245000000 USD; period year-end instant to 2021-12-31; SEC accession 0001018724-25-000004.",
+          "xbrl_tag": "us-gaap:StockholdersEquity"
+        },
+        "noncontrolling_interests": null
+      },
+      "cash_flow_statement": {
+        "kind": "standard",
+        "depreciation_amortization": {
+          "value": "34433000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Amazon combined cash-flow depreciation, content/lease amortization and other adjustments. Filed combined proxy includes operating lease assets and other items; not pure D&A. us-gaap:DepreciationDepletionAndAmortization=34433000000 USD; selected amount 34433000000 USD; 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:DepreciationDepletionAndAmortization"
+        },
+        "cash_from_operations": {
+          "value": "46327000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInOperatingActivities: 46327000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInOperatingActivities"
+        },
+        "capital_expenditures": {
+          "value": "61053000000",
+          "source": "xbrl",
+          "confidence": 0.95,
+          "source_quote": "Filed PaymentsToAcquireProductiveAssets: 61053000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:PaymentsToAcquireProductiveAssets"
+        },
+        "cash_from_investing": {
+          "value": "-58154000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInInvestingActivities: -58154000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInInvestingActivities"
+        },
+        "cash_from_financing": {
+          "value": "6291000000",
+          "source": "xbrl",
+          "confidence": 1.0,
+          "source_quote": "Filed NetCashProvidedByUsedInFinancingActivities: 6291000000 USD; period 2021-01-01 to 2021-12-31; SEC accession 0001018724-24-000008.",
+          "xbrl_tag": "us-gaap:NetCashProvidedByUsedInFinancingActivities"
+        },
+        "dividends_paid": null
+      },
+      "standardized_measure": null
+    }
+  ],
+  "extraction_flags": [],
+  "share_count_label": null,
+  "operating_income_label": null,
+  "valuation_note": "AMZN uses its filed combined cash-flow add-back, including property/equipment and content amortization, operating lease assets and other items. It is not pure D&A; DCF-implied EV/EBITDA is withheld. Debt includes carrying notes, short-term borrowings, finance leases and recognized financing obligations; the latter retain the filing\u2019s rounded noncurrent amount. Operating leases enter net debt separately. Cash excludes restricted cash and marketable securities. Capex is gross cash PP&E purchases; noncash acquisitions and future commitments are not separately projected. GAAP operating income and taxes are retained. This simplified historical-ratio DCF is not Amazon-reported free cash flow; older debt rows are unavailable if full combined coverage is missing.",
+  "qualification": null
+}

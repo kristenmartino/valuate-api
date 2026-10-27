@@ -26,21 +26,22 @@ def statement_role(table):
     return None
 
 
-def read_statement_facts(html, cik, document_end):
+def read_statement_facts(html, cik, document_end, *, include_notes=False, allow_dimensions=False):
     """Return validated consolidated USD facts with row label and role.
 
-    Dimensioned, quarterly, hidden, nil, continued and unsupported numeric
-    contexts are excluded. The caller must cross-check the original annual
-    accession and company-facts amount before using this evidence.
+    Quarterly, hidden, nil, continued and unsupported numeric contexts are
+    excluded. Notes and explicit dimensions require opt-in; callers must then
+    match their exact approved scope. Cross-check the original annual accession
+    and company-facts amount, or an explicitly reviewed inline-only concept.
     """
     soup = BeautifulSoup(html, "xml")
     metadata = {}
     for key in ["dei:DocumentType", "dei:EntityCentralIndexKey", "dei:DocumentPeriodEndDate"]:
-        values = {f.get_text(strip=True) for f in soup.find_all("nonNumeric") if f.get("name") == key}
+        values = {re.sub(r"\s+", " ", f.get_text(" ", strip=True)) for f in soup.find_all("nonNumeric") if f.get("name") == key}
         if len(values) != 1:
             return []
         metadata[key] = values.pop()
-    end = metadata.get("dei:DocumentPeriodEndDate", "")
+    end = re.sub(r"\s*,\s*", ", ", metadata.get("dei:DocumentPeriodEndDate", ""))
     try:
         end = date.fromisoformat(end)
     except ValueError:
@@ -54,49 +55,55 @@ def read_statement_facts(html, cik, document_end):
         return []
     contexts = {c.get("id"): c for c in soup.find_all("context")}
     units = {u.get("id"): u.get_text(strip=True) for u in soup.find_all("unit")}
+    roles = {id(t): statement_role(t) for t in soup.find_all("table")}
     output = []
-    for table in soup.find_all("table"):
-        role = statement_role(table)
-        if role is None:
+    for fact in soup.find_all("nonFraction"):
+        table = fact.find_parent("table")
+        role = roles.get(id(table)) if table is not None else None
+        if role is None and not include_notes:
             continue
-        for row in table.find_all("tr"):
-            cells = row.find_all(["td", "th"], recursive=False)
-            if not cells:
+        row = fact.find_parent("tr")
+        cells = row.find_all(["td", "th"], recursive=False) if row is not None else []
+        label = cells[0].get_text(" ", strip=True) if cells else ""
+        numeric_format = fact.get("format")
+        if (fact.get("continuedAt") or fact.get("xsi:nil") in {"true", "1"}
+                or fact.find_parent("hidden") or units.get(fact.get("unitRef")) != "iso4217:USD"
+                or numeric_format not in {None, "ixt:num-dot-decimal", "ixt:numdotdecimal", "ixt:zerodash", "ixt:fixed-zero", "ixt:numdash"}):
+            continue
+        context = contexts.get(fact.get("contextRef"))
+        if context is None or context.find("typedMember"):
+            continue
+        members = context.find_all("explicitMember")
+        dimensions = {m.get("dimension"): m.get_text(strip=True) for m in members}
+        if len(dimensions) != len(members) or (dimensions and not allow_dimensions):
+            continue
+        identifier = context.find("identifier")
+        if identifier is None or identifier.get_text(strip=True).lstrip("0") != cik.lstrip("0"):
+            continue
+        instant, start, end = context.find("instant"), context.find("startDate"), context.find("endDate")
+        if instant is not None and (start is not None or end is not None):
+            continue
+        try:
+            pe = date.fromisoformat((instant if instant is not None else end).get_text(strip=True))
+            start_date = date.fromisoformat(start.get_text(strip=True)) if start is not None else None
+            if pe > document_end or (instant is None and (start_date is None or not 330 <= (pe - start_date).days <= 380)):
                 continue
-            label = cells[0].get_text(" ", strip=True)
-            for fact in row.find_all("nonFraction"):
-                if fact.find_parent("table") is not table:
-                    continue
-                if (fact.get("continuedAt") or fact.get("xsi:nil") == "true"
-                        or fact.find_parent("hidden") or units.get(fact.get("unitRef")) != "iso4217:USD"
-                        or fact.get("format") not in {None, "ixt:num-dot-decimal", "ixt:numdotdecimal"}):
-                    continue
-                context = contexts.get(fact.get("contextRef"))
-                if context is None or context.find("explicitMember") or context.find("typedMember"):
-                    continue
-                identifier = context.find("identifier")
-                if identifier is None or identifier.get_text(strip=True).lstrip("0") != cik.lstrip("0"):
-                    continue
-                instant, start, end = context.find("instant"), context.find("startDate"), context.find("endDate")
-                if instant is not None and (start is not None or end is not None):
-                    continue
-                try:
-                    pe = date.fromisoformat((instant if instant is not None else end).get_text(strip=True))
-                    start_date = date.fromisoformat(start.get_text(strip=True)) if start is not None else None
-                    if pe > document_end or (instant is None and (start_date is None or not 330 <= (pe - start_date).days <= 380)):
-                        continue
-                    value = Decimal(fact.get_text(strip=True).replace(",", "")) * Decimal(10) ** int(fact.get("scale", "0"))
-                    if fact.get("sign") == "-":
-                        value = -value
-                    if not value.is_finite() or value < 0:
-                        continue
-                    if value == value.to_integral_value():
-                        value = value.to_integral_value()
-                except (AttributeError, ValueError, InvalidOperation):
-                    continue
-                output.append({"role": role, "label": label, "concept": fact.get("name"), "value": value,
-                               "end": str(pe), "start": str(start_date) if start_date else None,
-                               "instant": instant is not None, "unit": "USD", "dimensions": {}})
+            raw = fact.get_text(strip=True).replace(",", "")
+            if raw in {"—", "–", "-"} and numeric_format in {"ixt:zerodash", "ixt:fixed-zero", "ixt:numdash"}:
+                raw = "0"
+            value = Decimal(raw) * Decimal(10) ** int(fact.get("scale", "0"))
+            if fact.get("sign") == "-":
+                value = -value
+            if not value.is_finite() or value < 0:
+                continue
+            if value == value.to_integral_value():
+                value = value.to_integral_value()
+        except (AttributeError, ValueError, InvalidOperation, OverflowError):
+            continue
+        output.append({"role": role or "filing_note", "label": label, "concept": fact.get("name"), "value": value,
+                       "end": str(pe), "start": str(start_date) if start_date else None,
+                       "instant": instant is not None, "unit": "USD", "dimensions": dimensions,
+                       "decimals": fact.get("decimals", ""), "scale": fact.get("scale", "0")})
     return output
 
 

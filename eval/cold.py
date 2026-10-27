@@ -1,7 +1,8 @@
-"""Cold graph replay: real ingestion/normalization/qualification, recorded AI.
+"""Cold graph replay: real ingestion/normalization/qualification, no paid AI.
 
 No repository is consulted. Selected SEC facts and inline fixtures are pinned;
-latest-period AI responses are replayed to keep CI deterministic and cost-free.
+latest-period AI responses are replayed where needed. Reviewed source-only
+cases must make no AI requests. All cases are deterministic and cost-free.
 Live AI/external retrieval are exercised separately with the protected runner.
 """
 
@@ -11,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from edgar import EdgarClient
+from scoped_inputs import contract as scoped_contract
 from graph import build_graph
 from qualification_service import qualify_record
 from schemas import Company, ExtractionSource, LineItem
@@ -49,6 +51,13 @@ class FixtureEdgar(EdgarClient):
                     else "cisco-da-2026.html"
                 )
             ).read_text()
+        if self.ticker in {"ORCL", "AMZN"}:
+            cfg = scoped_contract(self.saved.cik, self.saved.periods[0].filing_accession)
+            recent = self.submissions["filings"]["recent"]
+            for acc, end in zip(recent["accessionNumber"], recent["reportDate"]):
+                if acc in cfg["documents"] and acc.replace("-", "") in url:
+                    return (FIXTURES / (self.ticker.lower() + "-" + end + "-scope.xml")).read_text()
+            raise ValueError("No pinned source document for this accession")
         if self.ticker == "SBUX":
             if "sbux-20231001" in url:
                 return (FIXTURES / "starbucks-2023-statements.xml").read_text()
@@ -73,10 +82,18 @@ async def run_fixture(ticker):
                     update={"source": ExtractionSource.LLM_HTML, "xbrl_tag": None}
                 )
 
+    ai_calls = []
+
     async def backfill(**kwargs):
+        ai_calls.append("backfill")
+        if scoped_contract(client.saved.cik, client.saved.periods[0].filing_accession):
+            raise AssertionError("Source-only cold cases must never request AI backfill")
         return {field: recorded.get(field) for field in kwargs["fields_to_extract"]}
 
     async def segments(**kwargs):
+        ai_calls.append("segments")
+        if scoped_contract(client.saved.cik, client.saved.periods[0].filing_accession):
+            raise AssertionError("Source-only cold cases must never request AI segments")
         return (
             getattr(client.saved.periods[0].income_statement, "revenue_segments", None)
             or []
@@ -87,6 +104,8 @@ async def run_fixture(ticker):
         patch("graph.extract_revenue_segments", segments),
     ):
         result = await build_graph(client, None).ainvoke({"ticker": ticker})
+    if scoped_contract(client.saved.cik, client.saved.periods[0].filing_accession):
+        assert not ai_calls, "A source-only extraction attempted an AI request"
     checked, evidence = await qualify_record(
         result["company"], client=client, facts=result["facts"]
     )
@@ -113,7 +132,7 @@ async def main():
         )
     print(
         json.dumps(
-            {"mode": "offline cold graph with recorded AI responses", "results": rows},
+            {"mode": "offline cold graph; recorded AI where needed, reviewed source-only cases", "results": rows},
             indent=2,
         )
     )
