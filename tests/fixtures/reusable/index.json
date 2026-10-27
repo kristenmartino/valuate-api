@@ -32,7 +32,8 @@
   {
     "ticker": "MET",
     "cik": "0001099219",
-    "expected_status": "qualified"
+    "expected_status": "review_required",
+    "withheld_reason": "Historical parent/consolidated equity coverage is unresolved"
   },
   {
     "ticker": "O",

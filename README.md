@@ -22,7 +22,13 @@ Cold tests start with no saved record. The reviewed-contract subset of CI replay
 
 ## Broad ticker extraction
 
-The reusable-rule cold set adds eight previously unlisted filings, using no saved Company records, per-issuer policies or AI responses: META, NVDA, COST, WMT, CAT, BAC, MET and O qualify. NVDA and BAC initially exposed gaps in debt-signal classification and per-share dividend coverage. Filing-source checks resolve those gaps without substituting missing values, total dividends or declared dividends. Fixtures retain inline numeric contexts and original relationships with source hashes; surrounding prose is removed. These are selected-source regression outcomes, not a market-wide coverage rate or extraction-accuracy score. Complete-source replays are checked separately before release.
+<!-- valuate:source-coverage:start -->
+The reusable-rule cold set starts without saved Company records, per-issuer policies or AI responses. META, NVDA, COST, WMT, CAT, BAC and O qualify; MET is withheld for unresolved source/model coverage. MET: Historical parent/consolidated equity coverage is unresolved. These are selected-source regressions, not a market-wide coverage rate or extraction-accuracy score. Complete-source checks are separate from the historical May extraction baseline.
+
+Publication checks the meaning and basis of model inputs, not just whether a number occurs in a filing. Carrying debt must have complete nonoverlapping components; cash and cash-flow add-backs retain their source scope. Historical shares and direct paid-common dividends per share require consistent split bases and independent same-period bridges before conversion. Model-driving history cannot silently change units, annual dates, parent/consolidated coverage or pure/combined add-back scope. Same-concept comparative revisions retain the newer inspected figures and are disclosed; they never authorize rescaling a different year. Older periods may not all be restated on a uniform accounting basis. Missing or ambiguous coverage requires review, and saved corrections do not bypass qualification.
+
+A weekday SEC-only cold canary checks current filings without saved records, AI calls or publication writes. Its report distinguishes qualified, review-required and source-failed results; a failure requires maintainer review. Browser regressions exercise qualification withholding, exact assumption restoration, source-note readability, per-share units and proxy/residual labels against recorded responses with all external APIs blocked. These checks catch defined failure classes; they do not establish model suitability, investment accuracy or universal ticker coverage.
+<!-- valuate:source-coverage:end -->
 
 Enter a US ticker with a SEC 10-K. An uncached filing no longer needs to be added to an issuer allowlist before it can produce a valuation. The source-only path reads the filing-local schema, primary-statement presentation and calculation relationships, annual entity contexts and units. Standard undimensioned values also require matching SEC company-facts amounts. Optional fields with unestablished scope remain unavailable; this path makes no AI backfill or revenue-segmentation calls.
 
@@ -125,7 +131,7 @@ After the graph completes, the API independently collects qualification evidence
 `compute_projection` in `dcf.py` dispatches by industry:
 
 - **Standard** (industrials / tech): 5-year FCFF DCF with Gordon-growth terminal, plus 10K-iteration Monte Carlo and a 7×7 sensitivity grid over (revenue growth × operating margin).
-- **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` is observed dividend CAGR capped 200bps under default `r` so the Gordon constraint holds out of the box.
+- **Bank**: Gordon dividend discount model — `P = D₀(1 + g) / (r − g)`, where `wacc` is reinterpreted as cost of equity and `terminal_growth` as long-term dividend growth. The default `g` uses sustainable growth: average historical parent ROE multiplied by one minus the latest common-dividend payout ratio, then bounded to −2% through 8% under the 10% default cost of equity. Nonpositive sustainable growth uses the 4% fallback. It is not a dividend-CAGR forecast.
 - **Insurer**: justified price-to-book — `P/B = (ROE − g) / (r − g)`, then `fair_value/share = book_value/share × P/B`. Reserves and the general-account investment portfolio dominate the balance sheet, so book value is the economic anchor.
 - **REIT**: Gordon growth using approximate FFO — `fair_value/share = FFO/share × (1 + g) / (r − g)`, where approximate `FFO = net income + D&A`. This omits other Nareit adjustments. The supplementary estimated AFFO subtracts positive reported capex, or uses 80% of approximate FFO otherwise. These are simplified calculations, not company-reported FFO/AFFO.
 - **Energy E&P**: fixed ten-year FCFF projection, **no terminal value**. `revenue_growth` changes projected revenue. The model does not estimate company-specific reserve life, production volumes, or commodity prices. The line items use the standard statement schema.
@@ -267,7 +273,7 @@ The server listens on `http://127.0.0.1:8000` by default. Without `DATABASE_URL`
 pytest tests/
 ```
 
-574 collected tests across 26 files: 573 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
+606 collected tests across 30 files: 605 are selected by default, and the network integration test is deselected. Check the current inventory with `pytest tests/ --collect-only -q`.
 
 - `test_extraction.py` (26) — bugs that bit during development plus per-industry valuation math
 - `test_dcf.py` (7) — standard FCFF DCF, Monte Carlo, and sensitivity-grid math
@@ -292,6 +298,10 @@ pytest tests/
 - `test_statement_coverage.py` (30) — statement-role evidence, SBUX five-year recovery, separate historical borrowings, explicit zero-borrowing disclosures, source-only preflight, and atomic repair
 - `test_scoped_inputs.py` (49) — Oracle/Amazon source-only cold onboarding, exact lease/financing operands, five-year history, unsafe-source rejection, preserved optional reviews and rejected conflicting model reviews
 - `test_share_basis.py` (20) — cross-filing share-basis bridges, explicit split evidence, forward/reverse conversions, unsafe-evidence rejection, unchanged latest valuation and independent qualification
+- `test_history_consistency.py` (16) — history scope/revision distinctions, parent-equity model basis, inverse DPS split checks, public withholding and bank-default provenance
+- `test_latest_annual.py` (8) — archive-aware latest annual discovery, source/entity/date safety and bounded retrieval
+- `test_source_canary.py` (2) — SEC-only cold qualification statuses, no AI/repository writes and bounded failures
+- `test_docs_contract.py` (6) — shared-claim boundaries, layout independence and generated test inventory
 - `test_nvda_bac_coverage.py` (21) — reconciled notes versus accumulated asset amortization, paid-common DPS units/history, unsafe-source rejection and reviewed-policy protection
 - `test_reusable_inputs.py` (37) — unlisted SEC-only cold cases, independent qualification, rounded values, source contexts, model scope, public withholding and source-only preflight
 - `test_integration.py` (1, network-gated) — end-to-end against a real AAPL 10-K
@@ -327,7 +337,7 @@ Required env vars (set in the Railway project UI):
 | `ANTHROPIC_API_KEY` | yes | Track B and segment extraction need it; `sk-ant-...` from `console.anthropic.com/settings/keys` |
 | `DATABASE_URL` | required in production; optional locally | Deployed startup fails without persistent storage. Use a service reference such as `${{Postgres.DATABASE_URL}}`. Local development may use in-memory storage. |
 | `VALUATE_OVERRIDE_TOKEN` | optional | When set, `PUT /company/{ticker}/override` requires `Authorization: Bearer <token>`. The Vercel frontend injects the same token via its `proxy.ts` from a same-named env var. When unset, `/override` runs unauthenticated (fine for local dev). |
-| `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited (it's the Anthropic-burning endpoint); read endpoints aren't. |
+| `VALUATE_EXTRACT_RATE_LIMIT` | optional | IP rate limit on `POST /extract`, format `<count>/<window-seconds>`. Default `10/3600`. Only `/extract` is limited, to bound retrieval load and potential AI usage; cached/source-only calls do not use Anthropic. Read endpoints are not limited. |
 | `VALUATE_DISABLE_STRUCTURED_LOGGING` | optional | Set to `1` to skip the JSON-per-request middleware (`app/logging_middleware.py`). Useful for local dev when reading plain Python tracebacks in stderr is preferable. |
 | `SENTRY_DSN` | optional | When set, FastAPI exceptions get reported to Sentry. Requires `pip install sentry-sdk[fastapi]` (commented out in `requirements.txt`; uncomment to bake in). Off by default; lazy-imports the SDK so the dep is opt-in. |
 

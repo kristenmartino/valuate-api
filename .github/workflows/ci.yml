@@ -56,3 +56,9 @@ jobs:
       # the Anthropic API being reachable.
       - name: Run unit + auth/rate-limit tests
         run: pytest tests/ -v
+
+      - name: Check canonical source-coverage documentation
+        run: python -m ops.sync_docs --check
+
+      - name: Check published test inventory against actual collection
+        run: python -m ops.check_test_inventory

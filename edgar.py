@@ -18,6 +18,8 @@ import asyncio
 import os
 import time
 import threading
+import re
+from datetime import date, timedelta
 from collections import OrderedDict
 from typing import Any, Optional
 
@@ -158,30 +160,38 @@ class EdgarClient:
         submissions = await self.get_submissions(cik)
         recent = submissions.get("filings", {}).get("recent", {})
 
-        forms = recent.get("form", [])
-        accessions = recent.get("accessionNumber", [])
-        filing_dates = recent.get("filingDate", [])
-        periods = recent.get("reportDate", [])
-        primary_docs = recent.get("primaryDocument", [])
+        from filing_sources import annual_rows, MAX_ARCHIVES
 
-        cik_int = int(cik)
-        for i, form in enumerate(forms):
-            if form == "10-K":
-                accession = accessions[i]
-                accession_clean = accession.replace("-", "")
-                primary_doc = primary_docs[i]
-                return {
-                    "accession_number": accession,
-                    "filing_date": filing_dates[i],
-                    "period_of_report": periods[i],
-                    "primary_document": primary_doc,
-                    "primary_doc_url": (
-                        f"https://www.sec.gov/Archives/edgar/data/"
-                        f"{cik_int}/{accession_clean}/{primary_doc}"
-                    ),
-                }
-
-        raise ValueError(f"No 10-K found in recent filings for CIK {cik}")
+        if submissions.get("cik") is not None and str(submissions["cik"]).lstrip("0") != cik.lstrip("0"):
+            raise ValueError("SEC submissions entity does not match the requested filer")
+        today = date.today()
+        candidates = [r for r in annual_rows(recent, cik) if r["form"] == "10-K" and r["filed"] <= today]
+        best = max(candidates, key=lambda r: (r["end"], r["filed"], r["accession"])) if candidates else None
+        archives = []
+        for entry in submissions.get("filings", {}).get("files", []):
+            try:
+                start, end = date.fromisoformat(entry["filingFrom"]), date.fromisoformat(entry["filingTo"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if end < today - timedelta(days=5*366) or start > today or (best and end <= best["filed"]):
+                continue
+            archives.append((end, start, entry))
+        for index, (end, start, entry) in enumerate(sorted(archives, key=lambda x: (x[0], x[1]), reverse=True)):
+            if best and end <= best["filed"]:
+                break
+            if index >= MAX_ARCHIVES:
+                raise ValueError("Latest annual filing exceeds bounded SEC archive discovery; source review is required")
+            name = entry.get("name", "")
+            if not re.fullmatch("CIK" + re.escape(cik.zfill(10)) + r"-submissions-\d{3}\.json", name):
+                raise ValueError("Unsafe SEC submissions archive name")
+            archived = await self._get_json(f"{SEC_DATA_BASE}/submissions/{name}")
+            candidates.extend(r for r in annual_rows(archived, cik) if r["form"] == "10-K" and r["filed"] <= today)
+            best = max(candidates, key=lambda r: (r["end"], r["filed"], r["accession"])) if candidates else None
+        if best is None:
+            raise ValueError(f"No 10-K found in available bounded SEC filings for CIK {cik}")
+        return {"accession_number": best["accession"], "filing_date": str(best["filed"]),
+                "period_of_report": str(best["end"]), "primary_document": best["url"].rsplit("/", 1)[-1],
+                "primary_doc_url": best["url"]}
 
     async def get_company_facts(self, cik: str) -> dict[str, Any]:
         """Get all XBRL company facts (canonical line items across all filings)."""

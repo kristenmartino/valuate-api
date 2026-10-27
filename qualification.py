@@ -25,6 +25,7 @@ POLICY_FILES = [
     "qualification.py",
     "reusable_inputs.py",
     "share_basis.py",
+    "history_consistency.py",
     "reusable_qualification.py",
     "filing_document.py",
     "filing_sources.py",

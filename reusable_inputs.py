@@ -841,6 +841,7 @@ async def load_reusable_inputs(
     inputs = {pe: {} for pe in ends}
     source_documents = []
     share_sources = []
+    history_sources = []
     for filing in filings[::2]:
         html = (
             anchor_html
@@ -852,6 +853,7 @@ async def load_reusable_inputs(
         doc = await asyncio.to_thread(FilingDocument, html, cik, filing["end"], linked)
         source_documents.append((filing, doc))
         filing_shares = {}
+        filing_inputs = {}
         for pe in ends:
             if pe > filing["end"] or (
                 pe == latest and filing["accession"] != accession
@@ -907,12 +909,16 @@ async def load_reusable_inputs(
                     selected.update(carrying_debt(doc, facts, filing, bound, pe))
             # Newest annual comparatives take precedence; never replace them
             # with a conveniently different amount from an older document.
+            filing_inputs[pe] = selected
             for path, value in selected.items():
                 inputs[pe].setdefault(path, value)
         share_sources.append((filing, filing_shares))
+        history_sources.append((filing, filing_inputs))
+    from history_consistency import validate_history
     from share_basis import reconcile_share_history
 
-    adjusted_shares = reconcile_share_history(inputs, share_sources, facts)
+    history_check = validate_history(history_sources, industry)
+    adjusted_shares = reconcile_share_history(inputs, share_sources, facts, history_sources)
     metadata = await client.get_submissions(cik)
     model_issue = model_scope_issue(metadata, industry, source_documents[0][1], latest)
     return {
@@ -924,6 +930,7 @@ async def load_reusable_inputs(
         "ruleset": RULESET,
         "source_only": True,
         "split_adjusted_shares": adjusted_shares,
+        "history_check": history_check,
     }
 
 

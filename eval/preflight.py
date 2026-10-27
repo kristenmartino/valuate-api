@@ -51,6 +51,7 @@ async def source_preflight(ticker, client):
             for pe, items in loaded["inputs"].items()
         ]
         model_issues = [loaded["model_issue"]] if loaded.get("model_issue") else []
+        model_issues.extend(p["reason"] for p in loaded.get("history_check", {}).get("issues", []))
         complete = not model_issues and not any(
             p["required_fields_missing"] for p in periods
         )

@@ -1,0 +1,41 @@
+name: Cold SEC source coverage
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: SEC-only cold tickers (up to 12; no AI or publication)
+        required: false
+        default: META,NVDA,COST,WMT,CAT,BAC,O,HD,KO
+        type: string
+  schedule:
+    - cron: '50 12 * * 1-5'
+permissions:
+  contents: read
+concurrency:
+  group: cold-sec-source-coverage
+  cancel-in-progress: false
+jobs:
+  source-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SEC_USER_AGENT: Valuate filing coverage kristen@kristenmartino.ai
+      CANARY_TICKERS: ${{ inputs.tickers || 'META,NVDA,COST,WMT,CAT,BAC,O,HD,KO' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Check published documentation for shared-claim drift
+        run: python -m ops.sync_docs --check --check-remote
+      - name: Cold extraction and independent qualification without AI or writes
+        if: always()
+        run: python -m eval.source_canary --tickers "$CANARY_TICKERS" --output source-canary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cold-sec-source-coverage
+          path: source-canary.json

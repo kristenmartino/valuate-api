@@ -288,8 +288,8 @@ def _default_bank_assumptions(periods: list) -> Assumptions:
     # where b is the retention ratio (1 − payout). This is the textbook bank
     # DDM convention and what sell-side analysts actually use, vs. the prior
     # naive dividend CAGR that captured one-off post-COVID dividend hikes
-    # at JPM/BAC and lifted defaults to non-sustainable rates. The CAGR
-    # path is kept as an upper bound for filers with thin payout history.
+    # at JPM/BAC and lifted defaults to non-sustainable rates. The active
+    # rule uses sustainable growth with the explicit fallback and bounds.
     payout_ratio = 0.0
     if div_per_share and roes:
         # Latest-year payout = dividends per share / EPS; EPS ≈ ROE × BVPS.

@@ -66,7 +66,7 @@ def _tolerance(source):
         return Decimal(0)
 
 
-def reconcile_share_history(inputs, sources, facts):
+def reconcile_share_history(inputs, sources, facts, history_sources=None):
     """Mutate only share inputs; source order is newest filing first.
 
     Missing/ambiguous bridges fail closed, including unsupported cumulative
@@ -77,12 +77,20 @@ def reconcile_share_history(inputs, sources, facts):
     canonical = {}
     newest = sources[0][0]
     adjusted = False
+    factors = {}
+    proofs = {}
+    dividend_sources = {
+        item.rows[0]["accn"] for periods in inputs.values()
+        for path, item in periods.items()
+        if path == "cash_flow_statement.common_dividends_per_share"
+    }
     for filing, shares in sources:
         missing = shares.keys() - canonical.keys()
-        if not missing:
+        if not missing and filing["accession"] not in dividend_sources:
             continue
         if not canonical:
             canonical.update(shares)
+            factors[filing["accession"]] = Decimal(1)
             continue
         overlap = sorted(shares.keys() & canonical.keys())
         if not overlap:
@@ -99,6 +107,11 @@ def reconcile_share_history(inputs, sources, facts):
         if len(candidates) != 1:
             raise ValueError("Historical share bases conflict: overlapping annual counts and one explicit SEC split ratio must reconcile; no adjustment was guessed")
         factor = candidates[0]
+        factors[filing["accession"]] = factor
+        proofs[filing["accession"]] = [
+            {**r, "usage": "same-period share-basis comparison"}
+            for pe in overlap for r in [*shares[pe].rows, *canonical[pe].rows]
+        ] + ([events[factor]] if factor != 1 else [])
         for pe in sorted(missing, reverse=True):
             source = shares[pe]
             if factor == 1:
@@ -120,4 +133,51 @@ def reconcile_share_history(inputs, sources, facts):
             adjusted = True
     for pe, source in canonical.items():
         inputs[pe][PATH] = source
+    if history_sources:
+        _reconcile_dividends(inputs, history_sources, factors, proofs)
     return adjusted
+
+
+def _reconcile_dividends(inputs, sources, factors, proofs):
+    """Paid-common DPS has the inverse split conversion, never a cash total.
+
+    Require a second same-period bridge for the per-share disclosure itself;
+    do not assume that its filing's annual shares prove its own presentation.
+    """
+    from reusable_inputs import selection
+
+    path = "cash_flow_statement.common_dividends_per_share"
+    canonical = {}
+    for filing, periods in sources:
+        values = {pe: items[path] for pe, items in periods.items() if path in items}
+        missing = values.keys() - canonical.keys()
+        if not missing:
+            continue
+        factor = factors.get(filing["accession"])
+        if factor is None:
+            raise ValueError("Paid-common dividend history has no reconciled share basis; review is required")
+        if factor != 1:
+            overlap = sorted(values.keys() & canonical.keys())
+            if not overlap or any(
+                values[pe].rows[0].get("start") != canonical[pe].rows[0].get("start")
+                or abs(values[pe].item.value / factor - canonical[pe].item.value)
+                > _tolerance(values[pe]) / factor + _tolerance(canonical[pe])
+                for pe in overlap
+            ):
+                raise ValueError("Paid-common dividend history does not reconcile to the split-adjusted same-period per-share disclosures; no conversion was guessed")
+        for pe in missing:
+            source = values[pe]
+            if factor == 1:
+                canonical[pe] = source
+                continue
+            bridge = [{**r, "usage": "same-period paid-common DPS comparison"}
+                      for end in overlap for r in [*values[end].rows, *canonical[end].rows]]
+            canonical[pe] = selection(
+                source.item.value / factor,
+                [*source.rows, *bridge, *proofs[filing["accession"]]],
+                "Annual paid-common dividends per share on the latest split basis",
+                f"Original annual paid-common DPS {source.item.value} divided by verified split factor {factor}; both annual-share and paid-common-DPS overlaps reconcile",
+                disclosure="Historical paid-common DPS uses the same verified split basis as annual shares. Per-share dividends adjust inversely; aggregate cash payments and the latest model input are unchanged.",
+            )
+    for pe, source in canonical.items():
+        inputs[pe][path] = source

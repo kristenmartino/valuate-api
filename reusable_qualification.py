@@ -65,6 +65,15 @@ def qualify_reusable(company, facts, loaded, latest_filing, source_error=None):
         return _report(company, issues, inputs, disclosures, latest_filing).model_copy(
             update={"method": "reusable_statement_rules"}
         )
+    for problem in loaded.get("history_check", {}).get("issues", []):
+        issue("history_basis_unverified", problem["path"], problem["reason"], problem["period"])
+    for revision in loaded.get("history_check", {}).get("revisions", []):
+        disclosures.append(
+            f"{revision['path']} for {revision['period']} uses the newer filed comparative "
+            f"({revision['new_value']}; {revision['new_accession']}) rather than "
+            f"{revision['old_value']} from {revision['old_accession']}. "
+            "The same source concept is retained; no different-year value was rescaled."
+        )
     latest = company.periods[0]
     industry = latest.industry
     if loaded.get("model_issue"):
