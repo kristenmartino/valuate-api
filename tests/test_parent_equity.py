@@ -123,3 +123,14 @@ def test_equal_amount_with_wrong_saved_equity_scope_cannot_qualify():
     c.periods[-1].balance_sheet.shareholders_equity.xbrl_tag = TOTAL
     q = qualify_reusable(c, client.facts, loaded, p.filing_accession)
     assert q.status == 'review_required' and any(i.code == 'equity_scope_unverified' for i in q.issues)
+
+
+def test_non_roe_model_retains_optional_equity_history_instead_of_reselecting_it():
+    # Parent recovery is a model-input contract, not a display-history refresh.
+    # WMT's consolidated optional balances must retain their established scope.
+    def forbidden(*args):
+        raise AssertionError('Industrial optional equity reached parent ROE recovery')
+    with patch('reusable_inputs.parent_equity_column', forbidden):
+        company, _ = asyncio.run(run_fixture('WMT'))
+    assert company.qualification.status == 'qualified', company.qualification.issues
+    assert [p.balance_sheet.shareholders_equity.value for p in company.periods][-3:] == list(map(Decimal, ['90349000000', '83754000000', '91891000000']))

@@ -495,7 +495,11 @@ def mapped_inputs(doc, facts, filing, bound, pe, industry):
                 disclosure="The bank DDM uses filed annual cash dividends paid per common share directly. This supplemental note disclosure is not total cash dividends, declared dividends or a cash-flow statement subtotal. No aggregate cash amount is estimated from average shares.",
             )
     path = "balance_sheet.shareholders_equity"
-    if path not in result or result[path].item.xbrl_tag != "us-gaap:StockholdersEquity":
+    # Parent recovery serves ROE/book-value models. Do not reselect optional
+    # consolidated display history in an industrial/energy/REIT record.
+    if industry in {Industry.BANK, Industry.INSURER} and (
+        path not in result or result[path].item.xbrl_tag != "us-gaap:StockholdersEquity"
+    ):
         parent = parent_equity_column(doc, facts, filing, bound, pe)
         if parent is not None:
             result[path] = parent
